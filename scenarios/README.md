@@ -14,13 +14,13 @@ One scenario per file, `scenarios/NN-short-name.md`, with exactly these level-2 
 
 ## How to run a scenario
 
-Test projects live in `C:/BC/tmp/scenarios/<NN>/`, outside this repository: Claude Code treats every file inside a loaded plugin's directory as sensitive, so a test project inside the repository would be read-only (CLAUDE.md rule 1). Results stay in `tmp/scratch/scenario-results/`.
+Test projects live in `C:/BC/tmp/masterskills/scenarios/<NN>/`, outside this repository: Claude Code treats every file inside a loaded plugin's directory as sensitive, so a test project inside the repository would be read-only (CLAUDE.md rule 1). Results stay in `tmp/scratch/scenario-results/`.
 
-1. **Prepare the test project.** Create `C:/BC/tmp/scenarios/<NN>/` as described in the Start section. It must be its own git repository (`git init`) unless the scenario says otherwise.
+1. **Prepare the test project.** Create `C:/BC/tmp/masterskills/scenarios/<NN>/` as described in the Start section. It must be its own git repository (`git init`) unless the scenario says otherwise.
 2. **Act.** Run a fresh Claude Code session in the test project with the plugin loaded from this repository, sending each step from the Kroki section as one turn:
 
    ```
-   cd C:/BC/tmp/scenarios/<NN>
+   cd C:/BC/tmp/masterskills/scenarios/<NN>
    S="--plugin-dir C:/BC/masterskills --settings C:/BC/masterskills/scenarios/actor-settings.json"
    echo "<step 1>" | claude -p $S
    echo "<step 2>" | claude -p --continue $S
@@ -33,7 +33,7 @@ Test projects live in `C:/BC/tmp/scenarios/<NN>/`, outside this repository: Clau
    - Save the state after each step (inbox file list, `git status`, `git log`, hashes of the files that must not change) and each reply to `tmp/scratch/scenario-results/`, for checks about intermediate states.
 3. **Judge.** Start a sub-agent (read-only use) with this prompt:
 
-   > Read `scenarios/<NN>-<name>.md` and inspect `C:/BC/tmp/scenarios/<NN>/` (files, contents, `git status`, `git log`). For every check in the Oczekiwane section decide PASS or FAIL from evidence on disk only. Report in the format from `scenarios/README.md`.
+   > Read `scenarios/<NN>-<name>.md` and inspect `C:/BC/tmp/masterskills/scenarios/<NN>/` (files, contents, `git status`, `git log`). For every check in the Oczekiwane section decide PASS or FAIL from evidence on disk only. Report in the format from `scenarios/README.md`.
 
 4. **Record.** Save the judge's report to `tmp/scratch/scenario-results/<NN>-<YYYY-MM-DD>.md`.
 
