@@ -9,6 +9,11 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - `scripts/inbox_summary.py`: open `inbox/` files and plan state files as JSON.
 - `loc-init` skill and `scripts/init_project.py`: set up `inbox/`, `docs/` (PRD, PATTERNS, MEMORY), the `CLAUDE.md` sections and `tmp/` in `.gitignore`; idempotent, never overwrites, refuses a directory that is not a git root.
 - `templates/`: the six inbox types, the three `docs/` files and the `CLAUDE.md` sections.
+- `loc-brainstorm` skill: one growing brainstorm file in `inbox/` with numbered decisions (`B-01`…); records only.
+- `loc-planning` skill: turns an inbox file, a PRD fragment or text into a plan with milestones and proofs, gated by `check_plan.py` and `rubber-duck` (at most 3 rounds, then `utknelo`); closes its input.
+- `researcher` and `rubber-duck` agents (read-only).
+- `scripts/next_number.py`: next inbox number, and creates an inbox file from its template with the time from the clock.
+- `scripts/check_plan.py`: mechanical plan gate (sections, undecided phrases, placeholders, milestones = proofs).
 
 ## 0.1.0 — 2026-09-26
 

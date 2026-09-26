@@ -21,9 +21,14 @@ Everything happens inside this repository (CLAUDE.md rule 1).
 
    ```
    cd tmp/scratch/scenarios/<NN>
-   claude --plugin-dir ../../../.. -p "<step 1>"
-   claude --plugin-dir ../../../.. -p --continue "<step 2>"
+   S="--plugin-dir ../../../.. --settings ../../../../scenarios/actor-settings.json"
+   echo "<step 1>" | claude -p $S
+   echo "<step 2>" | claude -p --continue $S
    ```
+
+   - The prompt goes through stdin: variadic flags such as `--allowedTools` would swallow a positional prompt.
+   - `actor-settings.json` sets `claudeMdExcludes` for this repository's own `CLAUDE.md`. The test project sits inside this repository, and without it the actor would load this repository's rules as well.
+   - Save the state after each step (inbox file list, `git status`, `git log`, hashes of the files that must not change) and each reply to `tmp/scratch/scenario-results/`, for checks about intermediate states.
 
    The acting session must not see the scenario file. It gets only the steps, as a real user would type them.
 3. **Judge.** Start a sub-agent (read-only use) with this prompt:

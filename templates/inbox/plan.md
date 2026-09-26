@@ -24,5 +24,8 @@
 ## Ryzyka i decyzje
 - <ryzyko albo decyzja, z odwołaniem do B-xx lub pliku `pytanie`>
 
+## Bramka planu
+<zapis rund bramki: runda, wynik `check_plan.py`, uwagi rubber-duck i co poprawiono; najwyżej 3 rundy>
+
 ## Rozstrzygnięcie
 <puste do czasu obsłużenia: wynik wykonania, data, commit>

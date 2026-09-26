@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""Give the next inbox number, and optionally create the inbox file from its template.
+
+The number is max(NNN in `inbox/` and `inbox/done/`) + 1, zero-padded to three
+digits; an empty inbox gives `001`. Never count files by hand: counting gives
+repeated numbers once files move to `inbox/done/`.
+
+With `--type`, `--slug` and `--title` the file `inbox/NNN-<type>-<slug>.md` is
+created from `templates/inbox/<type>.md`, with the number, title, source and the
+current time filled in. An existing file is never overwritten.
+
+Prints JSON to stdout:
+    {"number": "006", "now": "2026-01-15 14:30"}
+    {"number": "006", "now": ..., "path": "inbox/006-plan-csv-export.md", "created": true}
+"""
+
+import argparse
+import datetime
+import json
+import os
+import re
+import sys
+import unicodedata
+from pathlib import Path
+
+PLUGIN_ROOT = Path(__file__).resolve().parent.parent
+TEMPLATES = PLUGIN_ROOT / "templates" / "inbox"
+TYPES = ["brainstorm", "plan", "pytanie", "odlozone", "przeglad", "utknelo"]
+NUMBER = re.compile(r"^(\d{3,})-")
+
+
+def next_number(project: Path) -> str:
+    numbers = [
+        int(match.group(1))
+        for folder in (project / "inbox", project / "inbox" / "done")
+        if folder.is_dir()
+        for path in folder.iterdir()
+        if (match := NUMBER.match(path.name))
+    ]
+    return f"{max(numbers, default=0) + 1:03d}"
+
+
+def slugify(text: str) -> str:
+    text = text.replace("ł", "l").replace("Ł", "L")
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:50].rstrip("-")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--project",
+        type=Path,
+        default=Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()),
+        help="project root (default: $CLAUDE_PROJECT_DIR, then the current directory)",
+    )
+    parser.add_argument("--type", choices=TYPES, help="create a file of this type")
+    parser.add_argument("--slug", help="short description for the file name")
+    parser.add_argument("--title", help="title for the file header")
+    parser.add_argument("--source", default="rozmowa", help="where it came from (Źródło)")
+    args = parser.parse_args()
+
+    project = args.project.resolve()
+    number = next_number(project)
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    result = {"number": number, "now": now}
+
+    if args.type:
+        if not (args.slug and args.title):
+            parser.error("--type needs --slug and --title")
+        slug = slugify(args.slug)
+        if not slug:
+            parser.error("--slug has no usable characters")
+        rel = f"inbox/{number}-{args.type}-{slug}.md"
+        path = project / rel
+        if path.exists():
+            print(json.dumps({**result, "path": rel, "created": False, "error": "exists"}))
+            return 1
+        text = (TEMPLATES / f"{args.type}.md").read_text(encoding="utf-8")
+        for key, value in (("{NNN}", number), ("{TYTUL}", args.title),
+                           ("{DATA}", now), ("{ZRODLO}", args.source)):
+            text = text.replace(key, value)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(text.encode("utf-8"))
+        result.update(path=rel, created=True)
+
+    print(json.dumps(result))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

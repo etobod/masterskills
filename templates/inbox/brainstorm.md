@@ -15,7 +15,7 @@
 - B-01 — <decyzja i krótko dlaczego>
 
 ## Otwarte
-<co jeszcze nie jest ustalone; pytania do użytkownika idą do osobnych plików `pytanie`>
+<co jeszcze nie jest ustalone; każda pozycja z rekomendacją, jeśli jest>
 
 ## Rozstrzygnięcie
 <puste do czasu obsłużenia: który plan z tego powstał>
