@@ -2,7 +2,7 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
-## Unreleased
+## 1.0.0 — 2026-09-26
 
 - `rules/core.md`: the always-loaded rules (12 points + 7a).
 - `SessionStart` hook (startup, /clear, compaction): injects the rules and the project's open inbox; `scripts/py.sh` finds a working Python 3 on Windows and macOS.
@@ -22,6 +22,12 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - `scripts/memory_index.py`: keeps `docs/MEMORY.md` newest first, regenerates its index, trims to N entries (default 1000); adds an entry stamped with the clock; idempotent.
 - `loc-journal` skill: one short diary entry per piece of work (`Plan`, `Przegląd`, `Poprawka`, `Decyzja`), corrects contradicted `PATTERNS.md` entries; never touches `docs/PRD.md`.
 - `loc-orchestrate` calls `loc-journal` after closing the plan (`phase: journal`).
+- `PreToolUse` hook `write_guard.py`: writes only inside the project, no exceptions; best-effort check of `Bash` and `PowerShell` redirections, `tee` and write cmdlets.
+- `PreToolUse` hook `commit_guard.py`: denies `git commit` with AI attribution markers; ordinary mentions of AI pass.
+- `loc-init` adds `.claude/settings.json` (`autoMemoryEnabled: false`, empty `attribution`), filling in only missing values (nested objects and lists included).
+- `PreToolUse` hook `plugin_commands.py`: allows the skills' own commands (the plugin's scripts, `date +…`, moves from `inbox/` to `inbox/done/`) without a prompt; skills run each command on its own.
+- `scripts/review_diff.py`: `loc-review` writes its diff through a script instead of a shell redirection.
+- Scenario headings in English (`Setup`, `Steps`, `Expected`); results recorded under `## Result`.
 
 ## 0.1.0 — 2026-09-26
 
