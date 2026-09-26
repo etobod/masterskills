@@ -22,6 +22,8 @@ Look for `inbox/*-brainstorm-*.md` (not `inbox/done/`).
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type brainstorm --slug "<topic, few words>" --title "<topic>" --source "rozmowa"
 ```
 
+Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
+
 It prints JSON with `path`; the file already has the header and sections. The content is in Polish, like everything in `inbox/`.
 
 ## 2. Write in the same reply

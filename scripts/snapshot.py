@@ -24,12 +24,12 @@ import tempfile
 from pathlib import Path
 
 
-def git(args: list, cwd: Path, env: dict = None, stdin: str = None) -> str:
+def git(args: list, cwd: Path, env: dict = None, stdin: str = None, strip: bool = True) -> str:
     result = subprocess.run(["git", *args], cwd=cwd, env=env, input=stdin,
                             capture_output=True, text=True, encoding="utf-8")
     if result.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)}: {result.stderr.strip()}")
-    return result.stdout.strip()
+    return result.stdout.strip() if strip else result.stdout
 
 
 def snapshot(project: Path) -> str:

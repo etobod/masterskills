@@ -33,6 +33,8 @@ In Polish: a title of a few words, then **at most 3 sentences**: what was done a
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type <Plan|Przegląd|Poprawka|Decyzja> --title "<title>" --text "<sentences> Szczegóły: <file>"
 ```
 
+Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
+
 The script adds the entry with the current time, sorts newest first, regenerates the index between the markers and trims to the newest 1000 entries. Never write the entry, the time or the index by hand.
 
 ## 3. Tidy `docs/PATTERNS.md`

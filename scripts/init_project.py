@@ -2,15 +2,16 @@
 """Set up the masterskills structure in a project, adding only what is missing.
 
 Creates `inbox/`, `inbox/done/`, `docs/PRD.md`, `docs/PATTERNS.md`,
-`docs/MEMORY.md`, the standard `CLAUDE.md` sections and a `tmp/` entry in
-`.gitignore`. Existing files are never overwritten: a missing `CLAUDE.md`
-section or `.gitignore` entry is appended, everything else is left alone, so
-running it again is safe. A project without git is refused and nothing is
+`docs/MEMORY.md`, the standard `CLAUDE.md` sections, a `tmp/` entry in
+`.gitignore` and `.claude/settings.json` (no auto memory, no AI
+attribution). Existing files are never overwritten: a missing `CLAUDE.md` section,
+`.gitignore` entry or settings value is added, everything else is left alone,
+so running it again is safe. A project without git is refused and nothing is
 created.
 
 Prints JSON to stdout:
     {"ok": true, "project": ..., "created": [...], "updated": [{"path", "added"}],
-     "existing": [...]}
+     "existing": [...], "skipped": [{"path", "reason"}]}
 or, without git (exit code 2):
     {"ok": false, "project": ..., "error": "no-git", "message": ...}
 """
@@ -31,7 +32,7 @@ TMP_ENTRY = re.compile(r"^/?tmp(/(\*\*?)?)?\s*$")
 
 NO_GIT = (
     "This directory is not the root of a git repository. masterskills needs git: plans take a "
-    "snapshot of every milestone with `git stash create`, reviews read the diff "
+    "snapshot of every milestone with git, reviews read the diff "
     "and commits close the work. Run `git init` and then this again. Nothing "
     "was created."
 )
@@ -103,8 +104,56 @@ def ensure_gitignore(project: Path, report: dict) -> None:
     report["updated"].append({"path": ".gitignore", "added": ["tmp/"]})
 
 
+def merge(settings: dict, template: dict, prefix: str = "") -> list:
+    """Add what the template has and settings lack; return the dotted names added.
+
+    Objects are merged key by key and lists gain their missing items; a value
+    the user already set is never changed.
+    """
+    added = []
+    for key, value in template.items():
+        name = prefix + key
+        if key not in settings:
+            settings[key] = value
+            added.append(name)
+        elif isinstance(value, dict) and isinstance(settings[key], dict):
+            added += merge(settings[key], value, name + ".")
+        elif isinstance(value, list) and isinstance(settings[key], list):
+            for item in value:
+                if item not in settings[key]:
+                    settings[key].append(item)
+                    added.append(f"{name}: {item}")
+    return added
+
+
+def ensure_settings(project: Path, report: dict) -> None:
+    path = project / ".claude" / "settings.json"
+    template = json.loads((TEMPLATES / "settings.json").read_text(encoding="utf-8"))
+    if not path.exists():
+        write(path, json.dumps(template, indent=2) + "\n")
+        report["created"].append(".claude/settings.json")
+        return
+    try:
+        text = path.read_bytes().decode("utf-8-sig")
+        settings = json.loads(text)
+    except ValueError as error:  # UnicodeDecodeError is a ValueError too
+        report["skipped"].append({"path": ".claude/settings.json", "reason": f"not valid UTF-8 JSON: {error}"})
+        return
+    if not isinstance(settings, dict):
+        report["skipped"].append({"path": ".claude/settings.json", "reason": "not a JSON object"})
+        return
+    missing = merge(settings, template)
+    if not missing:
+        report["existing"].append(".claude/settings.json")
+        return
+    nl = newline_of(text)
+    write(path, (json.dumps(settings, indent=2, ensure_ascii=False) + "\n").replace("\n", nl))
+    report["updated"].append({"path": ".claude/settings.json", "added": missing})
+
+
 def init(project: Path) -> dict:
-    report = {"ok": True, "project": project.as_posix(), "created": [], "updated": [], "existing": []}
+    report = {"ok": True, "project": project.as_posix(), "created": [], "updated": [], "existing": [],
+              "skipped": []}
 
     for rel in DIRS:
         path = project / rel
@@ -126,6 +175,7 @@ def init(project: Path) -> dict:
 
     ensure_claude_md(project, report)
     ensure_gitignore(project, report)
+    ensure_settings(project, report)
     return report
 
 

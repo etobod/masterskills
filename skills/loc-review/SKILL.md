@@ -13,18 +13,18 @@ An independent look at a finished change: does it do what was asked, and is it c
 Parse `$ARGUMENTS`:
 
 - **Level**: `low`, `medium`, `high` or `max`; default `medium`. **`ultra` is recognised and dropped, never forwarded**: it sends the code to the cloud. Say so in one line and use `medium`.
-- **`plan <NNN>`, called by `loc-orchestrate`** → **orchestrated mode**. Requirements: the plan file. Scope: from `milestones[0].start` in `tmp/state/<NNN>.json` to a fresh snapshot (`snapshot.py` without `--state`). Gate: `final-review` in that state file.
-- **Anything else** → **standalone mode**, report only, no edits. Requirements: what the user named (a plan, an inbox file, their words); if nothing, "the change is correct and consistent with the project's rules". Scope: the git range given (`a..b`), else the named paths against `HEAD`, else everything uncommitted: `HEAD` to a fresh snapshot.
+- **`plan <NNN>`, called by `loc-orchestrate`** → **orchestrated mode**. Requirements: the plan file. Scope: from `milestones[0].start` in `tmp/state/<NNN>.json` to a fresh snapshot. Gate: `final-review` in that state file.
+- **Anything else** → **standalone mode**, report only, no edits. Requirements: what the user named (a plan, an inbox file, their words); if nothing, "the change is correct and consistent with the project's rules". Scope: the git range given (`a..b`), else the named paths from `HEAD` (`--paths`), else everything uncommitted from `HEAD`.
 
-Write the diff to a file and list the changed files:
+Write the diff to a file and list the changed files (`inbox/` is left out; without `--to` the end is a fresh snapshot):
 
 ```sh
-mkdir -p tmp/review
-git diff <from> <to> -- . ':!inbox' > tmp/review/<NNN or date>.diff
-git diff --name-only <from> <to> -- . ':!inbox'
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/review_diff.py --from <from> [--to <to>] --out tmp/review/<NNN or date>.diff [--paths <paths>]
 ```
 
-An empty diff: say there is nothing to review, and stop.
+Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
+
+`empty: true`: say there is nothing to review, and stop.
 
 ## 2. Review, in parallel
 

@@ -36,6 +36,8 @@ Anything the user must decide goes to its own `pytanie` file **before** the plan
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --slug "<topic>" --title "<title>" --source "<input file or PRD heading or rozmowa>"
 ```
 
+Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
+
 The file comes from the template with all sections. Fill them in Polish:
 
 - **Cel**: what works afterwards, in terms the user can check.

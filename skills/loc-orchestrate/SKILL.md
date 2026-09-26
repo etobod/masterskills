@@ -10,6 +10,8 @@ Executes `inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the con
 
 **Do not commit or push. Do not ask "shall I continue?" between milestones.**
 
+Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
+
 ## 1. Start
 
 1. `$ARGUMENTS` is a plan number or file; find it in `inbox/`. No argument: if `tmp/state/` holds a file whose `phase` is not `done`, resume it; otherwise, if `inbox/` has exactly one plan, use it; else ask which.
