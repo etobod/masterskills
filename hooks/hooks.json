@@ -1,0 +1,17 @@
+{
+  "description": "masterskills: core rules and open inbox on session start, /clear and compaction",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" session_start.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
