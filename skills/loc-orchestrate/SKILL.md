@@ -57,6 +57,7 @@ A failed gate ends in `utknelo`, not in a stop.
 
 ## 5. At the end
 
-1. `phase: final-review`. Run `/masterskills:loc-review` in orchestrated mode for this plan (`Skill(skill: "masterskills:loc-review", args: "plan <NNN>")`). It uses the state file's `final-review` gate.
-2. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>`. Move it to `inbox/done/` (`git mv` if tracked, else `mv`). Update `plan` in the state file, set `phase: done`, validate.
-3. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, deviations, new inbox files, final review result. Then a **proposed commit message** (Conventional Commits, English, no mention of AI and no `Co-authored-by`) and the sentence that you commit only when asked.
+1. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode). It uses the state file's `final-review` gate.
+2. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>`. Move it to `inbox/done/` (`git mv` if tracked, else `mv`). Update `plan` in the state file, set `phase: journal`, validate.
+3. **Journal.** `Skill(skill: "masterskills:loc-journal", args: "inbox/done/<plan file>")`, then `phase: done`, validate.
+4. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, deviations, new inbox files, final review result. Then a **proposed commit message** (Conventional Commits, English, no mention of AI and no `Co-authored-by`) and the sentence that you commit only when asked.

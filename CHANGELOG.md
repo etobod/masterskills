@@ -19,6 +19,9 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - `scripts/check_state.py`: validates `tmp/state/<NNN>.json`, including the 3-round limit and its `utknelo` file.
 - `scripts/snapshot.py`: a milestone snapshot as a dangling commit object (new files included), recorded in the state file; history, index and working tree stay untouched.
 - `inbox_summary.py`: finished runs (`phase: done`) are no longer reported as active.
+- `scripts/memory_index.py`: keeps `docs/MEMORY.md` newest first, regenerates its index, trims to N entries (default 1000); adds an entry stamped with the clock; idempotent.
+- `loc-journal` skill: one short diary entry per piece of work (`Plan`, `Przegląd`, `Poprawka`, `Decyzja`), corrects contradicted `PATTERNS.md` entries; never touches `docs/PRD.md`.
+- `loc-orchestrate` calls `loc-journal` after closing the plan (`phase: journal`).
 
 ## 0.1.0 — 2026-09-26
 
