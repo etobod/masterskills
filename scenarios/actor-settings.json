@@ -4,11 +4,11 @@
     "allow": [
       "Read(//c/BC/masterskills/**)",
       "Bash(cd *)",
-      "Bash(sh *)",
       "Bash(python *)",
       "Bash(git *)",
+      "PowerShell(python *)",
+      "PowerShell(git *)",
       "Bash(mv *)",
-      "Bash(date *)",
       "Bash(ls *)",
       "Bash(find *)",
       "Bash(grep *)",
