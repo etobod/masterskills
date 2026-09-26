@@ -1,11 +1,13 @@
 #!/bin/sh
-# Run a Python hook script from this directory with whichever Python 3 works.
-# Usage: sh run-hook.sh <script.py> [args...]
+# Run a Python script of this plugin with whichever Python 3 works.
+# Usage: sh py.sh <script path, relative to the plugin root or absolute> [args...]
 # macOS usually has only `python3`; on Windows `python3` may be the Microsoft
 # Store stub, so each candidate is probed before use.
 
-dir=$(dirname "$0")
-script="$dir/$1"
+case "$1" in
+  /* | [A-Za-z]:*) script=$1 ;;
+  *) script="$(dirname "$0")/../$1" ;;
+esac
 shift
 
 for py in python3 python py; do
