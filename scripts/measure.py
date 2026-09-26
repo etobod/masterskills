@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""Enforce the plugin's word budget (spec section 9).
+
+Counts whitespace-separated words in every always-loaded or on-demand text
+file of the plugin and compares them with their limit:
+
+    rules/*.md                    400 words in total (one always-loaded block)
+    skills/*/SKILL.md             800 words per skill core
+    skills/*/references/*.md      800 words per reference
+    agents/*.md                   500 words per agent definition
+
+Prints a JSON report to stdout. Exit code: 0 all within budget, 1 at least
+one item over budget, 2 bad arguments.
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+LIMITS = {
+    "rule": 400,
+    "skill": 800,
+    "reference": 800,
+    "agent": 500,
+}
+
+PATTERNS = [
+    ("rule", "rules/*.md"),
+    ("skill", "skills/*/SKILL.md"),
+    ("reference", "skills/*/references/*.md"),
+    ("agent", "agents/*.md"),
+]
+
+
+def count_words(path: Path) -> int:
+    return len(path.read_text(encoding="utf-8").split())
+
+
+def measure(root: Path) -> dict:
+    items = []
+    for kind, pattern in PATTERNS:
+        for path in sorted(root.glob(pattern)):
+            words = count_words(path)
+            items.append({
+                "kind": kind,
+                "path": path.relative_to(root).as_posix(),
+                "words": words,
+            })
+
+    for item in items:
+        if item["kind"] != "rule":
+            item["limit"] = LIMITS[item["kind"]]
+            item["ok"] = item["words"] <= item["limit"]
+
+    # Rules are injected together, so the budget applies to their sum.
+    rule_items = [i for i in items if i["kind"] == "rule"]
+    rules_total = sum(i["words"] for i in rule_items)
+    rules = {
+        "files": len(rule_items),
+        "words": rules_total,
+        "limit": LIMITS["rule"],
+        "ok": rules_total <= LIMITS["rule"],
+    }
+
+    over = [i["path"] for i in items if i["kind"] != "rule" and not i["ok"]]
+    if not rules["ok"]:
+        over.append("rules/*.md (total)")
+
+    return {
+        "root": root.as_posix(),
+        "ok": not over,
+        "rules": rules,
+        "items": items,
+        "over": over,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path(__file__).resolve().parent.parent,
+        help="plugin root to measure (default: this repository)",
+    )
+    args = parser.parse_args()
+
+    root = args.root.resolve()
+    if not root.is_dir():
+        print(json.dumps({"error": f"root is not a directory: {root.as_posix()}"}))
+        return 2
+
+    report = measure(root)
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return 0 if report["ok"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
