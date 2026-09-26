@@ -9,6 +9,8 @@ file of the plugin and compares them with their limit:
     skills/*/references/*.md      800 words per reference
     agents/*.md                   500 words per agent definition
 
+Exceptions approved by the user are listed in OVERRIDES.
+
 Prints a JSON report to stdout. Exit code: 0 all within budget, 1 at least
 one item over budget, 2 bad arguments.
 """
@@ -23,6 +25,11 @@ LIMITS = {
     "skill": 800,
     "reference": 800,
     "agent": 500,
+}
+
+# Per-file limits approved by the user; everything else uses LIMITS.
+OVERRIDES = {
+    "skills/loc-orchestrate/SKILL.md": 900,
 }
 
 PATTERNS = [
@@ -50,7 +57,7 @@ def measure(root: Path) -> dict:
 
     for item in items:
         if item["kind"] != "rule":
-            item["limit"] = LIMITS[item["kind"]]
+            item["limit"] = OVERRIDES.get(item["path"], LIMITS[item["kind"]])
             item["ok"] = item["words"] <= item["limit"]
 
     # Rules are injected together, so the budget applies to their sum.
