@@ -1,3 +1,20 @@
 {
-  "claudeMdExcludes": ["**/masterskills/CLAUDE.md"]
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(//c/BC/masterskills/**)",
+      "Bash(cd *)",
+      "Bash(sh *)",
+      "Bash(python *)",
+      "Bash(git *)",
+      "Bash(mv *)",
+      "Bash(date *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(echo *)"
+    ]
+  }
 }

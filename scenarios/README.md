@@ -14,26 +14,26 @@ One scenario per file, `scenarios/NN-short-name.md`, with exactly these level-2 
 
 ## How to run a scenario
 
-Everything happens inside this repository (CLAUDE.md rule 1).
+Test projects live in `C:/BC/tmp/scenarios/<NN>/`, outside this repository: Claude Code treats every file inside a loaded plugin's directory as sensitive, so a test project inside the repository would be read-only (CLAUDE.md rule 1). Results stay in `tmp/scratch/scenario-results/`.
 
-1. **Prepare the test project.** Create `tmp/scratch/scenarios/<NN>/` as described in the Start section. It must be its own git repository (`git init`) unless the scenario says otherwise.
+1. **Prepare the test project.** Create `C:/BC/tmp/scenarios/<NN>/` as described in the Start section. It must be its own git repository (`git init`) unless the scenario says otherwise.
 2. **Act.** Run a fresh Claude Code session in the test project with the plugin loaded from this repository, sending each step from the Kroki section as one turn:
 
    ```
-   cd tmp/scratch/scenarios/<NN>
-   S="--plugin-dir ../../../.. --settings ../../../../scenarios/actor-settings.json"
+   cd C:/BC/tmp/scenarios/<NN>
+   S="--plugin-dir C:/BC/masterskills --settings C:/BC/masterskills/scenarios/actor-settings.json"
    echo "<step 1>" | claude -p $S
    echo "<step 2>" | claude -p --continue $S
    ```
 
-   - The prompt goes through stdin: variadic flags such as `--allowedTools` would swallow a positional prompt.
-   - `actor-settings.json` sets `claudeMdExcludes` for this repository's own `CLAUDE.md`. The test project sits inside this repository, and without it the actor would load this repository's rules as well.
-   - Save the state after each step (inbox file list, `git status`, `git log`, hashes of the files that must not change) and each reply to `tmp/scratch/scenario-results/`, for checks about intermediate states.
-
    The acting session must not see the scenario file. It gets only the steps, as a real user would type them.
+
+   - `actor-settings.json` sets `acceptEdits` and narrow allow rules: `Bash` for what the skills run, and `Read` of the plugin (skills' reference files lie outside the project). A headless session cannot answer permission prompts; add `--output-format json` to see refused calls in `permission_denials`.
+   - The prompt goes through stdin: variadic flags such as `--allowedTools` would swallow a positional prompt.
+   - Save the state after each step (inbox file list, `git status`, `git log`, hashes of the files that must not change) and each reply to `tmp/scratch/scenario-results/`, for checks about intermediate states.
 3. **Judge.** Start a sub-agent (read-only use) with this prompt:
 
-   > Read `scenarios/<NN>-<name>.md` and inspect `tmp/scratch/scenarios/<NN>/` (files, contents, `git status`, `git log`). For every check in the Oczekiwane section decide PASS or FAIL from evidence on disk only. Report in the format from `scenarios/README.md`.
+   > Read `scenarios/<NN>-<name>.md` and inspect `C:/BC/tmp/scenarios/<NN>/` (files, contents, `git status`, `git log`). For every check in the Oczekiwane section decide PASS or FAIL from evidence on disk only. Report in the format from `scenarios/README.md`.
 
 4. **Record.** Save the judge's report to `tmp/scratch/scenario-results/<NN>-<YYYY-MM-DD>.md`.
 
