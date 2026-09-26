@@ -14,6 +14,11 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - `researcher` and `rubber-duck` agents (read-only).
 - `scripts/next_number.py`: next inbox number, and creates an inbox file from its template with the time from the clock.
 - `scripts/check_plan.py`: mechanical plan gate (sections, undecided phrases, placeholders, milestones = proofs).
+- `loc-orchestrate` skill: executes a plan inline or with a sub-agent per milestone; a proof gate and a `code-review` gate per milestone (at most 3 rounds each, then `utknelo`), deviation rules 1–4, a closed list of stops, final `loc-review`, plan to `inbox/done/`, a proposed commit message and no commit.
+- `loc-review` skill: `rubber-duck` and `code-review` in parallel with an explicit level (never `ultra`), project invariants and `❌` patterns; fixes the findings after a plan (at most 3 rounds), or reports to a `przeglad` file when run on its own.
+- `scripts/check_state.py`: validates `tmp/state/<NNN>.json`, including the 3-round limit and its `utknelo` file.
+- `scripts/snapshot.py`: a milestone snapshot as a dangling commit object (new files included), recorded in the state file; history, index and working tree stay untouched.
+- `inbox_summary.py`: finished runs (`phase: done`) are no longer reported as active.
 
 ## 0.1.0 — 2026-09-26
 

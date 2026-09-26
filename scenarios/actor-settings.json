@@ -14,7 +14,8 @@
       "Bash(grep *)",
       "Bash(cat *)",
       "Bash(head *)",
-      "Bash(echo *)"
+      "Bash(echo *)",
+      "Bash(mkdir *)"
     ]
   }
 }

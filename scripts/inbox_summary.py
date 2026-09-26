@@ -2,8 +2,8 @@
 """List what the project has waiting: open inbox files and plan state files.
 
 Open files are `inbox/*.md` (never `inbox/done/`), named `NNN-<type>-<desc>.md`.
-State files are `tmp/state/*.json`, newest first. A project without `inbox/`
-gives an empty list, not an error.
+State files are `tmp/state/*.json` of runs not yet done, newest first. A
+project without `inbox/` gives an empty list, not an error.
 
 Prints JSON to stdout:
     {"project": ..., "has_inbox": bool,
@@ -33,6 +33,14 @@ def read_title(path: Path) -> str:
     return ""
 
 
+def finished(path: Path) -> bool:
+    """A state file whose run ended stays as a record; it is not active."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8-sig")).get("phase") == "done"
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
 def summarize(project: Path) -> dict:
     inbox_dir = project / "inbox"
     inbox = []
@@ -50,7 +58,7 @@ def summarize(project: Path) -> dict:
     state = []
     if state_dir.is_dir():
         files = sorted(state_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
-        state = [p.relative_to(project).as_posix() for p in files]
+        state = [p.relative_to(project).as_posix() for p in files if not finished(p)]
 
     return {
         "project": project.as_posix(),
