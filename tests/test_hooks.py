@@ -1,5 +1,6 @@
 """Tests for the plugin's hooks: each hook runs as Claude Code runs it, JSON on stdin."""
 
+import hashlib
 import json
 import os
 import subprocess
@@ -42,6 +43,9 @@ class PluginCommandsTest(unittest.TestCase):
     def test_allows_the_skills_commands(self):
         for command in (
             f"{PY_SH} scripts/next_number.py --type pytanie --slug \"a b\" --title \"T\" --source \"x\"",
+            f"{PY_SH} scripts/mutate.py backup app.py",
+            f"{PY_SH} scripts/mutate.py restore",
+            f"{PY_SH} scripts/test_baseline.py --plan 007",
             'date "+%Y-%m-%d %H:%M"',
             "mv loc/inbox/001-pytanie-a.md loc/inbox/done/",
             "mv loc/inbox/001-pytanie-a.md loc/inbox/done/001-pytanie-a.md",
@@ -116,6 +120,20 @@ class SessionStartTest(unittest.TestCase):
 
     def test_project_without_loc(self):
         self.assertIn("no `loc/inbox/` yet", self.context(scratch_dir(self)))
+
+    def test_restores_a_file_left_mutated(self):
+        project = scratch_dir(self)
+        app = project / "app.py"
+        app.write_text("good\n", encoding="utf-8")
+        original = hashlib.sha256(app.read_bytes()).hexdigest()
+        subprocess.run([sys.executable, str(ROOT / "scripts" / "mutate.py"), "backup", "app.py"], cwd=project,
+                       capture_output=True, check=True)
+        app.write_text("mutated\n", encoding="utf-8")
+        text = self.context(project)
+        self.assertIn("Restored `app.py`", text)
+        self.assertEqual(hashlib.sha256(app.read_bytes()).hexdigest(), original)
+        self.assertFalse((project / "loc" / "state" / "mutacja.json").exists())
+        self.assertNotIn("Interrupted mutation", self.context(project))
 
 
 if __name__ == "__main__":

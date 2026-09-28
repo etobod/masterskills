@@ -19,13 +19,14 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 3. Read the plan, the project's `CLAUDE.md` (`Commands`, `Invariants`, `Limits`) and `loc/PATTERNS.md`.
 4. Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>`. If it does not exit `0`, or the plan's status says the gate did not pass, **stop**: say why and point to `/masterskills:loc-planning`.
 5. Choose the mode: **inline** for one or two small milestones; **subagent** otherwise. Create the state file (`references/state.md`) and validate it.
+6. Copy the tests: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/test_baseline.py --plan <NNN>`.
 
 ## 2. Each milestone
 
 Update the state file before and after every step.
 
 1. **Snapshot** `--point start`.
-2. **Implement** exactly this milestone, code and its tests together.
+2. **Implement** exactly this milestone, code and its tests together. With `**Kryteria:**`: tests first, red gate `M<n>/red`, then the code (`references/tests.md`).
    - *inline*: do it yourself.
    - *subagent*: a fresh general-purpose sub-agent per milestone with the plan path, the milestone's heading and text, `Kontekst z kodu`, and the rules: only this milestone, no commits, follow the project's `CLAUDE.md`, report the files changed and the proof output. The next steps check its report.
 3. **Proof gate** (`M<n>/proof`). Increase `rounds`, run the `Dowód` command exactly as written, compare with the expected result. Pass → next step. Fail → fix the cause (not the proof) and start the next round. After the third failed round: **stuck** (below).

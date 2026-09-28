@@ -7,6 +7,11 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - Tests in planning: a code milestone lists acceptance criteria (`**Kryteria:**`, ``- K<n>: <what the code must do> → `<test>` ``, `(zachowanie)` for behaviour seen from outside) and a performer (`**Wykonawca:** auto | agent | użytkownik (blokujący|odkładalny)`); `check_plan.py` enforces both. The first plan with code starts with a test-suite milestone. Details in `loc-planning/references/tests.md`.
 - Template `templates/loc/TEST-PLAN.md` (the project's test contract, created by the first plan with code, not by `loc-init`) and a `## Project-specific workflow` section in the `CLAUDE.md` template.
 - Scenario `05-first-plan-with-code`.
+- Tests in plan execution (`loc-orchestrate/references/tests.md`): tests before code with a red gate `M<n>/red` that must fail on an assertion (its output kept in the state file, validated by `check_state.py`); a test written after its code proves itself by one hand-made mutation.
+- `scripts/test_baseline.py`: a copy of the project's tests at the start of a plan (`loc/state/<NNN>/baseline/`), `--compare` lists changed, added and removed tests.
+- `scripts/mutate.py` (`backup` / `restore`); the `SessionStart` hook restores a file left mutated by an interrupted session.
+- Agent `test-author`: writes the tests for behaviour criteria before the code, without reading the implementation.
+- Scenario `06-test-before-code`.
 
 ## 1.1.0 — 2026-09-28
 

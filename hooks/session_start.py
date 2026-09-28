@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """SessionStart hook: inject the core rules and the project's open inbox.
 
+First it puts back a file left mutated by an interrupted session
+(`scripts/mutate.py`), so broken code never survives into the next one.
+
 Runs on startup, /clear and after compaction, so the rules come back into
 context whenever it is rebuilt. Reads the hook input JSON from stdin and
 prints hookSpecificOutput.additionalContext as JSON.
@@ -15,6 +18,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
 from inbox_summary import summarize  # noqa: E402
+from mutate import restore  # noqa: E402
 
 
 def read_input() -> dict:
@@ -56,12 +60,27 @@ def inbox_commands() -> str:
     )
 
 
+def mutation_section(project: Path) -> str:
+    try:
+        code, result = restore(project)
+    except (OSError, ValueError, KeyError) as error:
+        code, result = 2, {"error": str(error)}
+    if code != 0:
+        return f"\n\n## Interrupted mutation\nRestore failed: {result['error']} Fix this before anything else."
+    if result["restored"]:
+        return (f"\n\n## Interrupted mutation\nRestored `{result['restored']}` from its backup "
+                "after an interrupted mutation; its hash matches the original.")
+    return ""
+
+
 def main() -> int:
     hook_input = read_input()
+    project = project_dir(hook_input).resolve()
+    mutation = mutation_section(project)
     rules = (PLUGIN_ROOT / "rules" / "core.md").read_text(encoding="utf-8").strip()
-    summary = summarize(project_dir(hook_input).resolve())
+    summary = summarize(project)
 
-    context = f"{rules}\n\n{inbox_section(summary)}\n"
+    context = f"{rules}\n\n{inbox_section(summary)}{mutation}\n"
     output = {
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",

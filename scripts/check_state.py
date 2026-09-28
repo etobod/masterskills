@@ -14,7 +14,8 @@
         {"id": "M1", "status": "pending" | "in_progress" | "done" | "stuck",
          "start": "<snapshot hash>" | null, "end": "<snapshot hash>" | null}
       ],
-      "gates": {                                 # "M1/proof", "M1/code-review", "final-review"
+      "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "final-review"
+        "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ..."},
         "M1/proof": {"rounds": 3, "passed": false, "stuck": "loc/inbox/004-utknelo-....md"}
       },
       "deviations": [{"milestone": "M1", "rule": 1-4, "note": "...",
@@ -25,6 +26,8 @@
 
 Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
 `utknelo` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
+A passed `M<n>/red` gate (the new tests failed before the code) keeps the
+failing test output in `output`.
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -44,7 +47,7 @@ PHASES = {"start", "implement", "proof", "code-review", "final-review", "journal
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
-GATE = re.compile(r"^(M\d+)/(proof|code-review)$|^final-review$")
+GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^final-review$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
 QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
@@ -87,7 +90,7 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
     for name, gate in gates.items():
         match = GATE.match(name)
         if not match:
-            problems.append(f"gates: unknown gate {name!r} (M<n>/proof, M<n>/code-review, final-review)")
+            problems.append(f"gates: unknown gate {name!r} (M<n>/red, M<n>/proof, M<n>/code-review, final-review)")
             continue
         if match.group(1) and match.group(1) not in ids:
             problems.append(f"gates.{name}: no such milestone")
@@ -109,6 +112,9 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
                 problems.append(f"gates.{name}.stuck: {stuck} does not exist")
         elif stuck is not None:
             problems.append(f"gates.{name}.stuck: only a gate that failed {MAX_ROUNDS} rounds has one")
+        output = gate.get("output")
+        if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
+            problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
 
 
 def check_deviations(data: dict, ids: list, problems: list) -> None:

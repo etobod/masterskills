@@ -60,5 +60,6 @@ RESULT: PASS | FAIL
 | `03-new-project-loc-init.md` | `loc-init` on a new project, idempotent second run |
 | `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `pytanie` → `loc/inbox/done/` + `odlozone` |
 | `05-first-plan-with-code.md` | first plan with code: test-suite milestone, criteria with tests |
+| `06-test-before-code.md` | `loc-orchestrate` with criteria: red gate on an assertion, `test-author`, test copy, no open mutation |
 
 Scenarios cannot run until the skills they exercise exist; each later plan runs the scenarios it enables.

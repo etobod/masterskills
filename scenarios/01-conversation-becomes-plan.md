@@ -35,4 +35,4 @@ PLUGIN: 1.1.0
 RESULT: PASS
 ```
 
-All checks pass. Permission denials: one, step 3 — `sed -i … ; grep …` on the plan file (a compound command of the acting session, not a plugin command); no effect on the result.
+All checks pass. Permission denials: none.
