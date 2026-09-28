@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """List what the project has waiting: open inbox files and plan state files.
 
-Open files are `inbox/*.md` (never `inbox/done/`), named `NNN-<type>-<desc>.md`.
-State files are `tmp/state/*.json` of runs not yet done, newest first. A
-project without `inbox/` gives an empty list, not an error.
+Open files are `loc/inbox/*.md` (never `loc/inbox/done/`), named `NNN-<type>-<desc>.md`.
+State files are `loc/state/*.json` of runs not yet done, newest first. A
+project without `loc/inbox/` gives an empty list, not an error.
 
 Prints JSON to stdout:
     {"project": ..., "has_inbox": bool,
@@ -42,7 +42,7 @@ def finished(path: Path) -> bool:
 
 
 def summarize(project: Path) -> dict:
-    inbox_dir = project / "inbox"
+    inbox_dir = project / "loc" / "inbox"
     inbox = []
     if inbox_dir.is_dir():
         for path in sorted(inbox_dir.glob("*.md")):
@@ -54,7 +54,7 @@ def summarize(project: Path) -> dict:
                 "title": read_title(path),
             })
 
-    state_dir = project / "tmp" / "state"
+    state_dir = project / "loc" / "state"
     state = []
     if state_dir.is_dir():
         files = sorted(state_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)

@@ -1,18 +1,18 @@
 ---
 name: loc-journal
-description: Use after work that changed something, to record it in docs/MEMORY.md — called by loc-orchestrate when a plan ends, and after a review, a fix outside any plan or an important decision (e.g. "loc-journal", "zapisz w dzienniku"). Also tidies contradicting entries in docs/PATTERNS.md.
-argument-hint: "[inbox/done file | what was done]"
+description: Use after work that changed something, to record it in loc/MEMORY.md — called by loc-orchestrate when a plan ends, and after a review, a fix outside any plan or an important decision (e.g. "loc-journal", "zapisz w dzienniku"). Also tidies contradicting entries in loc/PATTERNS.md.
+argument-hint: "[loc/inbox/done file | what was done]"
 ---
 
 # loc-journal
 
-Keeps the project's diary, `docs/MEMORY.md`: what was done, newest first, one short entry per piece of work, so anyone can find it again by topic and date. The diary records history; the code stays the truth about the present.
+Keeps the project's diary, `loc/MEMORY.md`: what was done, newest first, one short entry per piece of work, so anyone can find it again by topic and date. The diary records history; the code stays the truth about the present.
 
-**Do not touch `docs/PRD.md`. Do not commit.**
+**Do not touch `loc/PRD.md`. Do not commit.**
 
 ## 1. What to record
 
-`$ARGUMENTS` is an `inbox/done/` file (a plan, a review, a question) or a description of the work. No argument: take the work just finished in this session. One entry per piece of work, of one type:
+`$ARGUMENTS` is a `loc/inbox/done/` file (a plan, a review, a question) or a description of the work. No argument: take the work just finished in this session. One entry per piece of work, of one type:
 
 | Type | When |
 |---|---|
@@ -23,11 +23,11 @@ Keeps the project's diary, `docs/MEMORY.md`: what was done, newest first, one sh
 
 Nothing changed (a conversation, a question, a failed attempt that was undone): no entry; say so in one line.
 
-If the project has no `docs/MEMORY.md`, say that `/masterskills:loc-init` creates it, and stop.
+If the project has no `loc/MEMORY.md`, say that `/masterskills:loc-init` creates it, and stop.
 
 ## 2. Write the entry
 
-In Polish: a title of a few words, then **at most 3 sentences**: what was done and why, and what did not work out (a gate that ended in `utknelo`, an open `pytanie`). End with the source file: `Szczegóły: inbox/done/NNN-<type>-<topic>.md`. Facts only: no praise, no plans for later.
+In Polish: a title of a few words, then **at most 3 sentences**: what was done and why, and what did not work out (a gate that ended in `utknelo`, an open `pytanie`). End with the source file: `Szczegóły: loc/inbox/done/NNN-<type>-<topic>.md`. Facts only: no praise, no plans for later.
 
 ```sh
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type <Plan|Przegląd|Poprawka|Decyzja> --title "<title>" --text "<sentences> Szczegóły: <file>"
@@ -37,7 +37,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 The script adds the entry with the current time, sorts newest first, regenerates the index between the markers and trims to the newest 1000 entries. Never write the entry, the time or the index by hand.
 
-## 3. Tidy `docs/PATTERNS.md`
+## 3. Tidy `loc/PATTERNS.md`
 
 New lessons go into `PATTERNS.md` at the moment they are learned (rule 10), not here. Here only check what this work touched:
 

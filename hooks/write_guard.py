@@ -2,8 +2,8 @@
 """PreToolUse hook: files are written only inside the project.
 
 `Write`, `Edit` and `NotebookEdit` with a path outside `$CLAUDE_PROJECT_DIR`
-are denied, with no exceptions: knowledge belongs in `docs/PATTERNS.md`, plans
-go through `loc-planning`, scratch files go to the project's `tmp/`.
+are denied, with no exceptions: knowledge belongs in `loc/PATTERNS.md`, plans
+go through `loc-planning`, scratch files go to the project's `loc/tmp/`.
 
 For `Bash` and `PowerShell` it is best effort: output redirections (`>`, `>>`,
 `&>`, `>&file`), `tee` targets and the path of `Out-File`, `Set-Content`,
@@ -23,8 +23,8 @@ from pathlib import Path
 
 REASON = (
     "masterskills: files are written only inside the project ({project}); "
-    "refused: {path}. Put lessons in docs/PATTERNS.md, plans through loc-planning "
-    "(inbox/), and scratch files in the project's tmp/."
+    "refused: {path}. Put lessons in loc/PATTERNS.md, plans through loc-planning "
+    "(loc/inbox/), and scratch files in the project's loc/tmp/."
 )
 DEVICES = {"/dev/null", "/dev/stdout", "/dev/stderr", "/dev/tty", "nul", "con", "$null"}
 OPERATORS = ";|&()\n"

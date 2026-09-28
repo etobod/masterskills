@@ -1,6 +1,6 @@
 ---
 name: loc-review
-description: Use when the user asks for a review of changes ("loc-review", "review what changed", "review plan 018"), and when loc-orchestrate finishes a plan. Runs the rubber-duck critic and code-review in parallel, checks the project's invariants. After a plan it fixes the findings; on its own it only reports, to inbox/.
+description: Use when the user asks for a review of changes ("loc-review", "review what changed", "review plan 018"), and when loc-orchestrate finishes a plan. Runs the rubber-duck critic and code-review in parallel, checks the project's invariants. After a plan it fixes the findings; on its own it only reports, to loc/inbox/.
 argument-hint: "[plan <NNN> | <git range> | <paths>] [low|medium|high|max]"
 ---
 
@@ -13,13 +13,13 @@ An independent look at a finished change: does it do what was asked, and is it c
 Parse `$ARGUMENTS`:
 
 - **Level**: `low`, `medium`, `high` or `max`; default `medium`. **`ultra` is recognised and dropped, never forwarded**: it sends the code to the cloud. Say so in one line and use `medium`.
-- **`plan <NNN>`, called by `loc-orchestrate`** → **orchestrated mode**. Requirements: the plan file. Scope: from `milestones[0].start` in `tmp/state/<NNN>.json` to a fresh snapshot. Gate: `final-review` in that state file.
+- **`plan <NNN>`, called by `loc-orchestrate`** → **orchestrated mode**. Requirements: the plan file. Scope: from `milestones[0].start` in `loc/state/<NNN>.json` to a fresh snapshot. Gate: `final-review` in that state file.
 - **Anything else** → **standalone mode**, report only, no edits. Requirements: what the user named (a plan, an inbox file, their words); if nothing, "the change is correct and consistent with the project's rules". Scope: the git range given (`a..b`), else the named paths from `HEAD` (`--paths`), else everything uncommitted from `HEAD`.
 
-Write the diff to a file and list the changed files (`inbox/` is left out; without `--to` the end is a fresh snapshot):
+Write the diff to a file and list the changed files (`loc/inbox/` is left out; without `--to` the end is a fresh snapshot):
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/review_diff.py --from <from> [--to <to>] --out tmp/review/<NNN or date>.diff [--paths <paths>]
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/review_diff.py --from <from> [--to <to>] --out loc/review/<NNN or date>.diff [--paths <paths>]
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
@@ -30,10 +30,10 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 Start both in the same step:
 
-- **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `docs/PATTERNS.md`."
+- **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `loc/PATTERNS.md`."
 - **`Skill(skill: "code-review", args: "<changed files> <level>")`**: always the explicit files and level, because `code-review` otherwise reuses the level typed last.
 
-Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` that the changed files touch, and every `❌` entry of `docs/PATTERNS.md` whose **Kiedy stosować** matches them.
+Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` that the changed files touch, and every `❌` entry of `loc/PATTERNS.md` whose **Kiedy stosować** matches them.
 
 ## 3. Merge
 

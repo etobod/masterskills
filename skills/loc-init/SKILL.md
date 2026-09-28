@@ -1,6 +1,6 @@
 ---
 name: loc-init
-description: Use when the user wants to set up masterskills in a project, or to bring an existing project up to date with the current plugin version (missing inbox/, docs/, CLAUDE.md sections, the tmp/ ignore entry or .claude/settings.json keys). Safe to run again.
+description: Use when the user wants to set up masterskills in a project, or to bring an existing project up to date with the current plugin version (missing loc/ files, CLAUDE.md sections, the loc/ ignore entry or .claude/settings.json keys). Safe to run again.
 argument-hint: "[project directory]"
 ---
 
@@ -27,9 +27,9 @@ The script prints JSON.
   - what was **added** to existing files (`updated`: file and the sections or entries added);
   - that everything else **already existed**;
   - each `skipped` file with its reason: the user fixes it by hand.
-  `.claude/settings.json` turns off Claude's auto memory (lessons go to `docs/PATTERNS.md`) and AI attribution in commits and pull requests. If both `created` and `updated` are empty, say the project is already complete and nothing changed. Then point out the next step:
+  `.claude/settings.json` turns off Claude's auto memory (lessons go to `loc/PATTERNS.md`) and AI attribution in commits and pull requests. If both `created` and `updated` are empty, say the project is already complete and nothing changed. Then point out the next step:
   - fill the empty `CLAUDE.md` sections (`Commands` first: skills run those commands and never guess them);
-  - write the project's direction in `docs/PRD.md`.
+  - write the project's direction in `loc/PRD.md`.
 - **`ok: false`.** Show `message` as it is, in the user's language, and stop. With `no-git` the directory is not the root of a git repository: plans snapshot milestones with git, reviews read the diff and work ends in a commit, so none of that works without it. Nothing was created. Do not run `git init` unless the user asks.
 
 Do not commit the result; the user decides when.

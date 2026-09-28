@@ -45,8 +45,8 @@ DATE: 2026-09-26
 PLUGIN: 1.0.0
 RESULT: PASS | FAIL
 
-- E1 PASS — inbox/004-utknelo-m1-proof.md exists
-- E2 FAIL — tmp/state/003.json: gate "m1-proof" rounds = 5, expected 3
+- E1 PASS — loc/inbox/004-utknelo-m1-proof.md exists
+- E2 FAIL — loc/state/003.json: gate "m1-proof" rounds = 5, expected 3
 ```
 
 `RESULT` is `PASS` only when every check passes. Each line names its evidence: a path, a line, a command and its output.
@@ -58,6 +58,6 @@ RESULT: PASS | FAIL
 | `01-conversation-becomes-plan.md` | conversation → `brainstorm` → `loc-planning` → `plan` |
 | `02-gate-fails-three-times.md` | 3-round gate limit, `utknelo` file, work continues |
 | `03-new-project-loc-init.md` | `loc-init` on a new project, idempotent second run |
-| `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `pytanie` → `inbox/done/` + `odlozone` |
+| `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `pytanie` → `loc/inbox/done/` + `odlozone` |
 
 Scenarios cannot run until the skills they exercise exist; each later plan runs the scenarios it enables.

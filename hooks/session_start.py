@@ -30,7 +30,7 @@ def project_dir(hook_input: dict) -> Path:
 
 def inbox_section(summary: dict) -> str:
     if not summary["has_inbox"]:
-        return "## Inbox\nThis project has no `inbox/` yet (`loc-init` sets it up)."
+        return "## Inbox\nThis project has no `loc/inbox/` yet (`loc-init` sets it up)."
 
     lines = [f"## Inbox — {len(summary['inbox'])} open"]
     for item in summary["inbox"]:
@@ -52,7 +52,7 @@ def inbox_commands() -> str:
         "(no `cd`, `&&` or PowerShell), so they need no approval.\n"
         f'- New file from its template, time from the clock: `sh "{root}/scripts/py.sh" scripts/next_number.py '
         '--type <pytanie|odlozone|...> --slug "<few words>" --title "<title>" --source "<where it came from>"`\n'
-        "- Close a file: `mv inbox/<file> inbox/done/`"
+        "- Close a file: `mv loc/inbox/<file> loc/inbox/done/`"
     )
 
 

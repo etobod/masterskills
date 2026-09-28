@@ -6,7 +6,7 @@ Allows exactly these `Bash` commands, each run on its own:
 - `sh "<plugin root>/scripts/py.sh" scripts/<name>.py ...`, where
   `scripts/<name>.py` is one of the plugin's scripts;
 - `date +<format>`;
-- `mv` or `git mv` of one file from `inbox/` to `inbox/done/`.
+- `mv` or `git mv` of one file from `loc/inbox/` to `loc/inbox/done/`.
 
 Anything with a shell operator, substitution or redirection outside quotes
 (`;`, `&`, `|`, `<`, `>`, `$`, backtick, parentheses, newline, glob), or with `$` or
@@ -30,8 +30,8 @@ PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 # from the resolved path (a symlink, another spelling of the drive).
 ROOTS = [PLUGIN_ROOT] + ([Path(os.environ["CLAUDE_PLUGIN_ROOT"])] if os.environ.get("CLAUDE_PLUGIN_ROOT") else [])
 OPERATORS = set(";&|<>()$`\n\r*?[{")  # outside quotes; the last four expand to file names
-INBOX_FILE = re.compile(r"inbox/[^/\\]+")
-DONE_FILE = re.compile(r"inbox/done/[^/\\]*")
+INBOX_FILE = re.compile(r"loc/inbox/[^/\\]+")
+DONE_FILE = re.compile(r"loc/inbox/done/[^/\\]*")
 REASON = "masterskills: the plugin's own command"
 
 

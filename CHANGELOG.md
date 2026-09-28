@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.1.0 — 2026-09-28
+
+- All workflow files of a project live in `loc/`, ignored by git with one `.gitignore` line: `loc/inbox/`, `loc/PRD.md`, `loc/PATTERNS.md`, `loc/MEMORY.md`, plan state in `loc/state/`, review diffs in `loc/review/`, scratch files in `loc/tmp/`. `loc-init` no longer adds `tmp/` to `.gitignore` or `.gitkeep` files.
+- Plans are closed with `mv` only: nothing in `loc/` is tracked.
+- Templates moved to `templates/loc/`.
+- Repeatable tests for the hooks and the `loc-init`/inbox scripts in `tests/` (`python -m unittest discover -s tests`).
+
 ## 1.0.1 — 2026-09-28
 
 - `rules/core.md` rule 3: every inbox file is created with `next_number.py`, never by hand; rule 11 shortened to stay within the word budget.

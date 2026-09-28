@@ -1,12 +1,12 @@
 ---
 name: loc-orchestrate
-description: Use when the user asks to execute a plan from inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in tmp/state/. Builds it milestone by milestone with a proof and a code-review per milestone, then a final review. Never commits.
+description: Use when the user asks to execute a plan from loc/inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in loc/state/. Builds it milestone by milestone with a proof and a code-review per milestone, then a final review. Never commits.
 argument-hint: "<plan number or file>"
 ---
 
 # loc-orchestrate
 
-Executes `inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the contract: build what it says, prove it with its `Dowód` lines, review each milestone's diff, then the whole. Do not redesign it.
+Executes `loc/inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the contract: build what it says, prove it with its `Dowód` lines, review each milestone's diff, then the whole. Do not redesign it.
 
 **Do not commit or push. Do not ask "shall I continue?" between milestones.**
 
@@ -14,9 +14,9 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 ## 1. Start
 
-1. `$ARGUMENTS` is a plan number or file; find it in `inbox/`. No argument: if `tmp/state/` holds a file whose `phase` is not `done`, resume it; otherwise, if `inbox/` has exactly one plan, use it; else ask which.
-2. If `tmp/state/<NNN>.json` exists, **resume** from its `next_action` (`references/state.md`).
-3. Read the plan, the project's `CLAUDE.md` (`Commands`, `Invariants`, `Limits`) and `docs/PATTERNS.md`.
+1. `$ARGUMENTS` is a plan number or file; find it in `loc/inbox/`. No argument: if `loc/state/` holds a file whose `phase` is not `done`, resume it; otherwise, if `loc/inbox/` has exactly one plan, use it; else ask which.
+2. If `loc/state/<NNN>.json` exists, **resume** from its `next_action` (`references/state.md`).
+3. Read the plan, the project's `CLAUDE.md` (`Commands`, `Invariants`, `Limits`) and `loc/PATTERNS.md`.
 4. Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>`. If it does not exit `0`, or the plan's status says the gate did not pass, **stop**: say why and point to `/masterskills:loc-planning`.
 5. Choose the mode: **inline** for one or two small milestones; **subagent** otherwise. Create the state file (`references/state.md`) and validate it.
 
@@ -60,6 +60,6 @@ A failed gate ends in `utknelo`, not in a stop.
 ## 5. At the end
 
 1. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode). It uses the state file's `final-review` gate.
-2. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>`. Move it to `inbox/done/` (`git mv` if tracked, else `mv`). Update `plan` in the state file, set `phase: journal`, validate.
-3. **Journal.** `Skill(skill: "masterskills:loc-journal", args: "inbox/done/<plan file>")`, then `phase: done`, validate.
+2. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>`. Move it to `loc/inbox/done/` with `mv`. Update `plan` in the state file, set `phase: journal`, validate.
+3. **Journal.** `Skill(skill: "masterskills:loc-journal", args: "loc/inbox/done/<plan file>")`, then `phase: done`, validate.
 4. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, deviations, new inbox files, final review result. Then a **proposed commit message** (Conventional Commits, English, no mention of AI and no `Co-authored-by`) and the sentence that you commit only when asked.

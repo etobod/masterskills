@@ -15,11 +15,11 @@
 
 ## Expected
 
-- E1. After step 1 these exist: `inbox/`, `inbox/done/`, `docs/PRD.md`, `docs/PATTERNS.md`, `docs/MEMORY.md`.
+- E1. After step 1 these exist: `loc/inbox/`, `loc/inbox/done/`, `loc/PRD.md`, `loc/PATTERNS.md`, `loc/MEMORY.md`.
 - E2. `CLAUDE.md` still contains `Always answer in short sentences.` unchanged, and now also has the headings `Commands`, `Invariants`, `Manual verification / UAT`, `Developer notes`, `Limits`.
-- E3. `CLAUDE.md` has no project-goal section (the goal belongs in `docs/PRD.md`).
-- E4. `.gitignore` still contains `*.log` and now also ignores `tmp/`.
-- E5. `docs/PRD.md`, `docs/PATTERNS.md` and `docs/MEMORY.md` are templates in Polish; `PATTERNS.md` has the three sections: works, does not work, pitfalls.
+- E3. `CLAUDE.md` has no project-goal section (the goal belongs in `loc/PRD.md`).
+- E4. `.gitignore` still contains `*.log` and now also ignores `loc/`, in one line.
+- E5. `loc/PRD.md`, `loc/PATTERNS.md` and `loc/MEMORY.md` are templates in Polish; `PATTERNS.md` has the three sections: works, does not work, pitfalls.
 - E6. No file outside the test project was created or changed.
 - E7. After step 2 every file hash matches the snapshot: the second run added nothing and overwrote nothing, and its reply says the project is already complete.
 - E8. `.claude/settings.json` exists with `"autoMemoryEnabled": false` and an `attribution` object whose `commit` and `pr` are empty strings.
@@ -29,9 +29,9 @@
 
 ```
 SCENARIO: 03-new-project-loc-init
-DATE: 2026-09-26
-PLUGIN: 1.0.0
+DATE: 2026-09-28
+PLUGIN: 1.1.0
 RESULT: PASS
 ```
 
-All checks E1–E9 pass. Permission denials: none.
+All checks pass. Permission denials: none.

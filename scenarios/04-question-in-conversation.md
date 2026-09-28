@@ -6,8 +6,8 @@ A question in plain conversation must not create an inbox file, and a chat answe
 
 - Test project initialised by `loc-init`, project `CLAUDE.md` with a `Commands` section containing `test: python -m unittest`.
 - `app.py` with a function `greet(name)` returning `"Hello, " + name + "."`, and `test_app.py` with one passing test for `greet("Ann") == "Hello, Ann."`.
-- `inbox/001-pytanie-greeting-punctuation.md` from the `pytanie` template: the question is whether the greeting ends with a period or an exclamation mark; variant A (recommended) is a period, variant B an exclamation mark; `## Tymczasowo` says work continues on A and `app.py:2` already uses the period; `## Rozstrzygnięcie` is empty.
-- `inbox/done/` contains no files. One initial commit, clean tree.
+- `loc/inbox/001-pytanie-greeting-punctuation.md` from the `pytanie` template: the question is whether the greeting ends with a period or an exclamation mark; variant A (recommended) is a period, variant B an exclamation mark; `## Tymczasowo` says work continues on A and `app.py:2` already uses the period; `## Rozstrzygnięcie` is empty.
+- `loc/inbox/done/` contains no files. One initial commit, clean tree.
 
 ## Steps
 
@@ -16,12 +16,12 @@ A question in plain conversation must not create an inbox file, and a chat answe
 
 ## Expected
 
-- E1. After step 1 the file list of `inbox/` and `inbox/done/` equals the setup, and the hash of `inbox/001-pytanie-greeting-punctuation.md` is unchanged: the question in conversation created no file.
+- E1. After step 1 the file list of `loc/inbox/` and `loc/inbox/done/` equals the setup, and the hash of `loc/inbox/001-pytanie-greeting-punctuation.md` is unchanged: the question in conversation created no file.
 - E2. After step 1 the hashes of `app.py` and `test_app.py` and the output of `git log` are unchanged.
-- E3. After step 2 `inbox/done/001-pytanie-greeting-punctuation.md` exists and `inbox/001-pytanie-greeting-punctuation.md` does not.
+- E3. After step 2 `loc/inbox/done/001-pytanie-greeting-punctuation.md` exists and `loc/inbox/001-pytanie-greeting-punctuation.md` does not.
 - E4. In the moved file the `## Rozstrzygnięcie` section is not empty and records the answer: an exclamation mark.
-- E5. After step 2 exactly one new file matches `inbox/*-odlozone-*.md`, numbered higher than `001`, with `**Typ:** odlozone`, and it names `app.py` and the change to an exclamation mark.
-- E6. After step 2 `inbox/` holds no other new files (no `pytanie`, `brainstorm` or `plan`).
+- E5. After step 2 exactly one new file matches `loc/inbox/*-odlozone-*.md`, numbered higher than `001`, with `**Typ:** odlozone`, and it names `app.py` and the change to an exclamation mark.
+- E6. After step 2 `loc/inbox/` holds no other new files (no `pytanie`, `brainstorm` or `plan`).
 - E7. `git log` is unchanged after both steps: no commit.
 - E8. No file outside the test project was created or changed.
 
@@ -30,8 +30,8 @@ A question in plain conversation must not create an inbox file, and a chat answe
 ```
 SCENARIO: 04-question-in-conversation
 DATE: 2026-09-28
-PLUGIN: 1.0.1
+PLUGIN: 1.1.0
 RESULT: PASS
 ```
 
-All checks E1–E8 pass. Permission denials: none.
+All checks pass. Permission denials: none.

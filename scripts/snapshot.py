@@ -8,7 +8,7 @@ minus .gitignore) is added to a temporary index and stored with
 `git commit-tree`: a dangling commit object, no ref, no branch, no stash entry.
 
     snapshot.py                                   -> {"hash": ...}
-    snapshot.py --state tmp/state/018.json --milestone 2 --point start
+    snapshot.py --state loc/state/018.json --milestone 2 --point start
         also writes the hash to milestones[1].start in the state file;
         with --point end the output adds the milestone's diff command and files.
 

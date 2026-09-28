@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Write the diff under review to a file and list the changed files.
 
-`inbox/` is left out: plans, reviews and questions are not the code under
+`loc/` is left out: plans, reviews and questions are not the code under
 review. Without `--to` the end point is a fresh snapshot of the working tree
 (new files included, see snapshot.py), so uncommitted work is reviewed too.
 
-    review_diff.py --from <rev> [--to <rev>] --out tmp/review/018.diff [--paths a.py b/]
+    review_diff.py --from <rev> [--to <rev>] --out loc/review/018.diff [--paths a.py b/]
 
 Prints JSON {"from", "to", "out", "files", "empty"}. Exit 0, or 2 when git fails.
 """
@@ -35,7 +35,7 @@ def main() -> int:
     out = args.out if args.out.is_absolute() else project / args.out
     try:
         end = args.end or snapshot(project)
-        scope = ["--", *(args.paths or ["."]), ":!inbox"]
+        scope = ["--", *(args.paths or ["."]), ":!loc"]
         diff = git(["diff", args.start, end, *scope], project, strip=False)
         files = git(["diff", "--name-only", args.start, end, *scope], project).splitlines()
         out.parent.mkdir(parents=True, exist_ok=True)

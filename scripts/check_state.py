@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validate a plan execution state file, `tmp/state/<NNN>.json`.
+"""Validate a plan execution state file, `loc/state/<NNN>.json`.
 
 `loc-orchestrate` writes the file after every step, so a new session (after
 /clear or compaction) resumes from it without asking. Schema, all keys required:
 
     {
-      "plan": "inbox/018-plan-csv-export.md",   # or inbox/done/..., NNN = file name
+      "plan": "loc/inbox/018-plan-csv-export.md",   # or loc/inbox/done/..., NNN = file name
       "mode": "inline" | "subagent",
       "milestone": 1,                            # current one, 1-based
       "phase": "start" | "implement" | "proof" | "code-review"
@@ -15,16 +15,16 @@
          "start": "<snapshot hash>" | null, "end": "<snapshot hash>" | null}
       ],
       "gates": {                                 # "M1/proof", "M1/code-review", "final-review"
-        "M1/proof": {"rounds": 3, "passed": false, "stuck": "inbox/004-utknelo-....md"}
+        "M1/proof": {"rounds": 3, "passed": false, "stuck": "loc/inbox/004-utknelo-....md"}
       },
       "deviations": [{"milestone": "M1", "rule": 1-4, "note": "...",
-                      "question": "inbox/NNN-pytanie-....md"}],   # question: rule 4 only
+                      "question": "loc/inbox/NNN-pytanie-....md"}],   # question: rule 4 only
       "next_action": "exactly what to do next",
       "updated": "YYYY-MM-DD HH:MM"
     }
 
 Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
-`utknelo` file, and that file must exist in `inbox/` or `inbox/done/`.
+`utknelo` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -43,10 +43,10 @@ MODES = {"inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
-PLAN = re.compile(r"^inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
+PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(proof|code-review)$|^final-review$")
-STUCK = re.compile(r"^inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
-QUESTION = re.compile(r"^inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
+STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
+QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
 
 
@@ -105,7 +105,7 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
         if rounds == MAX_ROUNDS and passed is False:
             if not (isinstance(stuck, str) and STUCK.match(stuck)):
                 problems.append(f"gates.{name}: {MAX_ROUNDS} failed rounds without a utknelo file")
-            elif not any((project / p).is_file() for p in (stuck, stuck.replace("inbox/", "inbox/done/", 1))):
+            elif not any((project / p).is_file() for p in (stuck, stuck.replace("loc/inbox/", "loc/inbox/done/", 1))):
                 problems.append(f"gates.{name}.stuck: {stuck} does not exist")
         elif stuck is not None:
             problems.append(f"gates.{name}.stuck: only a gate that failed {MAX_ROUNDS} rounds has one")
@@ -144,7 +144,7 @@ def check(path: Path, data) -> list:
 
     match = PLAN.match(str(data.get("plan")))
     if not match:
-        problems.append("plan: expected inbox/NNN-plan-<topic>.md or inbox/done/...")
+        problems.append("plan: expected loc/inbox/NNN-plan-<topic>.md or loc/inbox/done/...")
     elif match.group(2) != path.stem:
         problems.append(f"plan: number {match.group(2)} does not match the file name {path.name}")
     if data.get("mode") not in MODES:
@@ -162,7 +162,7 @@ def check(path: Path, data) -> list:
         if open_:
             problems.append(f"phase done but milestones still open: {open_}")
 
-    # tmp/state/NNN.json -> the project root is two levels up.
+    # loc/state/NNN.json -> the project root is two levels up.
     check_gates(data, ids, path.resolve().parent.parent.parent, problems)
     check_deviations(data, ids, problems)
 
@@ -177,7 +177,7 @@ def check(path: Path, data) -> list:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("state", type=Path, help="state file, e.g. tmp/state/018.json")
+    parser.add_argument("state", type=Path, help="state file, e.g. loc/state/018.json")
     args = parser.parse_args()
     try:
         # utf-8-sig: some editors on Windows add a BOM to a perfectly valid file.

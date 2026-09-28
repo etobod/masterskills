@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """Give the next inbox number, and optionally create the inbox file from its template.
 
-The number is max(NNN in `inbox/` and `inbox/done/`) + 1, zero-padded to three
+The number is max(NNN in `loc/inbox/` and `loc/inbox/done/`) + 1, zero-padded to three
 digits; an empty inbox gives `001`. Never count files by hand: counting gives
-repeated numbers once files move to `inbox/done/`.
+repeated numbers once files move to `loc/inbox/done/`.
 
-With `--type`, `--slug` and `--title` the file `inbox/NNN-<type>-<slug>.md` is
-created from `templates/inbox/<type>.md`, with the number, title, source and the
+With `--type`, `--slug` and `--title` the file `loc/inbox/NNN-<type>-<slug>.md` is
+created from `templates/loc/inbox/<type>.md`, with the number, title, source and the
 current time filled in. An existing file is never overwritten.
 
 Prints JSON to stdout:
     {"number": "006", "now": "2026-01-15 14:30"}
-    {"number": "006", "now": ..., "path": "inbox/006-plan-csv-export.md", "created": true}
+    {"number": "006", "now": ..., "path": "loc/inbox/006-plan-csv-export.md", "created": true}
 """
 
 import argparse
@@ -24,7 +24,7 @@ import unicodedata
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
-TEMPLATES = PLUGIN_ROOT / "templates" / "inbox"
+TEMPLATES = PLUGIN_ROOT / "templates" / "loc" / "inbox"
 TYPES = ["brainstorm", "plan", "pytanie", "odlozone", "przeglad", "utknelo"]
 NUMBER = re.compile(r"^(\d{3,})-")
 
@@ -32,7 +32,7 @@ NUMBER = re.compile(r"^(\d{3,})-")
 def next_number(project: Path) -> str:
     numbers = [
         int(match.group(1))
-        for folder in (project / "inbox", project / "inbox" / "done")
+        for folder in (project / "loc" / "inbox", project / "loc" / "inbox" / "done")
         if folder.is_dir()
         for path in folder.iterdir()
         if (match := NUMBER.match(path.name))
@@ -71,7 +71,7 @@ def main() -> int:
         slug = slugify(args.slug)
         if not slug:
             parser.error("--slug has no usable characters")
-        rel = f"inbox/{number}-{args.type}-{slug}.md"
+        rel = f"loc/inbox/{number}-{args.type}-{slug}.md"
         path = project / rel
         if path.exists():
             print(json.dumps({**result, "path": rel, "created": False, "error": "exists"}))

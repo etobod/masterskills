@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Set up the masterskills structure in a project, adding only what is missing.
 
-Creates `inbox/`, `inbox/done/`, `docs/PRD.md`, `docs/PATTERNS.md`,
-`docs/MEMORY.md`, the standard `CLAUDE.md` sections, a `tmp/` entry in
+Creates `loc/inbox/`, `loc/inbox/done/`, `loc/PRD.md`, `loc/PATTERNS.md`,
+`loc/MEMORY.md`, the standard `CLAUDE.md` sections, a `loc/` entry in
 `.gitignore` and `.claude/settings.json` (no auto memory, no AI
 attribution). Existing files are never overwritten: a missing `CLAUDE.md` section,
 `.gitignore` entry or settings value is added, everything else is left alone,
@@ -26,9 +26,9 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates"
 
-DIRS = ["inbox", "inbox/done"]
-DOCS = ["docs/PRD.md", "docs/PATTERNS.md", "docs/MEMORY.md"]
-TMP_ENTRY = re.compile(r"^/?tmp(/(\*\*?)?)?\s*$")
+DIRS = ["loc/inbox", "loc/inbox/done"]
+DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"]
+LOC_ENTRY = re.compile(r"^/?loc(/(\*\*?)?)?\s*$")
 
 NO_GIT = (
     "This directory is not the root of a git repository. masterskills needs git: plans take a "
@@ -93,15 +93,15 @@ def ensure_claude_md(project: Path, report: dict) -> None:
 def ensure_gitignore(project: Path, report: dict) -> None:
     path = project / ".gitignore"
     if not path.exists():
-        write(path, "tmp/\n")
+        write(path, "loc/\n")
         report["created"].append(".gitignore")
         return
     text = path.read_bytes().decode("utf-8")
-    if any(TMP_ENTRY.match(line.strip()) for line in text.splitlines()):
+    if any(LOC_ENTRY.match(line.strip()) for line in text.splitlines()):
         report["existing"].append(".gitignore")
         return
-    append(path, text, "# masterskills: scratch and plan state\ntmp/\n")
-    report["updated"].append({"path": ".gitignore", "added": ["tmp/"]})
+    append(path, text, "# masterskills: workflow files, never in git\nloc/\n")
+    report["updated"].append({"path": ".gitignore", "added": ["loc/"]})
 
 
 def merge(settings: dict, template: dict, prefix: str = "") -> list:
@@ -161,7 +161,6 @@ def init(project: Path) -> dict:
             report["existing"].append(rel + "/")
         else:
             path.mkdir(parents=True)
-            (path / ".gitkeep").touch()  # keeps the empty directory in git
             report["created"].append(rel + "/")
 
     for rel in DOCS:
@@ -169,7 +168,7 @@ def init(project: Path) -> dict:
         if path.exists():
             report["existing"].append(rel)
         else:
-            text = (TEMPLATES / "docs" / path.name).read_text(encoding="utf-8")
+            text = (TEMPLATES / "loc" / path.name).read_text(encoding="utf-8")
             write(path, text.replace("{PROJEKT}", project.name))
             report["created"].append(rel)
 

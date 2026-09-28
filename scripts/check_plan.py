@@ -84,7 +84,7 @@ def check(text: str) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("plan", type=Path, help="plan file, e.g. inbox/007-plan-csv-export.md")
+    parser.add_argument("plan", type=Path, help="plan file, e.g. loc/inbox/007-plan-csv-export.md")
     args = parser.parse_args()
     try:
         text = args.plan.read_text(encoding="utf-8")

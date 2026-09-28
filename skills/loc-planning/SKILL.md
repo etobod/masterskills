@@ -1,12 +1,12 @@
 ---
 name: loc-planning
-description: Use when the user asks for a plan, or to turn a brainstorm, review, deferred item, stuck gate, answered question or PRD fragment into one (e.g. "loc-planning 004", "make a plan from the brainstorm"). Writes a plan with milestones and automatic proofs to inbox/ and gates it. Never executes the plan.
+description: Use when the user asks for a plan, or to turn a brainstorm, review, deferred item, stuck gate, answered question or PRD fragment into one (e.g. "loc-planning 004", "make a plan from the brainstorm"). Writes a plan with milestones and automatic proofs to loc/inbox/ and gates it. Never executes the plan.
 argument-hint: "<inbox number or file | PRD fragment | task text>"
 ---
 
 # loc-planning
 
-Turns an input into `inbox/NNN-plan-<topic>.md`: a plan someone can execute without deciding anything. Plans are made only here and executed only by `loc-orchestrate`.
+Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute without deciding anything. Plans are made only here and executed only by `loc-orchestrate`.
 
 **Do not execute the plan, do not change code, do not commit.**
 
@@ -14,21 +14,21 @@ Turns an input into `inbox/NNN-plan-<topic>.md`: a plan someone can execute with
 
 `$ARGUMENTS` is one of:
 
-- **An inbox number or file**: `brainstorm`, `przeglad`, `odlozone`, `utknelo`, or a `pytanie` that already has an answer under `## Rozstrzygnięcie`. The number is enough; find the file in `inbox/`.
-- **A fragment of `docs/PRD.md`**, named by its heading.
+- **An inbox number or file**: `brainstorm`, `przeglad`, `odlozone`, `utknelo`, or a `pytanie` that already has an answer under `## Rozstrzygnięcie`. The number is enough; find the file in `loc/inbox/`.
+- **A fragment of `loc/PRD.md`**, named by its heading.
 - **Plain text**: the task itself.
 
-No argument: if `inbox/` has exactly one `brainstorm`, use it; otherwise ask what to plan. An open `pytanie` is not an input: the user has not answered it yet.
+No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask what to plan. An open `pytanie` is not an input: the user has not answered it yet.
 
 ## 2. Read the code, not documents about it
 
-1. The input, the project's `CLAUDE.md` (`Commands` gives the proof commands; `Invariants`, `Limits`, `Manual verification / UAT`) and `docs/PATTERNS.md` (entries whose **Kiedy stosować** matches).
+1. The input, the project's `CLAUDE.md` (`Commands` gives the proof commands; `Invariants`, `Limits`, `Manual verification / UAT`) and `loc/PATTERNS.md` (entries whose **Kiedy stosować** matches).
 2. The code the change touches. For more than a couple of files, delegate to the `researcher` agent with the question "what exists today for <change>" and use its `file:line` report. Documents and old plans are not evidence; code is.
 3. If the project has no `CLAUDE.md` `Commands` section, say so in the plan's risks and use the commands you verified by running them.
 
 ## 3. Unknowns become questions, not holes
 
-Anything the user must decide goes to its own `pytanie` file **before** the plan is written: first look for a similar open one and extend it; otherwise create one with the script (below) and fill it completely (context, options with cost, recommendation). The plan then proceeds on the recommendation and says so in `## Ryzyka i decyzje` (`→ inbox/NNN-pytanie-…`, tymczasowo wariant A). Stop without a plan only if that interim choice would be expensive to undo.
+Anything the user must decide goes to its own `pytanie` file **before** the plan is written: first look for a similar open one and extend it; otherwise create one with the script (below) and fill it completely (context, options with cost, recommendation). The plan then proceeds on the recommendation and says so in `## Ryzyka i decyzje` (`→ loc/inbox/NNN-pytanie-…`, tymczasowo wariant A). Stop without a plan only if that interim choice would be expensive to undo.
 
 ## 4. Write the plan
 
@@ -59,7 +59,7 @@ The round passes when the script exits `0` and the critic reports nothing blocki
 
 ## 6. Close the input
 
-Follow `references/closing.md` for the input's type: the input file gets its `## Rozstrzygnięcie` and moves to `inbox/done/`, a PRD fragment gets the `→ przekazane` marker.
+Follow `references/closing.md` for the input's type: the input file gets its `## Rozstrzygnięcie` and moves to `loc/inbox/done/`, a PRD fragment gets the `→ przekazane` marker.
 
 ## 7. Report
 
@@ -68,6 +68,6 @@ In the user's language, briefly:
 - the plan's path and its milestones, one line each;
 - the gate result (rounds, "skan czysty, krytyk bez uwag blokujących", or what remains and the `utknelo` file);
 - new `pytanie` files, each with its question in one line;
-- what moved to `inbox/done/`.
+- what moved to `loc/inbox/done/`.
 
 End with the next step: `/masterskills:loc-orchestrate <NNN>` when the user decides. Do not start it.

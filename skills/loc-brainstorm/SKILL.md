@@ -1,18 +1,18 @@
 ---
 name: loc-brainstorm
-description: Use as soon as a conversation turns into shaping a change (ideas for a feature, options being weighed, "thinking about…", "what if…", a decision about how something should work) and nobody has asked for a plan yet. Keeps one growing brainstorm file in inbox/ with numbered decisions. Also when the user asks to note or continue a brainstorm.
+description: Use as soon as a conversation turns into shaping a change (ideas for a feature, options being weighed, "thinking about…", "what if…", a decision about how something should work) and nobody has asked for a plan yet. Keeps one growing brainstorm file in loc/inbox/ with numbered decisions. Also when the user asks to note or continue a brainstorm.
 argument-hint: "[topic]"
 ---
 
 # loc-brainstorm
 
-Keeps the notes of a design conversation in **one** file, `inbox/NNN-brainstorm-<topic>.md`, so the conversation survives `/clear`, compaction and the next session, and so `loc-planning` can turn it into a plan.
+Keeps the notes of a design conversation in **one** file, `loc/inbox/NNN-brainstorm-<topic>.md`, so the conversation survives `/clear`, compaction and the next session, and so `loc-planning` can turn it into a plan.
 
 Brainstorming only records. **Do not write code, do not write a plan, do not commit**, even when the idea looks finished. The user moves on with `loc-planning`.
 
 ## 1. Find the active file
 
-Look for `inbox/*-brainstorm-*.md` (not `inbox/done/`).
+Look for `loc/inbox/*-brainstorm-*.md` (not `loc/inbox/done/`).
 
 - **One exists**: continue it, even if the topic drifted. Add a `### <new topic>` subheading under `## Notatki` when it did.
 - **Several exist**: continue the one about this topic; if none is, the most recent.
@@ -24,7 +24,7 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type brainstor
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
-It prints JSON with `path`; the file already has the header and sections. The content is in Polish, like everything in `inbox/`.
+It prints JSON with `path`; the file already has the header and sections. The content is in Polish, like everything in `loc/inbox/`.
 
 ## 2. Write in the same reply
 
@@ -39,7 +39,7 @@ Record only what the user decided as a decision. Your suggestion stays in `## Ot
 
 ## 3. Answer
 
-Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notatki: `inbox/004-brainstorm-jezyk-powitan.md` (B-01…B-03)."
+Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notatki: `loc/inbox/004-brainstorm-jezyk-powitan.md` (B-01…B-03)."
 
 When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. Do not start it yourself.
 

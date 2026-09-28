@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Keep `docs/MEMORY.md` in order: entries newest first, a generated index, trimmed to N.
+"""Keep `loc/MEMORY.md` in order: entries newest first, a generated index, trimmed to N.
 
 An entry is a level-2 heading and the text under it:
 
     ## 2026-01-15 14:30 — [Plan] Eksport do CSV
-    Do 3 zdań. Szczegóły: inbox/done/007-plan-eksport-csv.md
+    Do 3 zdań. Szczegóły: loc/inbox/done/007-plan-eksport-csv.md
 
 The index is a table (date, type, topic, line of the entry) rewritten between
 `<!-- index:start -->` and `<!-- index:end -->`; never edit it by hand. Only the
@@ -75,18 +75,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--project", type=Path,
                         default=Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()))
-    parser.add_argument("--file", type=Path, help="default: <project>/docs/MEMORY.md")
+    parser.add_argument("--file", type=Path, help="default: <project>/loc/MEMORY.md")
     parser.add_argument("--keep", type=int, default=1000, help="entries to keep (default 1000)")
     parser.add_argument("--type", choices=TYPES, help="add an entry of this type first")
     parser.add_argument("--title", help="entry title")
-    parser.add_argument("--text", help="entry text: up to 3 sentences and the inbox/done/ link")
+    parser.add_argument("--text", help="entry text: up to 3 sentences and the loc/inbox/done/ link")
     args = parser.parse_args()
     if args.type and not (args.title and args.text):
         parser.error("--type needs --title and --text")
     if args.keep < 1:
         parser.error("--keep must be at least 1")
 
-    path = args.file or args.project / "docs" / "MEMORY.md"
+    path = args.file or args.project / "loc" / "MEMORY.md"
     try:
         original = path.read_bytes().decode("utf-8-sig")
     except (OSError, UnicodeDecodeError) as error:

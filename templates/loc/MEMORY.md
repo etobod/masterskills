@@ -8,5 +8,5 @@ skrypt, nigdy ręcznie.
 
 <!-- Wzór wpisu:
 ## 2026-01-15 14:30 — [Plan] Eksport do CSV
-Do 3 zdań: co zrobiono i dlaczego. Szczegóły: inbox/done/007-plan-eksport-csv.md
+Do 3 zdań: co zrobiono i dlaczego. Szczegóły: loc/inbox/done/007-plan-eksport-csv.md
 -->
