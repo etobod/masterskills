@@ -1,6 +1,6 @@
 # The state file `loc/state/<NNN>.json`
 
-`<NNN>` is the plan's number. The file is the memory of the run: after `/clear`, compaction or a new session, the next step is read from it, never guessed or asked. Write it in English. Update it **before** each step starts and **after** each step ends, then validate:
+`<NNN>` is the plan's number. The file is the memory of the run: after `/clear`, compaction or a new session, the next step is read from it, never guessed or asked. Write it in English, with the Write or Edit tool (a script or heredoc asks for permission). Update it **before** each step starts and **after** each step ends, then validate:
 
 ```sh
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_state.py loc/state/<NNN>.json
