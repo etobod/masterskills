@@ -10,11 +10,11 @@
 
 ## Rundy
 ### Runda 1
-<co zgłoszono, co poprawiono, wynik>
+<wyjście błędu dosłownie, także gdy powtarza poprzednią rundę; co zmieniono; wynik>
 ### Runda 2
-<…>
+<wyjście błędu dosłownie, także gdy powtarza poprzednią rundę; co zmieniono; wynik>
 ### Runda 3
-<…>
+<wyjście błędu dosłownie, także gdy powtarza poprzednią rundę; co zmieniono; wynik>
 
 ## Co zostało
 <uwagi nierozwiązane po 3 rundach, każda z `plik:linia`>

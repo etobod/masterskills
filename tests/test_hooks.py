@@ -49,6 +49,8 @@ class PluginCommandsTest(unittest.TestCase):
             'date "+%Y-%m-%d %H:%M"',
             "mv loc/inbox/001-pytanie-a.md loc/inbox/done/",
             "mv loc/inbox/001-pytanie-a.md loc/inbox/done/001-pytanie-a.md",
+            "gh run list --branch main --limit 1 --json status,conclusion,url",
+            "gh run list --branch feature/ci-check --limit 1 --json status,conclusion,url",
         ):
             with self.subTest(command=command):
                 self.assertEqual(self.check(command), "allow")
@@ -65,6 +67,10 @@ class PluginCommandsTest(unittest.TestCase):
             "mv loc/inbox/*.md loc/inbox/done/",
             "cd x && date +%Y",
             "sh other/py.sh scripts/next_number.py",
+            "gh run list --branch main --limit 1 --json status,conclusion,url ; rm x",
+            "gh run list --branch main --limit 1 --json status,conclusion,url,logs",
+            "gh run list --branch -R --limit 1 --json status,conclusion,url",
+            "gh run rerun 123",
         ):
             with self.subTest(command=command):
                 self.assertEqual(self.check(command), "")
@@ -72,6 +78,35 @@ class PluginCommandsTest(unittest.TestCase):
     def test_ignores_other_tools(self):
         out = run_hook("plugin_commands.py", {"tool_name": "PowerShell", "tool_input": {"command": "date +%Y"}})
         self.assertEqual(out, {})
+
+
+class AfterPushTest(unittest.TestCase):
+    def project(self, workflow: bool) -> Path:
+        project = scratch_dir(self)
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
+        if workflow:
+            (project / ".github" / "workflows").mkdir(parents=True)
+            (project / ".github" / "workflows" / "ci.yml").write_text("on: push\n", encoding="utf-8")
+        return project
+
+    def context(self, project: Path, command: str) -> str:
+        out = run_hook("after_push.py", {"tool_name": "Bash", "tool_input": {"command": command},
+                                         "cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
+        return out.get("hookSpecificOutput", {}).get("additionalContext", "")
+
+    def test_push_in_a_project_with_workflows_asks_for_one_ci_check(self):
+        text = self.context(self.project(True), "git push origin main")
+        self.assertIn("gh run list --branch main --limit 1 --json status,conclusion,url", text)
+        self.assertIn("--type utknelo", text)
+
+    def test_push_without_workflows_adds_nothing(self):
+        self.assertEqual(self.context(self.project(False), "git push"), "")
+
+    def test_other_commands_add_nothing(self):
+        project = self.project(True)
+        for command in ("git status", "git push && rm x", "echo git push"):
+            with self.subTest(command=command):
+                self.assertEqual(self.context(project, command), "")
 
 
 class WriteGuardTest(unittest.TestCase):

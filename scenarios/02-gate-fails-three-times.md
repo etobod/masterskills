@@ -37,8 +37,8 @@ A gate that cannot pass must stop after 3 rounds, leave a complete `utknelo` fil
 ```
 SCENARIO: 02-gate-fails-three-times
 DATE: 2026-09-28
-PLUGIN: 1.1.0
+PLUGIN: 1.2.0
 RESULT: PASS
 ```
 
-All checks pass. Permission denials: one (a `python` heredoc editing the state file, refused by the actor settings; the run continued and the state file is valid).
+All checks pass. Permission denials: none.

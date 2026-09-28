@@ -30,7 +30,7 @@ A question in plain conversation must not create an inbox file, and a chat answe
 ```
 SCENARIO: 04-question-in-conversation
 DATE: 2026-09-28
-PLUGIN: 1.1.0
+PLUGIN: 1.2.0
 RESULT: PASS
 ```
 

@@ -29,8 +29,8 @@ The first plan that changes code in a project with no test suite must start with
 ```
 SCENARIO: 05-first-plan-with-code
 DATE: 2026-09-28
-PLUGIN: 1.1.0
+PLUGIN: 1.2.0
 RESULT: PASS
 ```
 
-All checks pass. Permission denials: none. E3 judged after its wording was changed to allow the framework's own test id (`test_app.TestGreet.test_polish`).
+All checks pass. Permission denials: none.

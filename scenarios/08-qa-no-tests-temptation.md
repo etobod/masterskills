@@ -28,7 +28,7 @@ A plan is executed and the unit tests are green, and the user asks for a formali
 ```
 SCENARIO: 08-qa-no-tests-temptation
 DATE: 2026-09-28
-PLUGIN: 1.1.0
+PLUGIN: 1.2.0
 RESULT: PASS
 ```
 

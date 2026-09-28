@@ -31,7 +31,7 @@ Loose talk about a feature must land in one growing `brainstorm` file, and a pla
 ```
 SCENARIO: 01-conversation-becomes-plan
 DATE: 2026-09-28
-PLUGIN: 1.1.0
+PLUGIN: 1.2.0
 RESULT: PASS
 ```
 

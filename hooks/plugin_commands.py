@@ -6,7 +6,9 @@ Allows exactly these `Bash` commands, each run on its own:
 - `sh "<plugin root>/scripts/py.sh" scripts/<name>.py ...`, where
   `scripts/<name>.py` is one of the plugin's scripts;
 - `date +<format>`;
-- `mv` or `git mv` of one file from `loc/inbox/` to `loc/inbox/done/`.
+- `mv` or `git mv` of one file from `loc/inbox/` to `loc/inbox/done/`;
+- `gh run list --branch <branch> --limit 1 --json status,conclusion,url`, the
+  CI check that `after_push.py` asks for.
 
 Anything with a shell operator, substitution or redirection outside quotes
 (`;`, `&`, `|`, `<`, `>`, `$`, backtick, parentheses, newline, glob), or with `$` or
@@ -32,6 +34,7 @@ ROOTS = [PLUGIN_ROOT] + ([Path(os.environ["CLAUDE_PLUGIN_ROOT"])] if os.environ.
 OPERATORS = set(";&|<>()$`\n\r*?[{")  # outside quotes; the last four expand to file names
 INBOX_FILE = re.compile(r"loc/inbox/[^/\\]+")
 DONE_FILE = re.compile(r"loc/inbox/done/[^/\\]*")
+BRANCH = re.compile(r"[A-Za-z0-9._/][A-Za-z0-9._/-]*")
 REASON = "masterskills: the plugin's own command"
 
 
@@ -71,6 +74,9 @@ def allowed(words: list) -> bool:
         script = words[2]
         return (re.fullmatch(r"scripts/[A-Za-z0-9_]+\.py", script) is not None
                 and (PLUGIN_ROOT / script).is_file())
+    if words[:3] == ["gh", "run", "list"]:
+        return (len(words) == 9 and words[3] == "--branch" and BRANCH.fullmatch(words[4]) is not None
+                and words[5:] == ["--limit", "1", "--json", "status,conclusion,url"])
     if words[0] == "date":
         return len(words) > 1 and all(word.startswith("+") for word in words[1:])
     move = words[2:] if words[:2] == ["git", "mv"] else words[1:] if words[0] == "mv" else None

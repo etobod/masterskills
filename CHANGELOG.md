@@ -2,7 +2,7 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
-## Unreleased
+## 1.2.0 — 2026-09-28
 
 - Tests in planning: a code milestone lists acceptance criteria (`**Kryteria:**`, ``- K<n>: <what the code must do> → `<test>` ``, `(zachowanie)` for behaviour seen from outside) and a performer (`**Wykonawca:** auto | agent | użytkownik (blokujący|odkładalny)`); `check_plan.py` enforces both. The first plan with code starts with a test-suite milestone. Details in `loc-planning/references/tests.md`.
 - Template `templates/loc/TEST-PLAN.md` (the project's test contract, created by the first plan with code, not by `loc-init`) and a `## Project-specific workflow` section in the `CLAUDE.md` template.
@@ -17,6 +17,9 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - `loc-orchestrate`: a `qa` phase and gate before the final review for plans with `**Kryteria:**`; a plan whose QA gets stuck stays open. `check_state.py` rejects `journal` or `done` for such a plan without a passed or stuck `qa` gate.
 - Scenarios `07-qa-paths-field` and `08-qa-no-tests-temptation`.
 - A criterion may name its test by the id the framework runs directly (`test_app.TestGreet.test_polish`) as well as by file and test name.
+- `PostToolUse` hook `after_push.py`: after a successful `git push` in a project with GitHub Actions workflows, one CI check with `gh run list`; a failed run becomes a `utknelo` inbox file. `plugin_commands.py` allows exactly that `gh run list` command.
+- A `utknelo` file quotes the failure output of every round, also when it repeats the previous one (template and `loc-orchestrate`).
+- README: the `loc/` workflow, `loc/TEST-PLAN.md`, `loc-qa` and the `test-author` agent.
 
 ## 1.1.0 — 2026-09-28
 

@@ -40,7 +40,7 @@ Update the state file before and after every step.
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type utknelo --slug "<plan topic> m<n> <gate>" --title "<plan> — M<n>, <gate>" --source "<plan path>"
 ```
 
-Fill every section: the gate and milestone; per round the verbatim failure output, what you changed and the result; what remains with `file:line`; whether the rounds went in circles; and which version of the code the work continued with. Record its path in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
+Fill every section: the gate and milestone; for each round the verbatim failure output (even when it repeats the last one), what you changed and the result; what remains with `file:line`; whether the rounds went in circles; and which version of the code the work continued with. Record its path in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
 
 ## 3. Deviations from the plan
 

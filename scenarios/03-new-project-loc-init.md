@@ -30,7 +30,7 @@
 ```
 SCENARIO: 03-new-project-loc-init
 DATE: 2026-09-28
-PLUGIN: 1.1.0
+PLUGIN: 1.2.0
 RESULT: PASS
 ```
 

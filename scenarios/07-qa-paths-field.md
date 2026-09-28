@@ -28,7 +28,7 @@ A project has its own QA skills. One declares `qa-paths:`, a header field Claude
 ```
 SCENARIO: 07-qa-paths-field
 DATE: 2026-09-28
-PLUGIN: 1.1.0
+PLUGIN: 1.2.0
 RESULT: PASS
 ```
 

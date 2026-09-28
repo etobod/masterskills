@@ -1,5 +1,5 @@
 {
-  "description": "masterskills: core rules and open inbox on session start, /clear and compaction; the skills' own commands without a prompt; writes only inside the project; no AI attribution in commits",
+  "description": "masterskills: core rules and open inbox on session start, /clear and compaction; the skills' own commands without a prompt; writes only inside the project; no AI attribution in commits; one CI check after git push",
   "hooks": {
     "SessionStart": [
       {
@@ -40,6 +40,18 @@
           {
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" hooks/commit_guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" hooks/after_push.py",
             "timeout": 10
           }
         ]
