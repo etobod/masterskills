@@ -18,6 +18,9 @@
 
 ### M1 — <nazwa>
 <co powstaje>
+**Kryteria:**
+- K1: <co kod ma robić> → `<plik testu::nazwa testu>`
+**Wykonawca:** auto
 **Dowód:** `<komenda>` → `<oczekiwany wynik>`
 **Sprawdzenie ręczne:** <opcjonalnie, według `Manual verification / UAT` z `CLAUDE.md`>
 

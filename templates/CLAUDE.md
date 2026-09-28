@@ -12,3 +12,6 @@
 
 ## Limits
 <!-- What is not allowed: e.g. no cloud services, sensitive data. -->
+
+## Project-specific workflow
+<!-- Deviations from the plugin's workflow, e.g. which documents a plan must update after a change. -->

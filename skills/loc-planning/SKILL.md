@@ -43,7 +43,7 @@ The file comes from the template with all sections. Fill them in Polish:
 - **Cel**: what works afterwards, in terms the user can check.
 - **Czego nie robimy**: what is deliberately out of scope.
 - **Kontekst z kodu**: the files and `file:line` the plan relies on, as read now.
-- **Kamienie milowe**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Dowód:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Sprawdzenie ręczne:**` per `Manual verification / UAT`. Code and its tests go in the same milestone. A milestone's product is never a decision, an audit or a question.
+- **Kamienie milowe**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Dowód:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Sprawdzenie ręczne:**` per `Manual verification / UAT`. Code and its tests go in the same milestone; for code, criteria, tests and performer follow `references/tests.md`. A milestone's product is never a decision, an audit or a question.
 - **Ryzyka i decyzje**: references to brainstorm decisions (`B-01`…) and `pytanie` files, and what each risk would cost.
 
 Keep it proportional: a small change gets one or two milestones.

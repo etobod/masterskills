@@ -9,7 +9,12 @@ Checks, in order:
     sections, which record history rather than instructions;
   - no unfilled template placeholder such as `<co powstaje>`;
   - milestones (`### ` headings under `## Kamienie milowe`) and `**Dowód:**`
-    lines are both counted, both > 0 and equal.
+    lines are both counted, both > 0 and equal;
+  - in a milestone with `**Kryteria:**`, every criterion
+    `- K<n>[ (zachowanie)]: <what the code must do> → <test>` names its test in
+    inline code, or `ręcznie` when the performer is the user;
+  - `**Wykonawca:**`, when present, is `auto`, `agent`, or `użytkownik` with
+    `(blokujący)` or `(odkładalny)`.
 
 Prints JSON {"plan", "ok", "milestones", "proofs", "issues": [{"line", "problem"}]}.
 Exit code 0 when ok, 1 when there are issues, 2 when the file cannot be read.
@@ -37,6 +42,30 @@ PLACEHOLDER = re.compile(
 )
 CODE = re.compile(r"`[^`]*`")
 PROOF = re.compile(r"^\*\*Dowód:\*\*")
+CRITERIA = re.compile(r"^\*\*Kryteria:\*\*\s*$")
+CRITERION = re.compile(r"^- (K\d+)( \(zachowanie\))?: (?P<what>.+?)(?: → (?P<test>.*))?$")
+PERFORMER = re.compile(r"^\*\*Wykonawca:\*\*\s*(?P<value>.*?)\s*$")
+PERFORMERS = re.compile(r"^(auto|agent|użytkownik \((blokujący|odkładalny)\))$")
+
+
+def check_milestone(name: str, criteria: list, performer, issues: list) -> None:
+    """criteria: [(line number, text)]; performer: (line number, value) or None."""
+    user = performer is not None and performer[1].startswith("użytkownik")
+    if performer is not None and not PERFORMERS.match(performer[1]):
+        issues.append({"line": performer[0], "problem": f"{name}: performer must be auto, agent, "
+                       "użytkownik (blokujący) or użytkownik (odkładalny)"})
+    for number, text in criteria:
+        match = CRITERION.match(text)
+        if not match:
+            issues.append({"line": number, "problem": f"{name}: criterion must read "
+                           "'- K<n>: <what the code must do> → `<test>`'"})
+            continue
+        test = (match.group("test") or "").strip()
+        if test == "ręcznie" and user and not match.group(2):
+            continue
+        if not re.fullmatch(r"`[^`]+`", test):
+            issues.append({"line": number, "problem": f"{name}: criterion {match.group(1)} has no test "
+                           "(→ `<test file and name>`)"})
 
 
 def check(text: str) -> dict:
@@ -45,6 +74,11 @@ def check(text: str) -> dict:
     section = None
     milestones = proofs = 0
     in_fence = False
+    milestone, criteria, performer, in_criteria = None, [], None, False
+
+    def close_milestone():
+        if milestone:
+            check_milestone(milestone, criteria, performer, issues)
 
     for number, line in enumerate(text.splitlines(), 1):
         if line.startswith("```"):
@@ -53,13 +87,26 @@ def check(text: str) -> dict:
         if in_fence:
             continue
         if line.startswith("## "):
+            close_milestone()
+            milestone, criteria, performer, in_criteria = None, [], None, False
             section = line[3:].strip()
             sections.add(section)
             continue
         if section in HISTORY:
             continue
         if section == "Kamienie milowe" and line.startswith("### "):
+            close_milestone()
             milestones += 1
+            milestone, criteria, performer, in_criteria = f"M{milestones}", [], None, False
+        elif milestone and CRITERIA.match(line):
+            in_criteria = True
+        elif milestone and in_criteria and line.startswith("- "):
+            criteria.append((number, line))
+        elif milestone and PERFORMER.match(line):
+            performer = (number, PERFORMER.match(line).group("value"))
+            in_criteria = False
+        elif line.strip():
+            in_criteria = False
         if PROOF.match(line):
             proofs += 1
 
@@ -69,6 +116,7 @@ def check(text: str) -> dict:
         for match in PLACEHOLDER.finditer(prose):
             issues.append({"line": number, "problem": f"unfilled placeholder: {match.group(0)}"})
 
+    close_milestone()
     for name in REQUIRED:
         if name not in sections:
             issues.append({"line": 0, "problem": f"missing section: ## {name}"})

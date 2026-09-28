@@ -59,5 +59,6 @@ RESULT: PASS | FAIL
 | `02-gate-fails-three-times.md` | 3-round gate limit, `utknelo` file, work continues |
 | `03-new-project-loc-init.md` | `loc-init` on a new project, idempotent second run |
 | `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `pytanie` → `loc/inbox/done/` + `odlozone` |
+| `05-first-plan-with-code.md` | first plan with code: test-suite milestone, criteria with tests |
 
 Scenarios cannot run until the skills they exercise exist; each later plan runs the scenarios it enables.

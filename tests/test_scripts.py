@@ -42,6 +42,11 @@ class InitProjectTest(unittest.TestCase):
         self.assertIn(".gitignore", first["created"])
         self.assertEqual(second["created"] + second["updated"], [])
 
+    def test_test_plan_comes_only_from_a_plan(self):
+        run("init_project.py", "--project", ".", cwd=self.project)
+        self.assertFalse((self.project / "loc" / "TEST-PLAN.md").exists())
+        self.assertIn("## Project-specific workflow", (self.project / "CLAUDE.md").read_text(encoding="utf-8"))
+
     def test_git_sees_nothing_from_loc(self):
         run("init_project.py", "--project", ".", cwd=self.project)
         status = subprocess.run(["git", "status", "--short", "--untracked-files=all"], cwd=self.project,
