@@ -100,6 +100,21 @@ class PluginCommandsTest(unittest.TestCase):
         self.assertEqual(out, {})
 
 
+class PyShTest(unittest.TestCase):
+    def test_leaves_no_bytecode_in_the_plugin(self):
+        plugin = scratch_dir(self)
+        (plugin / "scripts").mkdir()
+        shutil.copy(ROOT / "scripts" / "py.sh", plugin / "scripts" / "py.sh")
+        (plugin / "scripts" / "helper.py").write_text("VALUE = 'ok'\n", encoding="utf-8")
+        (plugin / "scripts" / "main.py").write_text(
+            "import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).parent))\n"
+            "from helper import VALUE\nprint(VALUE)\n", encoding="utf-8")
+        result = subprocess.run(["sh", str(plugin / "scripts" / "py.sh"), "scripts/main.py"],
+                                capture_output=True, text=True, check=True)
+        self.assertEqual(result.stdout.strip(), "ok")
+        self.assertEqual(list(plugin.rglob("__pycache__")), [])
+
+
 class AfterPushTest(unittest.TestCase):
     def project(self, workflow: bool) -> Path:
         project = scratch_dir(self)
