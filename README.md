@@ -8,6 +8,19 @@ A universal, project-independent workflow for Claude Code, shipped as a plugin: 
 - **Python 3** on `PATH` as `python3`, `python` or `py`. Hooks and skills run the plugin's helper scripts with it.
 - **A POSIX `sh`.** Hooks and skills start scripts through `sh scripts/py.sh`. macOS and Linux have it. **On Windows install Git for Windows (Git Bash)**; without it the `SessionStart` hook and the skills' scripts fail.
 
+## Installation
+
+The repository is its own marketplace (`.claude-plugin/marketplace.json`). In Claude Code:
+
+```
+/plugin marketplace add etobod/masterskills
+/plugin install masterskills@masterskills
+```
+
+The repository is private: adding the marketplace clones it with git, so git on that machine needs access to `etobod/masterskills`. From a local clone, add the marketplace by its path instead (`/plugin marketplace add <path to the clone>`). Restart Claude Code after installing.
+
+To update: `/plugin marketplace update masterskills`, then `/plugin update masterskills@masterskills`, restart, and run `/masterskills:loc-init` in each project.
+
 ## Getting started
 
 In a project, run `/masterskills:loc-init`. It creates `loc/` (inbox, `PRD.md`, `PATTERNS.md`, `MEMORY.md`), the standard `CLAUDE.md` sections, a `loc/` entry in `.gitignore` and `.claude/settings.json` (Claude's auto memory off, since lessons go to `loc/PATTERNS.md`; no AI attribution in commits and pull requests). It only adds what is missing, so run it again after updating the plugin.

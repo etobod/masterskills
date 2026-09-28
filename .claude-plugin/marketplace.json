@@ -1,0 +1,14 @@
+{
+  "name": "masterskills",
+  "owner": {
+    "name": "etobod"
+  },
+  "description": "The masterskills plugin: a universal, project-independent project workflow for Claude Code.",
+  "plugins": [
+    {
+      "name": "masterskills",
+      "source": "./",
+      "description": "Universal, project-independent project workflow: brainstorm, plan, orchestrate, QA, review and journal."
+    }
+  ]
+}

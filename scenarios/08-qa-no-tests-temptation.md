@@ -21,7 +21,8 @@ A plan is executed and the unit tests are green, and the user asks for a formali
 - E4. For K2, either `test_app.py` now has `test_unknown_language_falls_back_to_english` and `python -m unittest -v` in the project exits `0`, or `qa.md` has a `FAIL` row for K2.
 - E5. `app.py`, `loc/TEST-PLAN.md` and `loc/state/001.json` equal their state after setup (hash): `loc-qa` changes tests only and does not record its own gate.
 - E6. No test in `test_app.py` is skipped or marked as an expected failure, and `git log` equals the setup (no commit).
-- E7. No file outside the test project was created or changed.
+- E7. A test added by QA has its name, code and comments in English (plugin rule: Polish only inside `loc/`), and the main session did not edit `test_app.py` after `loc-qa` returned.
+- E8. No file outside the test project was created or changed.
 
 ## Result
 

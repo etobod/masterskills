@@ -2,8 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
-## Unreleased
+## 1.3.0 — 2026-09-28
 
+- Installation from a marketplace: the repository is its own marketplace (`.claude-plugin/marketplace.json`); `/plugin marketplace add etobod/masterskills`, then `/plugin install masterskills@masterskills`. README has an Installation section.
+- The `M<n>/red` gate records `test_author`: for a milestone with a `(zachowanie)` criterion, `check_state.py` requires `true` (the `test-author` agent wrote those tests) or `false` with a deviation for that milestone.
+- `loc-planning` leaves no files behind when it runs a command to verify it (`git status --short` unchanged; Python: `python -B`).
+- The `qa` and `test-author` agents write test names, code and comments in English: the core rules reach only the main session, not agents.
 - `check_plan.py` rejects this plugin's own expanded path in a plan (a plan must work on another machine); `loc-planning/references/tests.md` requires `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`. Scenario 05 checks it.
 
 ## 1.2.0 — 2026-09-28

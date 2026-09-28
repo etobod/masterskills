@@ -33,6 +33,15 @@ PLAN_WITH_CRITERIA = """### M1 — powitanie
 **Dowód:** `python -m unittest` → `OK`
 """
 
+PLAN_WITH_BEHAVIOUR = """## Kamienie milowe
+
+### M1 — powitanie
+**Kryteria:**
+- K1: `greet("Ann", "pl")` zwraca `"Cześć, Ann"` → `test_app.py::GreetTest::test_polish`
+- K2 (zachowanie): nieznany język daje angielskie powitanie → `test_app.py::GreetTest::test_unknown`
+**Dowód:** `python -m unittest` → `OK`
+"""
+
 
 class CheckStateTest(unittest.TestCase):
     def run_check(self, data: dict, plan: str = None) -> tuple:
@@ -92,6 +101,24 @@ class CheckStateTest(unittest.TestCase):
 
     def test_journal_without_qa_is_valid_for_a_plan_without_criteria(self):
         code, out = self.run_check(self.finished("done", {}), "### M1 — opis\n**Dowód:** `grep x` → `1`\n")
+        self.assertEqual(code, 0, out)
+
+    def test_behaviour_criterion_needs_the_test_author(self):
+        red = {"rounds": 1, "passed": True, "stuck": None, "output": "AssertionError: 'Hello, Ann' != 'Hi'"}
+        code, out = self.run_check(state({"M1/red": red}), PLAN_WITH_BEHAVIOUR)
+        self.assertEqual(code, 1)
+        self.assertIn("gates.M1/red.test_author", "\n".join(out["problems"]))
+        code, out = self.run_check(state({"M1/red": {**red, "test_author": True}}), PLAN_WITH_BEHAVIOUR)
+        self.assertEqual(code, 0, out)
+
+    def test_test_author_false_needs_a_deviation(self):
+        red = {"rounds": 1, "passed": True, "stuck": None, "output": "AssertionError", "test_author": False}
+        data = state({"M1/red": red})
+        code, out = self.run_check(data, PLAN_WITH_BEHAVIOUR)
+        self.assertEqual(code, 1)
+        self.assertIn("needs a deviation for M1", "\n".join(out["problems"]))
+        data["deviations"] = [{"milestone": "M1", "rule": 3, "note": "test-author unavailable; tests written inline"}]
+        code, out = self.run_check(data, PLAN_WITH_BEHAVIOUR)
         self.assertEqual(code, 0, out)
 
 

@@ -21,7 +21,7 @@ Per milestone, in this order:
    - Other criteria: write the tests yourself.
    - *subagent* mode: start `test-author` yourself before the milestone's sub-agent (a sub-agent cannot start agents), and give that sub-agent this file's path.
 2. **Stub.** Add the smallest code that lets the tests run and returns a wrong result (e.g. `return ""`), so an import or a missing name cannot be the failure.
-3. **Red gate** (`M<n>/red`). Increase `rounds`, run the new tests. Every new test must fail **on its assertion** (`AssertionError`, `expected … got …`). An import, syntax or name error does not count: fix it and start the next round. A new test that passes on the stub checks nothing: fix the test. Passed: set `passed: true` and put the failing lines (assertion and test names, a few lines) in the gate's `output`. After the third failed round: **stuck**, as for other gates.
+3. **Red gate** (`M<n>/red`). Increase `rounds`, run the new tests. Every new test must fail **on its assertion** (`AssertionError`, `expected … got …`). An import, syntax or name error does not count: fix it and start the next round. A new test that passes on the stub checks nothing: fix the test. Passed: set `passed: true`, put the failing lines (assertion and test names, a few lines) in the gate's `output`, and with a `(zachowanie)` criterion set `test_author` (`references/state.md`). After the third failed round: **stuck**, as for other gates.
 4. **Real code**, then the proof gate.
 
 ## Test written after the code

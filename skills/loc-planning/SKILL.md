@@ -24,7 +24,7 @@ No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask
 
 1. The input, the project's `CLAUDE.md` (`Commands` gives the proof commands; `Invariants`, `Limits`, `Manual verification / UAT`) and `loc/PATTERNS.md` (entries whose **Kiedy stosować** matches).
 2. The code the change touches. For more than a couple of files, delegate to the `researcher` agent with the question "what exists today for <change>" and use its `file:line` report. Documents and old plans are not evidence; code is.
-3. If the project has no `CLAUDE.md` `Commands` section, say so in the plan's risks and use the commands you verified by running them.
+3. If the project has no `CLAUDE.md` `Commands` section, say so in the plan's risks and use the commands you verified by running them. A run leaves no files behind: nothing new in `git status --short` (Python: `python -B`).
 
 ## 3. Unknowns become questions, not holes
 

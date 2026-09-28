@@ -15,7 +15,8 @@
          "start": "<snapshot hash>" | null, "end": "<snapshot hash>" | null}
       ],
       "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "qa", "final-review"
-        "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ..."},
+        "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ...",
+                   "test_author": true},
         "M1/proof": {"rounds": 3, "passed": false, "stuck": "loc/inbox/004-utknelo-....md"}
       },
       "deviations": [{"milestone": "M1", "rule": 1-4, "note": "...",
@@ -27,7 +28,10 @@
 Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
 `utknelo` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
 A passed `M<n>/red` gate (the new tests failed before the code) keeps the
-failing test output in `output`. A plan with `**Kryteria:**` reaches `journal`
+failing test output in `output`; when the plan's milestone has a
+`(zachowanie)` criterion it also says whether the `test-author` agent wrote
+those tests (`test_author: true`), and `false` needs a deviation for that
+milestone explaining why. A plan with `**Kryteria:**` reaches `journal`
 or `done` only after a `qa` gate that passed or went stuck.
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
@@ -52,6 +56,7 @@ GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
 QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
+BEHAVIOUR = re.compile(r"^- K\d+ \(zachowanie\):")
 
 
 def is_int(value) -> bool:
@@ -118,15 +123,49 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
 
 
-def has_criteria(project: Path, plan) -> bool:
+def plan_text(project: Path, plan) -> str:
     for rel in (str(plan), str(plan).replace("loc/inbox/done/", "loc/inbox/", 1),
                 str(plan).replace("loc/inbox/", "loc/inbox/done/", 1)):
         try:
-            return re.search(r"^\*\*Kryteria:\*\*", (project / rel).read_text(encoding="utf-8"),
-                             re.MULTILINE) is not None
+            return (project / rel).read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-    return False
+    return ""
+
+
+def has_criteria(project: Path, plan) -> bool:
+    return re.search(r"^\*\*Kryteria:\*\*", plan_text(project, plan), re.MULTILINE) is not None
+
+
+def behaviour_milestones(project: Path, plan) -> set:
+    """Milestones (M1, M2...) of the plan with a `(zachowanie)` criterion."""
+    found, section, number = set(), None, 0
+    for line in plan_text(project, plan).splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+        elif section == "Kamienie milowe" and line.startswith("### "):
+            number += 1
+        elif number and section == "Kamienie milowe" and BEHAVIOUR.match(line):
+            found.add(f"M{number}")
+    return found
+
+
+def check_test_author(data: dict, project: Path, problems: list) -> None:
+    gates = data.get("gates")
+    if not isinstance(gates, dict):
+        return
+    deviated = {item.get("milestone") for item in data.get("deviations") or [] if isinstance(item, dict)}
+    for milestone in sorted(behaviour_milestones(project, data.get("plan"))):
+        gate = gates.get(f"{milestone}/red")
+        if not (isinstance(gate, dict) and gate.get("passed") is True):
+            continue
+        author = gate.get("test_author")
+        if author is False and milestone not in deviated:
+            problems.append(f"gates.{milestone}/red.test_author: false needs a deviation for {milestone} "
+                            "saying why test-author did not write the (zachowanie) tests")
+        elif author is not True and author is not False:
+            problems.append(f"gates.{milestone}/red.test_author: {milestone} has a (zachowanie) criterion; "
+                            "expected true (test-author wrote its tests) or false with a deviation")
 
 
 def check_qa(data: dict, project: Path, problems: list) -> None:
@@ -193,6 +232,7 @@ def check(path: Path, data) -> list:
     project = path.resolve().parent.parent.parent
     check_gates(data, ids, project, problems)
     check_qa(data, project, problems)
+    check_test_author(data, project, problems)
     check_deviations(data, ids, problems)
 
     if not (isinstance(data.get("next_action"), str) and data["next_action"].strip()):

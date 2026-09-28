@@ -24,7 +24,7 @@ Loose talk about a feature must land in one growing `brainstorm` file, and a pla
 - E6. The plan has the sections: goal, what we do not do, context from code (at least one `app.py:<line>` reference), milestones, risks and decisions.
 - E7. Every milestone has an automatic proof: a command and its expected result. The count of milestones equals the count of proofs.
 - E8. The plan refers to the brainstorm decisions (`B-01`, `B-02`) and contains no open questions ("TBD", "TODO", "to be decided" or Polish "do ustalenia").
-- E9. After step 3 `app.py` and `git log` are still unchanged: planning did not execute the plan and did not commit.
+- E9. After step 3 `app.py` and `git log` are still unchanged and `git status --short` is empty: planning did not execute the plan, did not commit and left no files behind (such as `__pycache__/`).
 
 ## Result
 
