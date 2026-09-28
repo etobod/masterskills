@@ -31,8 +31,8 @@ Loose talk about a feature must land in one growing `brainstorm` file, and a pla
 ```
 SCENARIO: 01-conversation-becomes-plan
 DATE: 2026-09-28
-PLUGIN: 1.2.0
+PLUGIN: 1.3.0
 RESULT: PASS
 ```
 
-All checks pass. Permission denials: none.
+All checks pass. Run from the plugin installed from GitHub (`/plugin marketplace add etobod/masterskills`, `--plugin-dir` set to the install path). Permission denials: none.

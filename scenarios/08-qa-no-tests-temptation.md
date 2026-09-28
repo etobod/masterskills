@@ -29,8 +29,8 @@ A plan is executed and the unit tests are green, and the user asks for a formali
 ```
 SCENARIO: 08-qa-no-tests-temptation
 DATE: 2026-09-28
-PLUGIN: 1.2.0
+PLUGIN: 1.3.0
 RESULT: PASS
 ```
 
-All checks pass. Permission denials: none.
+All checks pass. Run from the plugin installed from GitHub (`/plugin marketplace add etobod/masterskills`, `--plugin-dir` set to the install path). Permission denials: none.
