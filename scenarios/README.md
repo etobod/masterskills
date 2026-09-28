@@ -58,5 +58,6 @@ RESULT: PASS | FAIL
 | `01-conversation-becomes-plan.md` | conversation → `brainstorm` → `loc-planning` → `plan` |
 | `02-gate-fails-three-times.md` | 3-round gate limit, `utknelo` file, work continues |
 | `03-new-project-loc-init.md` | `loc-init` on a new project, idempotent second run |
+| `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `pytanie` → `inbox/done/` + `odlozone` |
 
 Scenarios cannot run until the skills they exercise exist; each later plan runs the scenarios it enables.

@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.0.1 — 2026-09-28
+
+- `rules/core.md` rule 3: every inbox file is created with `next_number.py`, never by hand; rule 11 shortened to stay within the word budget.
+- `SessionStart` context lists the inbox commands (`next_number.py` with the plugin path, `mv inbox/<file> inbox/done/`), to be run alone in the Bash tool so they need no approval.
+- Scenario `04-question-in-conversation`: a question in plain conversation creates no file; a chat answer to a `pytanie` is recorded, moved to `inbox/done/` and becomes an `odlozone` file.
+
 ## 1.0.0 — 2026-09-26
 
 - `rules/core.md`: the always-loaded rules (12 points + 7a).

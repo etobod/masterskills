@@ -40,7 +40,20 @@ def inbox_section(summary: dict) -> str:
         lines.append("Nothing open.")
     if summary["state"]:
         lines.append(f"\nActive plan state: `{summary['state'][0]}`")
+    lines.append(inbox_commands())
     return "\n".join(lines)
+
+
+def inbox_commands() -> str:
+    # The root as Claude Code gave it, so plugin_commands.py recognises the command.
+    root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
+    return (
+        "\nInbox commands: run each alone in the Bash tool, from the project directory "
+        "(no `cd`, `&&` or PowerShell), so they need no approval.\n"
+        f'- New file from its template, time from the clock: `sh "{root}/scripts/py.sh" scripts/next_number.py '
+        '--type <pytanie|odlozone|...> --slug "<few words>" --title "<title>" --source "<where it came from>"`\n'
+        "- Close a file: `mv inbox/<file> inbox/done/`"
+    )
 
 
 def main() -> int:
