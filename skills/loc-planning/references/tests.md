@@ -32,7 +32,7 @@ If the project has no test suite yet (no test command in `CLAUDE.md` `Commands`,
 
 - the framework, the test directory and the command, added to `CLAUDE.md` `Commands`;
 - one smoke test, proof: the command → `1 passed` (or the framework's equivalent);
-- `loc/TEST-PLAN.md` copied from `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`, with sections (a) layers and commands and (e) how a test looks here filled in.
+- `loc/TEST-PLAN.md` copied from `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`, with sections (a) layers and commands and (e) how a test looks here filled in. Write the path exactly so, never expanded: `check_plan.py` rejects the plugin's own path, since the plan must work on another machine.
 
 Later milestones use that command in their proofs.
 

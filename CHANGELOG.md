@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## Unreleased
+
+- `check_plan.py` rejects this plugin's own expanded path in a plan (a plan must work on another machine); `loc-planning/references/tests.md` requires `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`. Scenario 05 checks it.
+
 ## 1.2.0 — 2026-09-28
 
 - Tests in planning: a code milestone lists acceptance criteria (`**Kryteria:**`, ``- K<n>: <what the code must do> → `<test>` ``, `(zachowanie)` for behaviour seen from outside) and a performer (`**Wykonawca:** auto | agent | użytkownik (blokujący|odkładalny)`); `check_plan.py` enforces both. The first plan with code starts with a test-suite milestone. Details in `loc-planning/references/tests.md`.

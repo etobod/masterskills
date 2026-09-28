@@ -34,6 +34,10 @@ TAIL = """
 Brak.
 """
 
+SUITE = """### M1 — zestaw testów
+`loc/TEST-PLAN.md` skopiowany z `{path}`.
+**Dowód:** `python -m unittest -v` → `Ran 1 test`
+"""
 
 def plan(milestones: str) -> str:
     return HEAD + milestones + TAIL
@@ -103,6 +107,18 @@ class CheckPlanTest(unittest.TestCase):
             "### M1 — opis w README\n"
             "Sekcja o powitaniach.\n"
             "**Dowód:** `grep -c Powitania README.md` → `1`\n"))
+        self.assertEqual(code, 0, out)
+
+
+    def test_expanded_plugin_path_fails(self):
+        for path in (f"{ROOT.as_posix()}/templates/loc/TEST-PLAN.md", str(ROOT / "templates" / "loc" / "TEST-PLAN.md")):
+            with self.subTest(path=path):
+                code, out = self.run_check(plan(SUITE.format(path=path)))
+                self.assertEqual(code, 1)
+                self.assertIn("plugin path in the plan", self.problems(out))
+
+    def test_plugin_root_variable_passes(self):
+        code, out = self.run_check(plan(SUITE.format(path="${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md")))
         self.assertEqual(code, 0, out)
 
 

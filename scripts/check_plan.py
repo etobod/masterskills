@@ -14,7 +14,9 @@ Checks, in order:
     `- K<n>[ (zachowanie)]: <what the code must do> → <test>` names its test in
     inline code, or `ręcznie` when the performer is the user;
   - `**Wykonawca:**`, when present, is `auto`, `agent`, or `użytkownik` with
-    `(blokujący)` or `(odkładalny)`.
+    `(blokujący)` or `(odkładalny)`;
+  - no expanded path of this plugin: a plan names plugin files as
+    `${CLAUDE_PLUGIN_ROOT}/...`, so it still works on another machine.
 
 Prints JSON {"plan", "ok", "milestones", "proofs", "issues": [{"line", "problem"}]}.
 Exit code 0 when ok, 1 when there are issues, 2 when the file cannot be read.
@@ -22,6 +24,7 @@ Exit code 0 when ok, 1 when there are issues, 2 when the file cannot be read.
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -46,6 +49,24 @@ CRITERIA = re.compile(r"^\*\*Kryteria:\*\*\s*$")
 CRITERION = re.compile(r"^- (K\d+)( \(zachowanie\))?: (?P<what>.+?)(?: → (?P<test>.*))?$")
 PERFORMER = re.compile(r"^\*\*Wykonawca:\*\*\s*(?P<value>.*?)\s*$")
 PERFORMERS = re.compile(r"^(auto|agent|użytkownik \((blokujący|odkładalny)\))$")
+PLUGIN_ROOT = Path(__file__).resolve().parent.parent
+
+
+def plugin_roots() -> list:
+    """Spellings of the plugin directory, normalised: `/` separators, lower case on Windows."""
+    roots = {PLUGIN_ROOT.as_posix()}
+    if os.environ.get("CLAUDE_PLUGIN_ROOT"):
+        roots.add(os.environ["CLAUDE_PLUGIN_ROOT"].replace("\\", "/"))
+    for root in list(roots):
+        match = re.match(r"^([A-Za-z]):/(.*)$", root)
+        if match:  # Git Bash spelling of a drive path
+            roots.add(f"/{match.group(1)}/{match.group(2)}")
+    return [normal(root.rstrip("/")) + "/" for root in roots]
+
+
+def normal(text: str) -> str:
+    text = text.replace("\\", "/")
+    return text.lower() if os.name == "nt" else text
 
 
 def check_milestone(name: str, criteria: list, performer, issues: list) -> None:
@@ -80,7 +101,11 @@ def check(text: str) -> dict:
         if milestone:
             check_milestone(milestone, criteria, performer, issues)
 
+    roots = plugin_roots()
     for number, line in enumerate(text.splitlines(), 1):
+        if section not in HISTORY and any(root in normal(line) for root in roots):
+            issues.append({"line": number, "problem": "plugin path in the plan: write it as "
+                           "${CLAUDE_PLUGIN_ROOT}/..., so the plan works on another machine"})
         if line.startswith("```"):
             in_fence = not in_fence
             continue
