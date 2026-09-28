@@ -95,6 +95,26 @@ class PluginCommandsTest(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertEqual(self.read(path), "")
 
+    def search(self, tool: str, tool_input: dict) -> str:
+        return decision(run_hook("plugin_commands.py", {"tool_name": tool, "tool_input": tool_input}))
+
+    def test_allows_listing_and_searching_inside_the_plugin(self):
+        self.assertEqual(self.search("Glob", {"pattern": "templates/loc/*", "path": str(ROOT)}), "allow")
+        self.assertEqual(self.search("Grep", {"pattern": "Kryteria", "path": str(ROOT / "skills"),
+                                              "glob": "*.md"}), "allow")
+
+    def test_leaves_searches_that_leave_the_plugin_to_the_permission_rules(self):
+        for tool, tool_input in (
+            ("Glob", {"pattern": "*"}),
+            ("Glob", {"pattern": "*", "path": str(ROOT.parent)}),
+            ("Glob", {"pattern": "../*", "path": str(ROOT)}),
+            ("Glob", {"pattern": "C:/Users/*", "path": str(ROOT)}),
+            ("Grep", {"pattern": "x", "path": str(ROOT), "glob": "../**"}),
+            ("Grep", {"pattern": "x", "path": f"{ROOT.as_posix()}/.."}),
+        ):
+            with self.subTest(tool=tool, tool_input=tool_input):
+                self.assertEqual(self.search(tool, tool_input), "")
+
     def test_ignores_other_tools(self):
         out = run_hook("plugin_commands.py", {"tool_name": "PowerShell", "tool_input": {"command": "date +%Y"}})
         self.assertEqual(out, {})
