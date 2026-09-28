@@ -10,6 +10,10 @@ Allows exactly these `Bash` commands, each run on its own:
 - `gh run list --branch <branch> --limit 1 --json status,conclusion,url`, the
   CI check that `after_push.py` asks for.
 
+Also allows `Read` of a file inside the plugin's own directory (the skills'
+references and templates), wherever the plugin is installed: without it every
+reference a skill opens outside the project asks for permission.
+
 Anything with a shell operator, substitution or redirection outside quotes
 (`;`, `&`, `|`, `<`, `>`, `$`, backtick, parentheses, newline, glob), or with `$` or
 a backtick inside double quotes, is left to the normal permission rules. A skill's `allowed-tools` is not used for this: when the model starts a
@@ -68,6 +72,18 @@ def same_path(given: str, expected: Path) -> bool:
     return os.path.normcase(os.path.normpath(given)) == os.path.normcase(os.path.normpath(expected))
 
 
+def plugin_file(given: str) -> bool:
+    """True for an existing file inside the plugin, after symlinks and `..` are resolved."""
+    given = given.replace("\\", "/")
+    if os.name == "nt" and re.match(r"^/[a-zA-Z]/", given):
+        given = f"{given[1]}:{given[2:]}"
+    try:
+        path = Path(given).resolve()
+        return path.is_file() and any(path.is_relative_to(root.resolve()) for root in ROOTS)
+    except (OSError, ValueError):
+        return False
+
+
 def allowed(words: list) -> bool:
     if len(words) >= 3 and words[0] == "sh" and any(same_path(words[1], root / "scripts" / "py.sh")
                                                     for root in ROOTS):
@@ -90,14 +106,19 @@ def main() -> int:
         data = json.load(sys.stdin)
     except (ValueError, OSError):
         return 0
-    command = (data.get("tool_input") or {}).get("command", "").strip()
-    if data.get("tool_name") != "Bash" or not command or not plain(command):
-        return 0
-    try:
-        words = shlex.split(command)
-    except ValueError:
-        return 0
-    if words and allowed(words):
+    tool_input = data.get("tool_input") or {}
+    if data.get("tool_name") == "Read":
+        ok = isinstance(tool_input.get("file_path"), str) and plugin_file(tool_input["file_path"])
+    else:
+        command = str(tool_input.get("command", "")).strip()
+        if data.get("tool_name") != "Bash" or not command or not plain(command):
+            return 0
+        try:
+            words = shlex.split(command)
+        except ValueError:
+            return 0
+        ok = bool(words) and allowed(words)
+    if ok:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "allow",

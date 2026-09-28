@@ -75,6 +75,26 @@ class PluginCommandsTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(self.check(command), "")
 
+    def read(self, path: str) -> str:
+        return decision(run_hook("plugin_commands.py", {"tool_name": "Read", "tool_input": {"file_path": path}}))
+
+    def test_allows_reading_the_plugins_own_files(self):
+        reference = ROOT / "skills" / "loc-planning" / "references" / "tests.md"
+        for path in (str(reference), reference.as_posix(), "/" + reference.as_posix().replace(":", "", 1)):
+            with self.subTest(path=path):
+                self.assertEqual(self.read(path), "allow")
+
+    def test_leaves_reads_outside_the_plugin_to_the_permission_rules(self):
+        outside = Path(sys.executable).resolve()  # an existing file outside the plugin, nothing written
+        paths = [str(outside), f"{ROOT.as_posix()}/skills/missing.md", str(ROOT.parent)]
+        try:
+            paths.append(f"{ROOT.as_posix()}/skills/{os.path.relpath(outside, ROOT / 'skills')}")
+        except ValueError:  # another drive: no `..` path reaches it
+            pass
+        for path in paths:
+            with self.subTest(path=path):
+                self.assertEqual(self.read(path), "")
+
     def test_ignores_other_tools(self):
         out = run_hook("plugin_commands.py", {"tool_name": "PowerShell", "tool_input": {"command": "date +%Y"}})
         self.assertEqual(out, {})

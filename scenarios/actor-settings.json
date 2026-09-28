@@ -2,7 +2,6 @@
   "permissions": {
     "defaultMode": "acceptEdits",
     "allow": [
-      "Read(//c/BC/masterskills/**)",
       "Bash(cd *)",
       "Bash(python *)",
       "Bash(git *)",
