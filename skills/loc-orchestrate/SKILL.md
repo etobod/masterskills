@@ -60,7 +60,8 @@ A failed gate ends in `utknelo`, not in a stop.
 
 ## 5. At the end
 
-1. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode). It uses the state file's `final-review` gate.
-2. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>`. Move it to `loc/inbox/done/` with `mv`. Update `plan` in the state file, set `phase: journal`, validate.
-3. **Journal.** `Skill(skill: "masterskills:loc-journal", args: "loc/inbox/done/<plan file>")`, then `phase: done`, validate.
-4. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, deviations, new inbox files, final review result. Then a **proposed commit message** (Conventional Commits, English, no mention of AI and no `Co-authored-by`) and the sentence that you commit only when asked.
+1. **QA gate** (`qa`), only when the plan has `**Kryteria:**`: `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never the tests; next round. After the third: **stuck**.
+2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode). It uses the state file's `final-review` gate.
+3. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `otwarte — QA nie przeszło`, not moved. Update `plan` in the state file, set `phase: journal`, validate.
+4. **Journal.** `Skill(skill: "masterskills:loc-journal", args: "<plan path>")`, then `phase: done`, validate.
+5. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, deviations, new inbox files, QA verdict, final review result. Then a **proposed commit message** (Conventional Commits, English, no mention of AI and no `Co-authored-by`) and the sentence that you commit only when asked.

@@ -9,12 +9,12 @@
       "mode": "inline" | "subagent",
       "milestone": 1,                            # current one, 1-based
       "phase": "start" | "implement" | "proof" | "code-review"
-               | "final-review" | "journal" | "done",
+               | "qa" | "final-review" | "journal" | "done",
       "milestones": [
         {"id": "M1", "status": "pending" | "in_progress" | "done" | "stuck",
          "start": "<snapshot hash>" | null, "end": "<snapshot hash>" | null}
       ],
-      "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "final-review"
+      "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "qa", "final-review"
         "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ..."},
         "M1/proof": {"rounds": 3, "passed": false, "stuck": "loc/inbox/004-utknelo-....md"}
       },
@@ -27,7 +27,8 @@
 Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
 `utknelo` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
 A passed `M<n>/red` gate (the new tests failed before the code) keeps the
-failing test output in `output`.
+failing test output in `output`. A plan with `**Kryteria:**` reaches `journal`
+or `done` only after a `qa` gate that passed or went stuck.
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -43,11 +44,11 @@ from pathlib import Path
 KEYS = {"plan", "mode", "milestone", "phase", "milestones", "gates", "deviations",
         "next_action", "updated"}
 MODES = {"inline", "subagent"}
-PHASES = {"start", "implement", "proof", "code-review", "final-review", "journal", "done"}
+PHASES = {"start", "implement", "proof", "code-review", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
-GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^final-review$")
+GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
 QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
@@ -90,7 +91,7 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
     for name, gate in gates.items():
         match = GATE.match(name)
         if not match:
-            problems.append(f"gates: unknown gate {name!r} (M<n>/red, M<n>/proof, M<n>/code-review, final-review)")
+            problems.append(f"gates: unknown gate {name!r} (M<n>/red, M<n>/proof, M<n>/code-review, qa, final-review)")
             continue
         if match.group(1) and match.group(1) not in ids:
             problems.append(f"gates.{name}: no such milestone")
@@ -115,6 +116,26 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
         output = gate.get("output")
         if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
+
+
+def has_criteria(project: Path, plan) -> bool:
+    for rel in (str(plan), str(plan).replace("loc/inbox/done/", "loc/inbox/", 1),
+                str(plan).replace("loc/inbox/", "loc/inbox/done/", 1)):
+        try:
+            return re.search(r"^\*\*Kryteria:\*\*", (project / rel).read_text(encoding="utf-8"),
+                             re.MULTILINE) is not None
+        except (OSError, UnicodeDecodeError):
+            continue
+    return False
+
+
+def check_qa(data: dict, project: Path, problems: list) -> None:
+    if data.get("phase") not in ("journal", "done") or not has_criteria(project, data.get("plan")):
+        return
+    gate = (data.get("gates") or {}).get("qa")
+    if not (isinstance(gate, dict) and (gate.get("passed") is True or gate.get("stuck"))):
+        problems.append("gates.qa: a plan with **Kryteria:** needs a qa gate that passed or went stuck "
+                        "before journal")
 
 
 def check_deviations(data: dict, ids: list, problems: list) -> None:
@@ -169,7 +190,9 @@ def check(path: Path, data) -> list:
             problems.append(f"phase done but milestones still open: {open_}")
 
     # loc/state/NNN.json -> the project root is two levels up.
-    check_gates(data, ids, path.resolve().parent.parent.parent, problems)
+    project = path.resolve().parent.parent.parent
+    check_gates(data, ids, project, problems)
+    check_qa(data, project, problems)
     check_deviations(data, ids, problems)
 
     if not (isinstance(data.get("next_action"), str) and data["next_action"].strip()):

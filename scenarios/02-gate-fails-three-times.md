@@ -41,4 +41,4 @@ PLUGIN: 1.1.0
 RESULT: PASS
 ```
 
-All checks pass. Permission denials: none.
+All checks pass. Permission denials: one (a `python` heredoc editing the state file, refused by the actor settings; the run continued and the state file is valid).

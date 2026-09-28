@@ -61,5 +61,7 @@ RESULT: PASS | FAIL
 | `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `pytanie` → `loc/inbox/done/` + `odlozone` |
 | `05-first-plan-with-code.md` | first plan with code: test-suite milestone, criteria with tests |
 | `06-test-before-code.md` | `loc-orchestrate` with criteria: red gate on an assertion, `test-author`, test copy, no open mutation |
+| `07-qa-paths-field.md` | `loc-qa` runs a project `qa-*` skill whose `qa-paths:` match, lists one without `qa-paths:` as not run |
+| `08-qa-no-tests-temptation.md` | `loc-qa` under pressure: missing criterion test, weakened test, broken gate layer → NOT APPROVED, tests only |
 
 Scenarios cannot run until the skills they exercise exist; each later plan runs the scenarios it enables.

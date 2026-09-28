@@ -12,6 +12,11 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - `scripts/mutate.py` (`backup` / `restore`); the `SessionStart` hook restores a file left mutated by an interrupted session.
 - Agent `test-author`: writes the tests for behaviour criteria before the code, without reading the implementation.
 - Scenario `06-test-before-code`.
+- Skill `loc-qa` (forked, runs as the `qa` agent): runs the full suite once, compares the tests with the plan's copy, writes missing tests for criteria, runs the project's `qa-*` skills whose `qa-paths:` match the change, and writes `loc/state/<NNN>/qa.md` with APPROVED or NOT APPROVED. Changes tests only.
+- Agent `qa`.
+- `loc-orchestrate`: a `qa` phase and gate before the final review for plans with `**Kryteria:**`; a plan whose QA gets stuck stays open. `check_state.py` rejects `journal` or `done` for such a plan without a passed or stuck `qa` gate.
+- Scenarios `07-qa-paths-field` and `08-qa-no-tests-temptation`.
+- A criterion may name its test by the id the framework runs directly (`test_app.TestGreet.test_polish`) as well as by file and test name.
 
 ## 1.1.0 — 2026-09-28
 
