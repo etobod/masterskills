@@ -36,9 +36,9 @@ A gate that cannot pass must stop after 3 rounds, leave a complete `utknelo` fil
 
 ```
 SCENARIO: 02-gate-fails-three-times
-DATE: 2026-09-28
-PLUGIN: 1.2.0
+DATE: 2026-09-29
+PLUGIN: 1.4.0
 RESULT: PASS
 ```
 
-All checks pass. Permission denials: none.
+All checks pass. Permission denials: 1, with no effect on the result: `Bash` `ls loc/ …; ls <plugin>/skills/loc-orchestrate/references/` (a compound command listing the plugin's directory; `Glob` there is allowed).

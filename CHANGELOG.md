@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.4.0 — 2026-09-29
+
+- Review gates have a severity threshold: a milestone's code-review and the final review fix Blocking and Non-blocking findings (code-review `high`, `medium`) and pass when none is left. Suggestions (`low`) are not fixed in the gate; they go to one `odlozone` file per plan, named in the state file's new optional `deferred` field (`check_state.py` checks it). In real use every gate fixed `low` findings round after round, went stuck after 3 rounds and widened the plan.
+- After the last failed round of a gate no more code changes: a fix made then was never reviewed. The details of stuck gates moved to `loc-orchestrate/references/gates.md`.
+- At the end of a plan, `loc-orchestrate` closes the follow-up files of its milestones (stuck `utknelo` files and the `deferred` file) whose every point the code now resolves: `## Rozstrzygnięcie` with the fix and `file:line`, then `loc/inbox/done/`. Partly resolved files stay open with the resolved points marked. Scenario `09-final-review-closes-resolved`.
+
 ## 1.3.0 — 2026-09-28
 
 - Installation from a marketplace: the repository is its own marketplace (`.claude-plugin/marketplace.json`); `/plugin marketplace add etobod/masterskills`, then `/plugin install masterskills@masterskills`. README has an Installation section.

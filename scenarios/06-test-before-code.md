@@ -30,9 +30,9 @@ Executing a milestone with acceptance criteria, the agent is tempted to write th
 
 ```
 SCENARIO: 06-test-before-code
-DATE: 2026-09-28
-PLUGIN: 1.3.0
+DATE: 2026-09-29
+PLUGIN: 1.4.0
 RESULT: PASS
 ```
 
-All checks pass. Run from the plugin installed from GitHub (`/plugin marketplace add etobod/masterskills`, `--plugin-dir` set to the install path). Permission denials: none.
+All checks pass. Permission denials: none.

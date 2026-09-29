@@ -22,7 +22,8 @@
       "deviations": [{"milestone": "M1", "rule": 1-4, "note": "...",
                       "question": "loc/inbox/NNN-pytanie-....md"}],   # question: rule 4 only
       "next_action": "exactly what to do next",
-      "updated": "YYYY-MM-DD HH:MM"
+      "updated": "YYYY-MM-DD HH:MM",
+      "deferred": "loc/inbox/NNN-odlozone-....md" | null   # optional
     }
 
 Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
@@ -32,7 +33,9 @@ failing test output in `output`; when the plan's milestone has a
 `(zachowanie)` criterion it also says whether the `test-author` agent wrote
 those tests (`test_author: true`), and `false` needs a deviation for that
 milestone explaining why. A plan with `**Kryteria:**` reaches `journal`
-or `done` only after a `qa` gate that passed or went stuck.
+or `done` only after a `qa` gate that passed or went stuck. `deferred`, when
+set, names the plan's `odlozone` file (review Suggestions), which must exist in
+`loc/inbox/` or `loc/inbox/done/`.
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -47,6 +50,7 @@ from pathlib import Path
 
 KEYS = {"plan", "mode", "milestone", "phase", "milestones", "gates", "deviations",
         "next_action", "updated"}
+OPTIONAL = {"deferred"}
 MODES = {"inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
@@ -54,6 +58,7 @@ MAX_ROUNDS = 3
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
+DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-odlozone-[^/]+\.md$")
 QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
 BEHAVIOUR = re.compile(r"^- K\d+ \(zachowanie\):")
@@ -168,6 +173,21 @@ def check_test_author(data: dict, project: Path, problems: list) -> None:
                             "expected true (test-author wrote its tests) or false with a deviation")
 
 
+def exists_in_inbox(project: Path, rel: str) -> bool:
+    return any((project / p).is_file() for p in (rel, rel.replace("loc/inbox/", "loc/inbox/done/", 1),
+                                                   rel.replace("loc/inbox/done/", "loc/inbox/", 1)))
+
+
+def check_deferred(data: dict, project: Path, problems: list) -> None:
+    deferred = data.get("deferred")
+    if deferred is None:
+        return
+    if not (isinstance(deferred, str) and DEFERRED.match(deferred)):
+        problems.append("deferred: expected null or loc/inbox/NNN-odlozone-<topic>.md")
+    elif not exists_in_inbox(project, deferred):
+        problems.append(f"deferred: {deferred} does not exist")
+
+
 def check_qa(data: dict, project: Path, problems: list) -> None:
     if data.get("phase") not in ("journal", "done") or not has_criteria(project, data.get("plan")):
         return
@@ -202,7 +222,7 @@ def check(path: Path, data) -> list:
     if not isinstance(data, dict):
         return ["expected a JSON object"]
     problems = []
-    missing, extra = KEYS - set(data), set(data) - KEYS
+    missing, extra = KEYS - set(data), set(data) - KEYS - OPTIONAL
     if missing:
         problems.append(f"missing keys: {sorted(missing)}")
     if extra:
@@ -233,6 +253,7 @@ def check(path: Path, data) -> list:
     check_gates(data, ids, project, problems)
     check_qa(data, project, problems)
     check_test_author(data, project, problems)
+    check_deferred(data, project, problems)
     check_deviations(data, ids, problems)
 
     if not (isinstance(data.get("next_action"), str) and data["next_action"].strip()):

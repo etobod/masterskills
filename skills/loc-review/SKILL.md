@@ -37,13 +37,13 @@ Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` 
 
 ## 3. Merge
 
-One list: duplicates merged, each finding with `file:line`, severity (**Blocking**, **Non-blocking**, **Suggestion**), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[invariant]`). Check each against the code before accepting it; a finding the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
+One list: duplicates merged, each finding with `file:line`, severity (**Blocking**, **Non-blocking**, **Suggestion**; code-review `high`, `medium`, `low`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[invariant]`). Check each against the code before accepting it; a finding the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
 
 ## 4. Orchestrated mode: fix, at most 3 rounds
 
-Each round, in the state file's `final-review` gate: increase `rounds`, review (steps 1–3), fix **every** finding, rerun the `Dowód` of every milestone the fixes touched. A finding you reject goes into the report with the reason. The gate passes when a round's review finds nothing to fix; set `passed: true`.
+Each round, in the state file's `final-review` gate: increase `rounds`, review (steps 1–3), fix the Blocking and Non-blocking findings, rerun the `Dowód` of every milestone the fixes touched. Suggestions are not fixed: they go to a separate `odlozone` file of the final review, not to the milestones' `deferred` file (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`). A finding you reject goes into the report with the reason. The gate passes when a round has nothing above a Suggestion; set `passed: true`.
 
-After a third round that still has findings: do not start a fourth. Create a `utknelo` file (`next_number.py --type utknelo`, source: the plan) with each round's findings, what was changed, what remains with `file:line`, and whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, which closes the plan anyway.
+After a third round that still has Blocking or Non-blocking findings: do not start a fourth and change no more code. Create a `utknelo` file (`next_number.py --type utknelo`, source: the plan) with each round's findings, what was changed, what remains with `file:line`, and whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, which closes the plan anyway.
 
 ## 5. Standalone mode: report to inbox
 

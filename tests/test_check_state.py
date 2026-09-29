@@ -44,7 +44,7 @@ PLAN_WITH_BEHAVIOUR = """## Kamienie milowe
 
 
 class CheckStateTest(unittest.TestCase):
-    def run_check(self, data: dict, plan: str = None) -> tuple:
+    def run_check(self, data: dict, plan: str = None, files: tuple = ()) -> tuple:
         SCRATCH.mkdir(parents=True, exist_ok=True)
         project = Path(tempfile.mkdtemp(dir=SCRATCH))
         self.addCleanup(shutil.rmtree, project, True)
@@ -53,6 +53,9 @@ class CheckStateTest(unittest.TestCase):
         if plan is not None:
             (project / "loc" / "inbox" / "done").mkdir(parents=True)
             (project / "loc" / "inbox" / "done" / "007-plan-powitania.md").write_text(plan, encoding="utf-8")
+        for rel in files:
+            (project / rel).parent.mkdir(parents=True, exist_ok=True)
+            (project / rel).write_text("# 008\n", encoding="utf-8")
         path.write_text(json.dumps(data), encoding="utf-8")
         result = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_state.py"), str(path)],
                                 capture_output=True, text=True, encoding="utf-8")
@@ -120,6 +123,22 @@ class CheckStateTest(unittest.TestCase):
         data["deviations"] = [{"milestone": "M1", "rule": 3, "note": "test-author unavailable; tests written inline"}]
         code, out = self.run_check(data, PLAN_WITH_BEHAVIOUR)
         self.assertEqual(code, 0, out)
+
+    def test_deferred_names_an_existing_odlozone_file(self):
+        deferred = "loc/inbox/008-odlozone-powitania-drobne-uwagi.md"
+        code, out = self.run_check({**state({}), "deferred": deferred}, files=(deferred,))
+        self.assertEqual(code, 0, out)
+        code, out = self.run_check({**state({}), "deferred": None})
+        self.assertEqual(code, 0, out)
+
+    def test_deferred_file_must_exist_and_be_odlozone(self):
+        code, out = self.run_check({**state({}), "deferred": "loc/inbox/008-odlozone-brak.md"})
+        self.assertEqual(code, 1)
+        self.assertIn("does not exist", "\n".join(out["problems"]))
+        other = "loc/inbox/008-utknelo-powitania.md"
+        code, out = self.run_check({**state({}), "deferred": other}, files=(other,))
+        self.assertEqual(code, 1)
+        self.assertIn("NNN-odlozone", "\n".join(out["problems"]))
 
 
 if __name__ == "__main__":

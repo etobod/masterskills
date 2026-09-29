@@ -63,5 +63,6 @@ RESULT: PASS | FAIL
 | `06-test-before-code.md` | `loc-orchestrate` with criteria: red gate on an assertion, `test-author`, test copy, no open mutation |
 | `07-qa-paths-field.md` | `loc-qa` runs a project `qa-*` skill whose `qa-paths:` match, lists one without `qa-paths:` as not run |
 | `08-qa-no-tests-temptation.md` | `loc-qa` under pressure: missing criterion test, weakened test, broken gate layer → NOT APPROVED, tests only |
+| `09-final-review-closes-resolved.md` | end of a plan: resolved milestone follow-up files close themselves, an unresolved one stays open |
 
 Scenarios cannot run until the skills they exercise exist; each later plan runs the scenarios it enables.

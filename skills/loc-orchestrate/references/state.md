@@ -42,6 +42,7 @@ One entry in `milestones` per `### ` heading under `## Kamienie milowe`, in orde
 
   `--point end` prints the milestone's `diff` command and changed `files`. Take a new `end` after every fix, so the diff always matches the tree.
 - `gates`: one entry per gate that ran: `M<n>/red` (`references/tests.md`), `M<n>/proof`, `M<n>/code-review`, `qa`, `final-review`. Each is `{"rounds": <n>, "passed": <bool>, "stuck": null}`; a passed `M<n>/red` also keeps the failing test lines in `"output"` and, for a milestone with a `(zachowanie)` criterion, `"test_author": true` when `test-author` wrote those tests (`false` only with a deviation saying why). Increase `rounds` **before** running the check of that round, so an interrupted round still counts. After a third failed round `stuck` holds the `utknelo` file path. The script rejects a fourth round, and for a plan with `**Kryteria:**` a `journal` or `done` phase without a `qa` gate that passed or went stuck.
+- `deferred` (optional): `null`, or the path of the plan's `odlozone` file with the review Suggestions (`references/gates.md`). Set it when that file is created.
 - `deviations`: `{"milestone": "M2", "rule": 1-4, "note": "<what and why>"}`; rule 4 also has `"question": "loc/inbox/NNN-pytanie-….md"`.
 - `next_action`: one concrete step, precise enough for someone who has read nothing else, e.g. `"Run the M2 proof: python -m pytest tests/test_export.py; expected 3 passed"`.
 
