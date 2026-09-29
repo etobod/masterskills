@@ -34,8 +34,13 @@ failing test output in `output`; when the plan's milestone has a
 those tests (`test_author: true`), and `false` needs a deviation for that
 milestone explaining why. A plan with `**Kryteria:**` reaches `journal`
 or `done` only after a `qa` gate that passed or went stuck. `deferred`, when
-set, names the plan's `odlozone` file (review Suggestions), which must exist in
-`loc/inbox/` or `loc/inbox/done/`.
+set (runs started before 1.6), names the plan's `odlozone` file of milestone
+Suggestions, which must exist in `loc/inbox/` or `loc/inbox/done/`.
+
+The plan's `## Uwagi z przeglądów` section, when present, holds review findings
+that are not fixed, one per line: `- sugestia (<gate>): <finding>` or
+`- nierealna (<gate>): <finding> Kto to wytwarza: <answer, 3+ words>`, where
+<gate> is `M<n> code-review` or `final-review`.
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -58,6 +63,9 @@ MAX_ROUNDS = 3
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
+NOTES = "Uwagi z przeglądów"
+NOTE = re.compile(r"^- (sugestia|nierealna) \((M\d+ code-review|final-review)\): (.+)$")
+PRODUCER = re.compile(r"Kto to wytwarza:\s*(.+)$")
 DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-odlozone-[^/]+\.md$")
 QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
@@ -188,6 +196,25 @@ def check_deferred(data: dict, project: Path, problems: list) -> None:
         problems.append(f"deferred: {deferred} does not exist")
 
 
+def check_notes(data: dict, project: Path, problems: list) -> None:
+    section = None
+    for number, line in enumerate(plan_text(project, data.get("plan")).splitlines(), 1):
+        if line.startswith("## "):
+            section = line[3:].strip()
+            continue
+        if section != NOTES or not line.strip():
+            continue
+        match = NOTE.match(line)
+        if not match:
+            problems.append(f"plan line {number}: in ## {NOTES} expected "
+                            "'- sugestia (<gate>): ...' or '- nierealna (<gate>): ... Kto to wytwarza: ...'")
+        elif match.group(1) == "nierealna":
+            producer = PRODUCER.search(match.group(3))
+            if not producer or len(producer.group(1).split()) < 3:
+                problems.append(f"plan line {number}: a nierealna finding needs 'Kto to wytwarza:' "
+                                "and who or what produces that input (3+ words)")
+
+
 def check_qa(data: dict, project: Path, problems: list) -> None:
     if data.get("phase") not in ("journal", "done") or not has_criteria(project, data.get("plan")):
         return
@@ -254,6 +281,7 @@ def check(path: Path, data) -> list:
     check_qa(data, project, problems)
     check_test_author(data, project, problems)
     check_deferred(data, project, problems)
+    check_notes(data, project, problems)
     check_deviations(data, ids, problems)
 
     if not (isinstance(data.get("next_action"), str) and data["next_action"].strip()):

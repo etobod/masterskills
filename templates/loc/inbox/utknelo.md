@@ -1,6 +1,7 @@
 # {NNN} — {TYTUL}
 
 **Typ:** utknelo
+**Kategoria:** <blokująca | nieblokująca: najpoważniejsza uwaga, która została>
 **Status:** otwarte
 **Utworzono:** {DATA}
 **Źródło:** {ZRODLO}

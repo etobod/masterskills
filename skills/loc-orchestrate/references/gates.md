@@ -1,26 +1,28 @@
 # Review gates, stuck gates and follow-up files
 
-## Severity
+## Categories
 
-Every finding of a milestone's code-review and of the final review gets one severity:
+Every finding of a milestone's code-review and of the final review gets one category:
 
-- **Blocking**: wrong behaviour, a broken `Invariants` entry, a criterion not met. code-review `high`.
-- **Non-blocking**: a real defect in a rarer case. code-review `medium`.
-- **Suggestion**: everything else: style, wording, an unlikely edge case. code-review `low`.
+- **Blocking** (`blokująca`): wrong behaviour, a broken `Invariants` entry, a criterion not met. code-review `high`.
+- **Non-blocking** (`nieblokująca`): a real defect in a rarer case that does happen. code-review `medium`.
+- **Suggestion** (`sugestia`): real but minor: style, wording, a comment in the wrong place. code-review `low`.
+- **Unrealistic** (`nierealna`): the finding needs an input or a state that **nothing in this project produces**: not its code, not its real data, not a user mistake you can foresee. Ask "who or what here would produce this?" and name the answer: the code that writes that input and why it never writes this form (e.g. "the report is written by the model following `report-format.md`, which uses no numeric entities"). If you cannot name it, the finding is not unrealistic.
 
-When code-review gives no severity, judge it by these definitions; do not lower one to pass the gate. A review gate fixes Blocking and Non-blocking findings and **passes when a round has none left**. Suggestions are **not fixed** in the gate: fixing them round after round widens the plan and never ends. A milestone's Suggestions go to the plan's deferred file; the final review's go to a file of their own (below).
+When code-review gives no severity, judge it by these definitions; never lower one to pass the gate. A finding keeps its category from the milestone to the final review unless there is a new argument, such as naming who produces the input. A review gate fixes Blocking and Non-blocking findings and **passes when a round has none left**. Suggestions and Unrealistic findings are **never fixed in the gate**: fixing them round after round widens the plan and never ends.
 
-## The deferred file
+## Review notes in the plan
 
-One per plan. At the first Suggestion create it and record its path in the state file's `deferred`:
+Suggestions and Unrealistic findings create **no inbox file**. Each becomes one line in the plan file, in a section `## Uwagi z przeglądów` placed right before `## Rozstrzygnięcie` (create it at the first note):
 
-```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type odlozone --slug "<plan topic> drobne uwagi" --title "<plan> — drobne uwagi z przeglądów" --source "<plan path>"
+```
+- sugestia (M2 code-review): `app.py:14` — komentarz LINE_PREFIX stoi nad RAW_HTML
+- nierealna (final-review): `check.py:88` — encja `&#51;` w raporcie pokaże 3, a liczy 51. Kto to wytwarza: raport pisze model według report-format.md, który nie używa encji
 ```
 
-Under `## Co odłożono` one line per finding: `file:line`, the gate (`M2 code-review`, `final-review`), the finding verbatim, the suggested fix; later Suggestions are added there. `## Dlaczego nie teraz`: Suggestions from review gates, not fixed in the gate. `## Kiedy wrócić`: when that code is next changed.
+The gate is `M<n> code-review` or `final-review`. Only the finding: no proposed fix, no "when to come back". An Unrealistic line ends with `Kto to wytwarza:` and the answer; `check_state.py` rejects the section otherwise.
 
-The final review's Suggestions go to a separate `odlozone` file (`--slug "<plan topic> przegląd końcowy"`, same sections), not to `deferred`: the deferred file then holds only milestone points and can close when they are resolved.
+A run started on an older version may have a `deferred` `odlozone` file in the state file: keep appending its milestone Suggestions there, and close it as below.
 
 ## Stuck gate
 
@@ -30,7 +32,7 @@ Do not start a fourth round, and **change no more code**: a fix after the last r
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type utknelo --slug "<plan topic> m<n> <gate>" --title "<plan> — M<n>, <gate>" --source "<plan path>"
 ```
 
-Fill every section: the gate and milestone; for each round the verbatim failure output (even when it repeats the last one), what you changed and the result; `## Co zostało`, each point with `file:line`; whether the rounds went in circles; and which version of the code the work continued with. Record its path in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
+Fill every section: `**Kategoria:**` (`blokująca` or `nieblokująca`: the most serious finding left; a failing proof, red or QA gate is `blokująca`); the gate and milestone; for each round the verbatim failure output (even when it repeats the last one), what you changed and the result; `## Co zostało`, each point with `file:line`; whether the rounds went in circles; and which version of the code the work continued with. Record its path in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
 
 ## Closing what the plan resolved
 

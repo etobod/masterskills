@@ -5,8 +5,8 @@ Checks, in order:
   - the required sections exist (Cel, Czego nie robimy, Kontekst z kodu,
     Kamienie milowe, Ryzyka i decyzje);
   - no forbidden phrase that marks an undecided plan ("do ustalenia", "TODO"...),
-    outside inline code and outside the `## Bramka planu` and `## Rozstrzygnięcie`
-    sections, which record history rather than instructions;
+    outside inline code and outside the `## Bramka planu`, `## Uwagi z przeglądów`
+    and `## Rozstrzygnięcie` sections, which record history rather than instructions;
   - no unfilled template placeholder such as `<co powstaje>`;
   - milestones (`### ` headings under `## Kamienie milowe`) and `**Dowód:**`
     lines are both counted, both > 0 and equal;
@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 REQUIRED = ["Cel", "Czego nie robimy", "Kontekst z kodu", "Kamienie milowe", "Ryzyka i decyzje"]
-HISTORY = {"Bramka planu", "Rozstrzygnięcie"}
+HISTORY = {"Bramka planu", "Uwagi z przeglądów", "Rozstrzygnięcie"}
 FORBIDDEN = [
     "do ustalenia", "do decyzji", "do rozstrzygnięcia", "do sprawdzenia", "sprawdzić, czy",
     "zobaczymy", "jeśli się okaże", "ewentualnie", "być może", "prawdopodobnie",

@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.6.0 — 2026-09-29
+
+- A fourth review category, Unrealistic (`nierealna`): a finding that needs an input nothing in the project produces. It must name who or what produces that input instead (`Kto to wytwarza:`); if it cannot, the finding is not unrealistic. A finding keeps its category from the milestone to the final review unless there is a new argument. In real use each review of a checker found another invented input, and each deferred file became the next plan.
+- Suggestions and Unrealistic findings of review gates create no inbox file: one line each in the plan's `## Uwagi z przeglądów`, with the gate and no proposed fix. `check_state.py` checks the section's format and the `Kto to wytwarza:` answer. An inbox file is created only by a stuck gate, and the `utknelo` file shows its `**Kategoria:**` under `**Typ:**`. The state file's `deferred` field stays for runs started before 1.6.
+- `loc-review` standalone lists the category first on each line and creates no file when every finding is Unrealistic. The `rubber-duck` agent reports Unrealistic findings as their own group.
+
 ## 1.5.0 — 2026-09-29
 
 - At the end of a plan `loc-orchestrate` writes the diary entry itself with one `memory_index.py` command instead of starting `loc-journal`. It knows how the plan went, so the entry is the same; the skill's extra steps each re-read the whole end-of-plan context. The plan's end no longer tidies `loc/PATTERNS.md`: lessons go there when they are learned (rule 10). `loc-journal` stays for work outside orchestration.

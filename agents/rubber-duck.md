@@ -31,5 +31,6 @@ Findings grouped by severity, most severe first. Each one: **what** is wrong, wi
 - **Blocking**: the work will fail, be wrong or miss a requirement.
 - **Non-blocking**: a real robustness or quality problem.
 - **Suggestion**: a genuine improvement, lower priority.
+- **Unrealistic**: needs an input nothing in the project produces; say what produces that input instead.
 
 Omit empty groups. **If there are no substantive issues, say so in one line** ("No blocking or non-blocking issues.") and stop. Inventing findings to look thorough is a failure of this review.

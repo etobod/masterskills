@@ -31,10 +31,10 @@ Update the state file before and after every step.
    - *subagent*: a fresh general-purpose sub-agent per milestone with the plan path, the milestone's heading and text, `Kontekst z kodu`, and the rules: only this milestone, no commits, follow the project's `CLAUDE.md`, report the files changed and the proof output. The next steps check its report.
 3. **Proof gate** (`M<n>/proof`). Increase `rounds`, run the `Dowód` command exactly as written, compare with the expected result. Pass → next step. Fail → fix the cause (not the proof) and start the next round. After the third failed round: **stuck** (below).
 4. **Snapshot** `--point end`. It prints the changed files.
-5. **Code-review gate** (`M<n>/code-review`). Increase `rounds`, then `Skill(skill: "code-review", args: "<changed files> medium")`: always explicit files and level, **never `ultra`** (it leaves the machine). Fix the Blocking and Non-blocking findings; Suggestions (`low`) go to the plan's deferred file, unfixed (`references/gates.md`). Rerun the proof after the fixes and take a new `end` snapshot. A finding you reject after checking it goes into the final report with the reason. Passed when a round has nothing above a Suggestion. After the third failed round: **stuck**.
+5. **Code-review gate** (`M<n>/code-review`). Increase `rounds`, then `Skill(skill: "code-review", args: "<changed files> medium")`: always explicit files and level, **never `ultra`** (it leaves the machine). Fix the Blocking and Non-blocking findings; Suggestions and Unrealistic findings are not fixed: one line each in the plan's `## Uwagi z przeglądów` (`references/gates.md`). Rerun the proof after the fixes and take a new `end` snapshot. A finding you reject goes into the final report with the reason. Passed when a round has no Blocking or Non-blocking finding. After the third failed round: **stuck**.
 6. Mark the milestone `done`, move to the next one.
 
-**Stuck gate.** No fourth round and no more code changes: write the `utknelo` file as `references/gates.md` says, record it in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
+**Stuck gate.** No fourth round, no more code changes: write the `utknelo` file (`references/gates.md`), record it in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
 
 ## 3. Deviations from the plan
 
@@ -56,7 +56,7 @@ A failed gate ends in `utknelo`, not in a stop.
 
 1. **QA gate** (`qa`), only when the plan has `**Kryteria:**`: `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never the tests; next round. After the third: **stuck**.
 2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode). It uses the state file's `final-review` gate.
-3. **Close what the plan resolved**: milestone `utknelo` files and the deferred file whose points are all fixed now get `## Rozstrzygnięcie` and move to `loc/inbox/done/` (`references/gates.md`).
+3. **Close what the plan resolved**: milestone `utknelo` files whose points are all fixed now get `## Rozstrzygnięcie` and move to `loc/inbox/done/` (`references/gates.md`).
 4. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `otwarte — QA nie przeszło`, not moved. Update `plan` in the state file, set `phase: journal`, validate.
-5. **Journal.** One command, the text yours (Polish, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Szczegóły: <plan path>"`. Then `phase: done`, validate.
+5. **Journal.** One command, your text (Polish, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Szczegóły: <plan path>"`. Then `phase: done`, validate.
 6. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, QA verdict, final review result. Then a **proposed commit message** (Conventional Commits, English, no mention of AI and no `Co-authored-by`) and the sentence that you commit only when asked.

@@ -140,6 +140,35 @@ class CheckStateTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("NNN-odlozone", "\n".join(out["problems"]))
 
+    def with_notes(self, *lines: str) -> str:
+        return PLAN_WITH_CRITERIA + "\n## Uwagi z przeglądów\n" + "\n".join(lines) + "\n\n## Rozstrzygnięcie\n"
+
+    def test_review_notes_in_the_plan_are_valid(self):
+        plan = self.with_notes(
+            "- sugestia (M1 code-review): `app.py:3` — komentarz nad złą stałą",
+            "",
+            "- nierealna (final-review): `app.py:5` — encja `&#51;` w raporcie. "
+            "Kto to wytwarza: raport pisze model bez encji")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
+
+    def test_unrealistic_note_needs_who_produces_the_input(self):
+        gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
+        for note in ("- nierealna (final-review): `app.py:5` — encja `&#51;` w raporcie",
+                     "- nierealna (final-review): `app.py:5` — encja. Kto to wytwarza: nikt"):
+            code, out = self.run_check(self.finished("done", gates), self.with_notes(note))
+            self.assertEqual(code, 1, note)
+            self.assertIn("Kto to wytwarza", "\n".join(out["problems"]))
+
+    def test_review_notes_accept_only_suggestion_and_unrealistic(self):
+        gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
+        for note in ("- blokująca (M1 code-review): `app.py:3` — zły wynik",
+                     "- sugestia (review): `app.py:3` — komentarz",
+                     "Luźny tekst bez kategorii"):
+            code, out = self.run_check(self.finished("done", gates), self.with_notes(note))
+            self.assertEqual(code, 1, note)
+            self.assertIn("Uwagi z przeglądów", "\n".join(out["problems"]))
+
 
 if __name__ == "__main__":
     unittest.main()
