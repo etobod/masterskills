@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.5.0 — 2026-09-29
+
+- At the end of a plan `loc-orchestrate` writes the diary entry itself with one `memory_index.py` command instead of starting `loc-journal`. It knows how the plan went, so the entry is the same; the skill's extra steps each re-read the whole end-of-plan context. The plan's end no longer tidies `loc/PATTERNS.md`: lessons go there when they are learned (rule 10). `loc-journal` stays for work outside orchestration.
+- Scenario 09 checks the diary entry (E8).
+
 ## 1.4.0 — 2026-09-29
 
 - Review gates have a severity threshold: a milestone's code-review and the final review fix Blocking and Non-blocking findings (code-review `high`, `medium`) and pass when none is left. Suggestions (`low`) are not fixed in the gate; they go to one `odlozone` file per plan, named in the state file's new optional `deferred` field (`check_state.py` checks it). In real use every gate fixed `low` findings round after round, went stuck after 3 rounds and widened the plan.

@@ -52,4 +52,4 @@ The file exists when the skill starts: validate it, read `next_action`, and cont
 
 ## At the end
 
-`plan` points to the plan's new place in `loc/inbox/done/`, `phase` goes `journal` while `loc-journal` writes the diary entry, then `done`. The file stays: it is the record of the run. `loc/` is ignored by git.
+`plan` points to the plan's new place in `loc/inbox/done/`, `phase` goes `journal` while the diary entry is written, then `done`. The file stays: it is the record of the run. `loc/` is ignored by git.

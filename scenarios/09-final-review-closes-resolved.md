@@ -1,6 +1,6 @@
 # 09 — The end of a plan closes what the plan resolved
 
-A plan reaches its final review with three follow-up files from its milestones. Two describe points that a later milestone already fixed, and one describes a point the plan explicitly excludes. At the end, `loc-orchestrate` must close the two resolved files by itself, each with a `## Rozstrzygnięcie` that names the fix, and move them to `loc/inbox/done/`. It must leave the third one open and not "fix" it outside the plan's scope. Plugin 1.4.0, `loc-orchestrate` `references/gates.md`.
+A plan reaches its final review with three follow-up files from its milestones. Two describe points that a later milestone already fixed, and one describes a point the plan explicitly excludes. At the end, `loc-orchestrate` must close the two resolved files by itself, each with a `## Rozstrzygnięcie` that names the fix, and move them to `loc/inbox/done/`. It must leave the third one open and not "fix" it outside the plan's scope. Plugin 1.4.0, `loc-orchestrate` `references/gates.md`; E8 from 1.5.0 (the diary entry at the end of a plan).
 
 ## Setup
 
@@ -34,14 +34,15 @@ A plan reaches its final review with three follow-up files from its milestones. 
 - E5. The plan is in `loc/inbox/done/`, and its `## Rozstrzygnięcie` names files 002 and 003 as closed.
 - E6. `loc/state/001.json` has `phase: done` and passes `sh <plugin>/scripts/py.sh scripts/check_state.py loc/state/001.json` (exit `0`).
 - E7. No commit (`git log` shows only the initial commit), and no file outside the test project was created or changed.
+- E8. `loc/MEMORY.md` has exactly one entry more than after setup: a `[Plan]` entry whose text ends with `Szczegóły: loc/inbox/done/001-plan-powitanie.md` and has at most 3 sentences before it. `loc/PATTERNS.md` is unchanged. The session transcript has no call of the `loc-journal` skill: `loc-orchestrate` writes the entry itself with one `memory_index.py` command.
 
 ## Result
 
 ```
 SCENARIO: 09-final-review-closes-resolved
 DATE: 2026-09-29
-PLUGIN: 1.4.0
+PLUGIN: 1.5.0
 RESULT: PASS
 ```
 
-All checks pass. 002 and 003 are closed with `file:line`, 004 is still open, and the final review's Suggestion is in a new file (005). Permission denials: none. The first run (before the fix) failed E2: the final review added its Suggestion to 003, so 003 could not close. Since then the final review's Suggestions go to their own file.
+All checks pass. 002 and 003 are closed with `file:line`, 004 is still open, the plan names both closed files. E8: one new `[Plan]` entry in `loc/MEMORY.md`, added by a single `memory_index.py` command, with no `loc-journal` call; `loc/PATTERNS.md` unchanged. Permission denials: none. On 1.4.0 the first run failed E2 (the final review added its Suggestion to 003); since then its Suggestions go to their own file.

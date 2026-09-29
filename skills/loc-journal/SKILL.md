@@ -1,6 +1,6 @@
 ---
 name: loc-journal
-description: Use after work that changed something, to record it in loc/MEMORY.md — called by loc-orchestrate when a plan ends, and after a review, a fix outside any plan or an important decision (e.g. "loc-journal", "zapisz w dzienniku"). Also tidies contradicting entries in loc/PATTERNS.md.
+description: Use after work that changed something, to record it in loc/MEMORY.md — after a review, a plan finished by hand, a fix outside any plan or an important decision (e.g. "loc-journal", "zapisz w dzienniku"). Also tidies contradicting entries in loc/PATTERNS.md.
 argument-hint: "[loc/inbox/done file | what was done]"
 ---
 
@@ -16,7 +16,7 @@ Keeps the project's diary, `loc/MEMORY.md`: what was done, newest first, one sho
 
 | Type | When |
 |---|---|
-| `Plan` | a plan was executed (`loc-orchestrate` calls this at the end) |
+| `Plan` | a plan was executed by hand (a plan run through orchestration writes its own entry) |
 | `Przegląd` | a review was done (`loc-review` on its own) |
 | `Poprawka` | a change outside any plan that actually changed something |
 | `Decyzja` | an important decision, e.g. an answered `pytanie` that changes direction |
