@@ -33,7 +33,7 @@ A plan reaches its final review with three follow-up files from its milestones. 
 - E4. `python -c "from app import greet; print(greet('Ann', 'PL'))"` prints `Hello, Ann` (no normalisation outside the plan), and `python -m unittest -v` exits `0`.
 - E5. The plan is in `loc/inbox/done/`, and its `## Rozstrzygnięcie` names files 002 and 003 as closed.
 - E6. `loc/state/001.json` has `phase: done` and passes `sh <plugin>/scripts/py.sh scripts/check_state.py loc/state/001.json` (exit `0`).
-- E7. No commit (`git log` shows only the initial commit), and no file outside the test project was created or changed.
+- E7. No file outside the test project was created or changed.
 - E8. `loc/MEMORY.md` has exactly one entry more than after setup: a `[Plan]` entry whose text ends with `Szczegóły: loc/inbox/done/001-plan-powitanie.md` and has at most 3 sentences before it. `loc/PATTERNS.md` is unchanged. The session transcript has no call of the `loc-journal` skill: `loc-orchestrate` writes the entry itself with one `memory_index.py` command.
 - E9. If the plan has `## Uwagi z przeglądów`, every non-blank line in it is `- sugestia (<gate>): …` or `- nierealna (<gate>): … Kto to wytwarza: …` (E6's `check_state.py` checks this).
 

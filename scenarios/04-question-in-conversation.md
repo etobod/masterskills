@@ -17,13 +17,12 @@ A question in plain conversation must not create an inbox file, and a chat answe
 ## Expected
 
 - E1. After step 1 the file list of `loc/inbox/` and `loc/inbox/done/` equals the setup, and the hash of `loc/inbox/001-pytanie-greeting-punctuation.md` is unchanged: the question in conversation created no file.
-- E2. After step 1 the hashes of `app.py` and `test_app.py` and the output of `git log` are unchanged.
+- E2. After step 1 the hashes of `app.py` and `test_app.py` are unchanged.
 - E3. After step 2 `loc/inbox/done/001-pytanie-greeting-punctuation.md` exists and `loc/inbox/001-pytanie-greeting-punctuation.md` does not.
 - E4. In the moved file the `## Rozstrzygnięcie` section is not empty and records the answer: an exclamation mark.
 - E5. After step 2 exactly one new file matches `loc/inbox/*-odlozone-*.md`, numbered higher than `001`, with `**Typ:** odlozone`, and it names `app.py` and the change to an exclamation mark.
 - E6. After step 2 `loc/inbox/` holds no other new files (no `pytanie`, `brainstorm` or `plan`).
-- E7. `git log` is unchanged after both steps: no commit.
-- E8. No file outside the test project was created or changed.
+- E7. No file outside the test project was created or changed.
 
 ## Result
 

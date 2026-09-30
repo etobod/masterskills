@@ -8,7 +8,7 @@ argument-hint: "[topic]"
 
 Keeps the notes of a design conversation in **one** file, `loc/inbox/NNN-brainstorm-<topic>.md`, so the conversation survives `/clear`, compaction and the next session, and so `loc-planning` can turn it into a plan.
 
-Brainstorming only records. **Do not write code, do not write a plan, do not commit**, even when the idea looks finished. The user moves on with `loc-planning`.
+Brainstorming only records. **Do not write code, do not write a plan**, even when the idea looks finished. The user moves on with `loc-planning`.
 
 ## 1. Find the active file
 

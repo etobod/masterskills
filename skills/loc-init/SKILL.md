@@ -32,4 +32,3 @@ The script prints JSON.
   - write the project's direction in `loc/PRD.md`.
 - **`ok: false`.** Show `message` as it is, in the user's language, and stop. With `no-git` the directory is not the root of a git repository: plans snapshot milestones with git, reviews read the diff and work ends in a commit, so none of that works without it. Nothing was created. Do not run `git init` unless the user asks.
 
-Do not commit the result; the user decides when.

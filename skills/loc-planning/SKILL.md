@@ -8,7 +8,7 @@ argument-hint: "<inbox number or file | PRD fragment | task text>"
 
 Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute without deciding anything. Plans are made only here and executed only by `loc-orchestrate`.
 
-**Do not execute the plan, do not change code, do not commit.**
+**Do not execute the plan, do not change code.**
 
 ## 1. Input
 

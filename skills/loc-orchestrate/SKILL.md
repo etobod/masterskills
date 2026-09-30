@@ -1,6 +1,6 @@
 ---
 name: loc-orchestrate
-description: Use when the user asks to execute a plan from loc/inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in loc/state/. Builds it milestone by milestone with a proof and a code-review per milestone, then a final review. Never commits.
+description: Use when the user asks to execute a plan from loc/inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in loc/state/. Builds it milestone by milestone with a proof and a code-review per milestone, then a final review.
 argument-hint: "<plan number or file>"
 ---
 
@@ -8,7 +8,7 @@ argument-hint: "<plan number or file>"
 
 Executes `loc/inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the contract: build what it says, prove it with its `Dowód` lines, review each milestone's diff, then the whole. Do not redesign it.
 
-**Do not commit or push. Do not ask "shall I continue?" between milestones.**
+**Do not ask "shall I continue?" between milestones.**
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
@@ -28,7 +28,7 @@ Update the state file before and after every step.
 1. **Snapshot** `--point start`.
 2. **Implement** exactly this milestone, code and its tests together. With `**Kryteria:**`: tests first, red gate `M<n>/red`, then the code (`references/tests.md`).
    - *inline*: do it yourself.
-   - *subagent*: a fresh general-purpose sub-agent per milestone with the plan path, the milestone's heading and text, `Kontekst z kodu`, and the rules: only this milestone, no commits, follow the project's `CLAUDE.md`, scratch files only in `loc/tmp/` and delete only files you created there, never the directory, report the files changed and the proof output. The next steps check its report.
+   - *subagent*: a fresh general-purpose sub-agent per milestone with the plan path, the milestone's heading and text, `Kontekst z kodu`, and the rules: only this milestone, follow the project's `CLAUDE.md`, scratch files only in `loc/tmp/` and delete only files you created there, never the directory, report the files changed and the proof output. The next steps check its report.
 3. **Proof gate** (`M<n>/proof`). Increase `rounds`, run the `Dowód` command exactly as written, compare with the expected result. Pass → next step. Fail → fix the cause (not the proof) and start the next round. After the third failed round: **stuck** (below).
 4. **Snapshot** `--point end`. It prints the changed files.
 5. **Code-review gate** (`M<n>/code-review`). Increase `rounds`, then `Skill(skill: "code-review", args: "<changed files> medium")`: always explicit files and level, **never `ultra`** (it leaves the machine). Fix the Blocking and Non-blocking findings; Suggestions and Unrealistic findings are not fixed: one line each in the plan's `## Uwagi z przeglądów` (`references/gates.md`). Rerun the proof after the fixes and take a new `end` snapshot. A finding you reject goes into the final report with the reason. Passed when a round has no Blocking or Non-blocking finding. After the third failed round: **stuck**.
@@ -59,4 +59,4 @@ A failed gate ends in `utknelo`, not in a stop.
 3. **Close what the plan resolved**: milestone `utknelo` files whose points are all fixed now get `## Rozstrzygnięcie` and move to `loc/inbox/done/` (`references/gates.md`).
 4. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `otwarte — QA nie przeszło`, not moved. Update `plan` in the state file, set `phase: journal`, validate.
 5. **Journal.** One command, your text (Polish, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Szczegóły: <plan path>"`. Then `phase: done`, validate.
-6. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, QA verdict, final review result. Then a **proposed commit message** (Conventional Commits, English, no mention of AI and no `Co-authored-by`) and the sentence that you commit only when asked.
+6. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, QA verdict, final review result.

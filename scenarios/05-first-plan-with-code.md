@@ -21,7 +21,7 @@ The first plan that changes code in a project with no test suite must start with
 - E3. Every later milestone that changes `app.py` has a `**Kryteria:**` block with at least one `- K<n>: … → \`<test>\`` line naming the test (file and test name, or the id the framework runs directly); the unknown-language fallback appears as a criterion.
 - E4. Every later milestone's `**Dowód:**` is a test command, not "run the app and check".
 - E5. `python <plugin>/scripts/check_plan.py <plan>` exits `0`.
-- E6. `app.py` is unchanged, no test file exists yet, and `git log` equals the setup: planning wrote no code and made no commit.
+- E6. `app.py` is unchanged, and no test file exists yet: planning wrote no code.
 - E7. The plan contains no expanded path of the plugin directory: the template is named as `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md` or by its plugin-relative path.
 - E8. No file outside the test project was created or changed.
 

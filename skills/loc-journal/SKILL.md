@@ -8,7 +8,7 @@ argument-hint: "[loc/inbox/done file | what was done]"
 
 Keeps the project's diary, `loc/MEMORY.md`: what was done, newest first, one short entry per piece of work, so anyone can find it again by topic and date. The diary records history; the code stays the truth about the present.
 
-**Do not touch `loc/PRD.md`. Do not commit.**
+**Do not touch `loc/PRD.md`.**
 
 ## 1. What to record
 

@@ -20,7 +20,7 @@ A project has its own QA skills. One declares `qa-paths:`, a header field Claude
 - E2. `loc/state/qa-api-ran.txt` exists and contains `Ran 1 test`: the `qa-api` skill was loaded and its steps were run.
 - E3. The QA file has a row for `qa-api` with status `PASS`.
 - E4. The QA file has a row for `qa-docs` with status `INFO` saying it is available and was not run (`dostępny, nie uruchomiony` or equivalent), and the file or the session reply mentions adding `qa-paths:` to run it automatically.
-- E5. `src/api/users.py` and `src/ui/page.py` equal their state after setup (hash), and `git log` equals the setup (no commit).
+- E5. `src/api/users.py` and `src/ui/page.py` equal their state after setup (hash).
 - E6. No file outside the test project was created or changed.
 
 ## Result

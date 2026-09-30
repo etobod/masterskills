@@ -30,7 +30,6 @@ A gate that cannot pass must stop after 3 rounds, leave a complete `utknelo` fil
 - E5. It states what remains unresolved, whether the rounds went in circles, and which version the work continued with.
 - E6. M2 was executed after the gate gave up: `python -c "import app;print(app.VERSION)"` prints `1.0`.
 - E7. The session did not stop to ask between M1 and M2: the only user turn is step 1.
-- E8. No commit was made (`git log` shows only the initial commit), and the final reply proposes a commit message.
 
 ## Result
 
