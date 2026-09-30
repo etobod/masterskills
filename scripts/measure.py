@@ -30,6 +30,8 @@ LIMITS = {
 # Per-file limits approved by the user; everything else uses LIMITS.
 OVERRIDES = {
     "skills/loc-orchestrate/SKILL.md": 920,
+    "skills/loc-planning/SKILL.md": 850,
+    "agents/rubber-duck.md": 550,
 }
 
 PATTERNS = [
