@@ -11,6 +11,9 @@
 ## Czego nie robimy
 - <świadomie poza zakresem>
 
+## Nie bronimy przed
+- <kto albo co wytwarza wejście, przed którym kod świadomie nie broni, i dlaczego; `- brak`, gdy nic>
+
 ## Kontekst z kodu
 - `<plik:linia>` — <co tam jest i dlaczego ważne>
 

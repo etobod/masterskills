@@ -42,6 +42,7 @@ The file comes from the template with all sections. Fill them in Polish:
 
 - **Cel**: what works afterwards, in terms the user can check.
 - **Czego nie robimy**: what is deliberately out of scope.
+- **Nie bronimy przed**: who produces inputs the code deliberately does not defend against, with the reason (e.g. an administrator who could disable the tool anyway). Never a foreseeable user mistake. `- brak` when nothing. Reviews call such inputs Unrealistic.
 - **Kontekst z kodu**: the files and `file:line` the plan relies on, as read now.
 - **Kamienie milowe**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Dowód:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Sprawdzenie ręczne:**` per `Manual verification / UAT`. Code and its tests go in the same milestone; for code, criteria, tests and performer follow `references/tests.md`. A milestone's product is never a decision, an audit or a question.
 - **Ryzyka i decyzje**: references to brainstorm decisions (`B-01`…) and `pytanie` files, and what each risk would cost.
@@ -66,6 +67,7 @@ Follow `references/closing.md` for the input's type: the input file gets its `##
 In the user's language, briefly:
 
 - the plan's path and its milestones, one line each;
+- the `Nie bronimy przed` list, for the user to accept before execution;
 - the gate result (rounds, "skan czysty, krytyk bez uwag blokujących", or what remains and the `utknelo` file);
 - new `pytanie` files, each with its question in one line;
 - what moved to `loc/inbox/done/`.

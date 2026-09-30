@@ -2,8 +2,9 @@
 """Mechanical gate for a plan file: no open questions, every milestone has a proof.
 
 Checks, in order:
-  - the required sections exist (Cel, Czego nie robimy, Kontekst z kodu,
-    Kamienie milowe, Ryzyka i decyzje);
+  - the required sections exist (Cel, Czego nie robimy, Nie bronimy przed,
+    Kontekst z kodu, Kamienie milowe, Ryzyka i decyzje), and `Nie bronimy przed`
+    has at least one `- ` line (`- brak` when the code defends against everything);
   - no forbidden phrase that marks an undecided plan ("do ustalenia", "TODO"...),
     outside inline code and outside the `## Bramka planu`, `## Uwagi z przeglądów`
     and `## Rozstrzygnięcie` sections, which record history rather than instructions;
@@ -29,7 +30,8 @@ import re
 import sys
 from pathlib import Path
 
-REQUIRED = ["Cel", "Czego nie robimy", "Kontekst z kodu", "Kamienie milowe", "Ryzyka i decyzje"]
+REQUIRED = ["Cel", "Czego nie robimy", "Nie bronimy przed", "Kontekst z kodu", "Kamienie milowe", "Ryzyka i decyzje"]
+DEFENCE = "Nie bronimy przed"
 HISTORY = {"Bramka planu", "Uwagi z przeglądów", "Rozstrzygnięcie"}
 FORBIDDEN = [
     "do ustalenia", "do decyzji", "do rozstrzygnięcia", "do sprawdzenia", "sprawdzić, czy",
@@ -41,7 +43,7 @@ PHRASE = re.compile(
     re.IGNORECASE,
 )
 PLACEHOLDER = re.compile(
-    r"<(co |nazwa|plik:linia|komenda|oczekiwany|ryzyko|opcjonalnie|świadomie|puste do)[^>]*>"
+    r"<(co |kto albo|nazwa|plik:linia|komenda|oczekiwany|ryzyko|opcjonalnie|świadomie|puste do)[^>]*>"
 )
 CODE = re.compile(r"`[^`]*`")
 PROOF = re.compile(r"^\*\*Dowód:\*\*")
@@ -92,6 +94,7 @@ def check_milestone(name: str, criteria: list, performer, issues: list) -> None:
 def check(text: str) -> dict:
     issues = []
     sections = set()
+    defended = 0
     section = None
     milestones = proofs = 0
     in_fence = False
@@ -119,6 +122,8 @@ def check(text: str) -> dict:
             continue
         if section in HISTORY:
             continue
+        if section == DEFENCE and line.startswith("- "):
+            defended += 1
         if section == "Kamienie milowe" and line.startswith("### "):
             close_milestone()
             milestones += 1
@@ -145,6 +150,8 @@ def check(text: str) -> dict:
     for name in REQUIRED:
         if name not in sections:
             issues.append({"line": 0, "problem": f"missing section: ## {name}"})
+    if DEFENCE in sections and defended == 0:
+        issues.append({"line": 0, "problem": f"empty section: ## {DEFENCE} (write `- brak` when nothing)"})
     if milestones == 0:
         issues.append({"line": 0, "problem": "no milestones (### headings under ## Kamienie milowe)"})
     if proofs == 0:

@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.8.0 — 2026-09-30
+
+- Every plan has a `## Nie bronimy przed` section: who produces inputs the code deliberately does not defend against, with the reason, or `- brak`. `loc-planning` proposes it and shows it in its report; `rubber-duck` checks it at the plan gate; `check_plan.py` rejects a plan without it or with an empty one. In real use, reviews of a security-related plan kept inventing a new attacker each round, and every gate ended stuck.
+- A review finding whose input comes only from someone on that list is Unrealistic, quoting the list's line, and is not raised again (`gates.md`, `rubber-duck`).
+- An open plan written before 1.8.0 fails `check_plan.py` in `loc-orchestrate` until the section is added; one line `- brak` is enough.
+
 ## 1.7.0 — 2026-09-30
 
 - `loc-planning` adds a `Planowanie` entry to `loc/MEMORY.md` after the plan's gate, with one `memory_index.py` command (`references/closing.md`). New type `Planowanie` in `memory_index.py` and `loc-journal`.

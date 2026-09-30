@@ -23,6 +23,9 @@ Powitanie w wybranym języku.
 ## Czego nie robimy
 Tłumaczeń spoza listy.
 
+## Nie bronimy przed
+- brak
+
 ## Kontekst z kodu
 - `app.py:1`
 
@@ -56,6 +59,30 @@ class CheckPlanTest(unittest.TestCase):
 
     def problems(self, out: dict) -> str:
         return "\n".join(issue["problem"] for issue in out["issues"])
+
+    def defended(self, section: str) -> str:
+        text = plan("### M1 — opis\n**Dowód:** `grep x` → `1`\n")
+        return text.replace("## Nie bronimy przed\n- brak\n", section)
+
+    def test_none_defended_against_passes(self):
+        code, out = self.run_check(self.defended("## Nie bronimy przed\n- brak\n"))
+        self.assertEqual(code, 0, out)
+
+    def test_missing_defence_section_fails(self):
+        code, out = self.run_check(self.defended(""))
+        self.assertEqual(code, 1)
+        self.assertIn("missing section: ## Nie bronimy przed", self.problems(out))
+
+    def test_empty_defence_section_fails(self):
+        code, out = self.run_check(self.defended("## Nie bronimy przed\nNic.\n"))
+        self.assertEqual(code, 1)
+        self.assertIn("empty section: ## Nie bronimy przed", self.problems(out))
+
+    def test_unfilled_defence_placeholder_fails(self):
+        code, out = self.run_check(self.defended(
+            "## Nie bronimy przed\n- <kto albo co wytwarza wejście, przed którym kod nie broni>\n"))
+        self.assertEqual(code, 1)
+        self.assertIn("unfilled placeholder", self.problems(out))
 
     def test_criteria_with_tests_pass(self):
         code, out = self.run_check(plan(

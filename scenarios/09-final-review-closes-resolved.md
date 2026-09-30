@@ -9,6 +9,7 @@ A plan reaches its final review with three follow-up files from its milestones. 
   - M1: a `lang` parameter, K1 `greet("Ann", "pl")` → `"Cześć, Ann"`.
   - M2: an empty name raises `ValueError`, K2, plus a docstring.
   - `Czego nie robimy`: normalising the language code (`"PL"` gives English).
+  - `Nie bronimy przed`: `- brak`.
 - Plan executed up to the final review, uncommitted: `app.py` has the docstring, the `ValueError` for an empty name, and a case-sensitive `lang == "pl"`. `test_app.py` has 3 passing tests.
 - Follow-up files in `loc/inbox/`:
   - `002-utknelo-powitanie-m1-code-review.md`: stuck M1 code-review, `**Kategoria:** nieblokująca`. Remaining point: `app.py:3`, an empty name gives an incomplete greeting and should raise `ValueError`. It is resolved by M2.

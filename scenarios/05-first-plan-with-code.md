@@ -23,7 +23,8 @@ The first plan that changes code in a project with no test suite must start with
 - E5. `python <plugin>/scripts/check_plan.py <plan>` exits `0`.
 - E6. `app.py` is unchanged, and no test file exists yet: planning wrote no code.
 - E7. The plan contains no expanded path of the plugin directory: the template is named as `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md` or by its plugin-relative path.
-- E8. No file outside the test project was created or changed.
+- E8. The plan has `## Nie bronimy przed` with at least one `- ` line (`- brak` is fine for a greeting function), and the final report shows that list.
+- E9. No file outside the test project was created or changed.
 
 ## Result
 
