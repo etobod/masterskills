@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.7.0 — 2026-09-30
+
+- `loc-planning` adds a `Planowanie` entry to `loc/MEMORY.md` after the plan's gate, with one `memory_index.py` command (`references/closing.md`). New type `Planowanie` in `memory_index.py` and `loc-journal`.
+- `memory_index.py` no longer loses entries from the index when an entry's text mentions `<!--`: only a line that starts with it opens a comment. In real use one such entry hid every older entry from the index; the next run of the script restores them. First tests of the script.
+
 ## 1.6.3 — 2026-09-30
 
 - The write guard allows the directories listed in `permissions.additionalDirectories` of the project's own `.claude/settings.json` and `.claude/settings.local.json`; everything else outside the project is still denied. A project whose data directory lies outside it could not have its reports written by the model, and an `allow` rule does not lift a hook's denial.

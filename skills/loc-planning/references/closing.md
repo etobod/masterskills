@@ -27,6 +27,16 @@ Change nothing else in the PRD: no summary, no status, no milestone list. From n
 
 Nothing to close. The plan's `**Źródło:**` says `rozmowa` with a one-line summary of the request.
 
+## Journal entry
+
+After closing the input, one command adds the entry to `loc/MEMORY.md` (Polish, at most 3 sentences: what was planned, from which input, the gate result):
+
+```sh
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Planowanie --title "<title>" --text "<sentences> Szczegóły: loc/inbox/NNN-plan-<topic>.md"
+```
+
+Run it exactly as written, on its own. No `loc/MEMORY.md`: skip it.
+
 ## Plan that did not pass the gate
 
 Close the input the same way, so the next attempt starts from the plan and the `utknelo` file rather than from a stale brainstorm. The `utknelo` file's `**Źródło:**` names the plan.

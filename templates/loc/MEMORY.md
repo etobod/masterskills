@@ -1,6 +1,6 @@
 # Dziennik
 
-Co zrobiono, najnowsze na górze. Wpisy dodaje `loc-journal` albo `loc-orchestrate` na końcu planu; indeks generuje
+Co zrobiono, najnowsze na górze. Wpisy dodaje `loc-journal`, `loc-planning` (`Planowanie`) albo `loc-orchestrate` na końcu planu; indeks generuje
 skrypt, nigdy ręcznie.
 
 <!-- index:start -->

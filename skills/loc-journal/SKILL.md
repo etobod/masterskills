@@ -17,6 +17,7 @@ Keeps the project's diary, `loc/MEMORY.md`: what was done, newest first, one sho
 | Type | When |
 |---|---|
 | `Plan` | a plan was executed by hand (a plan run through orchestration writes its own entry) |
+| `Planowanie` | a plan was made by hand (`loc-planning` writes its own entry) |
 | `Przegląd` | a review was done (`loc-review` on its own) |
 | `Poprawka` | a change outside any plan that actually changed something |
 | `Decyzja` | an important decision, e.g. an answered `pytanie` that changes direction |
@@ -30,7 +31,7 @@ If the project has no `loc/MEMORY.md`, say that `/masterskills:loc-init` creates
 In Polish: a title of a few words, then **at most 3 sentences**: what was done and why, and what did not work out (a gate that ended in `utknelo`, an open `pytanie`). End with the source file: `Szczegóły: loc/inbox/done/NNN-<type>-<topic>.md`. Facts only: no praise, no plans for later.
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type <Plan|Przegląd|Poprawka|Decyzja> --title "<title>" --text "<sentences> Szczegóły: <file>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type <Plan|Planowanie|Przegląd|Poprawka|Decyzja> --title "<title>" --text "<sentences> Szczegóły: <file>"
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.

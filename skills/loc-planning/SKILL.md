@@ -59,7 +59,7 @@ The round passes when the script exits `0` and the critic reports nothing blocki
 
 ## 6. Close the input
 
-Follow `references/closing.md` for the input's type: the input file gets its `## Rozstrzygnięcie` and moves to `loc/inbox/done/`, a PRD fragment gets the `→ przekazane` marker.
+Follow `references/closing.md` for the input's type: the input file gets its `## Rozstrzygnięcie` and moves to `loc/inbox/done/`, a PRD fragment gets the `→ przekazane` marker; then the journal entry.
 
 ## 7. Report
 

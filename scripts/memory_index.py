@@ -27,7 +27,7 @@ from pathlib import Path
 
 START, END = "<!-- index:start -->", "<!-- index:end -->"
 ENTRY = re.compile(r"^## (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) — \[([^\]]+)\] (.+?)\s*$")
-TYPES = ["Plan", "Przegląd", "Poprawka", "Decyzja"]
+TYPES = ["Plan", "Planowanie", "Przegląd", "Poprawka", "Decyzja"]
 
 
 def split_entries(lines: list) -> tuple:
@@ -37,8 +37,9 @@ def split_entries(lines: list) -> tuple:
         if not in_comment and ENTRY.match(line):
             entries.append([line])
             continue
-        # An example entry inside an HTML comment is not an entry.
-        if "<!--" in line and "-->" not in line.split("<!--", 1)[1]:
+        # An example entry inside an HTML comment is not an entry. Only a line that
+        # starts with `<!--` opens a comment: an entry's text may mention the marker.
+        if line.lstrip().startswith("<!--") and "-->" not in line.split("<!--", 1)[1]:
             in_comment = True
         elif "-->" in line:
             in_comment = False
