@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.6.1 — 2026-09-30
+
+- A milestone's sub-agent is told to keep scratch files in `loc/tmp/` and delete only files it created there, never the directory; rule 2 says the same. The rules reach only the main session, and in real use a sub-agent told "delete it after" removed the whole `loc/tmp/` with files it had not created.
+- Size budgets: rules 420 words, `loc-orchestrate` `SKILL.md` 920.
+
 ## 1.6.0 — 2026-09-29
 
 - A fourth review category, Unrealistic (`nierealna`): a finding that needs an input nothing in the project produces. It must name who or what produces that input instead (`Kto to wytwarza:`); if it cannot, the finding is not unrealistic. A finding keeps its category from the milestone to the final review unless there is a new argument. In real use each review of a checker found another invented input, and each deferred file became the next plan.

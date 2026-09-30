@@ -1,7 +1,7 @@
 # masterskills — core rules
 
 1. **Language.** English for everything in the project: code, comments, commits, skills, rules, `CLAUDE.md`, scripts. Polish only for the contents of `loc/`.
-2. **Stay in the project.** Write files only inside the project directory. Scratch and temporary files go to `loc/tmp/`, never to `/tmp`, `%TEMP%` or the session scratchpad.
+2. **Stay in the project.** Write files only inside the project directory. Scratch and temporary files go to `loc/tmp/`, never to `/tmp`, `%TEMP%` or the session scratchpad. Delete only files you created there, never the directory.
 3. **Inbox.** A file in `loc/inbox/` means something waits for the user. Create every inbox file with the `next_number.py` command shown under Inbox, never by hand. Inside a skill, a question or deferred work becomes a file in `loc/inbox/` in the same reply (`NNN-pytanie-…`, `NNN-odlozone-…`), and work continues on the recommended option. Stop only when that choice would be expensive to undo. In plain conversation the user tracks their own questions.
 4. **Code is the only source of truth.** Never document the current state of the code.
 5. **Commits.** Commit or push only when the user asks. Never add `Co-authored-by`, session links or any mention of AI.
