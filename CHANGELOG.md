@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.6.3 — 2026-09-30
+
+- The write guard allows the directories listed in `permissions.additionalDirectories` of the project's own `.claude/settings.json` and `.claude/settings.local.json`; everything else outside the project is still denied. A project whose data directory lies outside it could not have its reports written by the model, and an `allow` rule does not lift a hook's denial.
+
 ## 1.6.1 — 2026-09-30
 
 - A milestone's sub-agent is told to keep scratch files in `loc/tmp/` and delete only files it created there, never the directory; rule 2 says the same. The rules reach only the main session, and in real use a sub-agent told "delete it after" removed the whole `loc/tmp/` with files it had not created.

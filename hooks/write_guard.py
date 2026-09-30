@@ -2,8 +2,10 @@
 """PreToolUse hook: files are written only inside the project.
 
 `Write`, `Edit` and `NotebookEdit` with a path outside `$CLAUDE_PROJECT_DIR`
-are denied, with no exceptions: knowledge belongs in `loc/PATTERNS.md`, plans
-go through `loc-planning`, scratch files go to the project's `loc/tmp/`.
+are denied: knowledge belongs in `loc/PATTERNS.md`, plans go through
+`loc-planning`, scratch files go to the project's `loc/tmp/`. The only
+exceptions are the directories in `permissions.additionalDirectories` of the
+project's own `.claude/settings.json` and `.claude/settings.local.json`.
 
 For `Bash` and `PowerShell` it is best effort: output redirections (`>`, `>>`,
 `&>`, `>&file`), `tee` targets and the path of `Out-File`, `Set-Content`,
@@ -185,6 +187,24 @@ def inside(path: Path, project: Path) -> bool:
     return a == b or a.startswith(b.rstrip("\\/") + os.sep)
 
 
+def extra_dirs(project: Path) -> list:
+    """The project's `permissions.additionalDirectories`, resolved; relative ones from the project."""
+    dirs = []
+    for name in ("settings.json", "settings.local.json"):
+        try:
+            data = json.loads((project / ".claude" / name).read_text(encoding="utf-8"))
+            entries = data["permissions"]["additionalDirectories"]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if isinstance(entry, str) and entry.strip():
+                path = Path(os.path.expanduser(os.path.expandvars(entry)))
+                dirs.append((path if path.is_absolute() else project / path).resolve())
+    return dirs
+
+
 def main() -> int:
     try:
         data = json.load(sys.stdin)
@@ -200,8 +220,10 @@ def main() -> int:
     else:
         paths = [p for p in (args.get("file_path"), args.get("notebook_path")) if p]
 
+    allowed = [project] + extra_dirs(project) if paths else []
     for path in paths:
-        if not inside(resolve(path, cwd), project):
+        target = resolve(path, cwd)
+        if not any(inside(target, root) for root in allowed):
             print(json.dumps({"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "deny",

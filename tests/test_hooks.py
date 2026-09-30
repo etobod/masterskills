@@ -182,6 +182,28 @@ class WriteGuardTest(unittest.TestCase):
     def test_allows_writes_inside_the_project(self):
         self.assertEqual(self.check("Write", {"file_path": str(Path(self.project) / "loc" / "tmp" / "a.txt")}), {})
 
+    def settings(self, name: str, text: str) -> None:
+        path = Path(self.project) / ".claude" / name
+        path.parent.mkdir(exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+    def test_additional_directories_of_the_project_are_allowed(self):
+        data = scratch_dir(self)
+        other = scratch_dir(self)
+        self.settings("settings.json", json.dumps({"permissions": {"additionalDirectories": [str(data / "reports")]}}))
+        self.settings("settings.local.json", json.dumps({"permissions": {"additionalDirectories": ["../shared"]}}))
+        self.assertEqual(self.check("Write", {"file_path": str(data / "reports" / "r.md")}), {})
+        self.assertEqual(self.check("Write", {"file_path": str(Path(self.project).parent / "shared" / "a.md")}), {})
+        self.assertEqual(self.check("Bash", {"command": f'echo x > "{(data / "reports" / "b.md").as_posix()}"'}), {})
+        self.assertEqual(decision(self.check("Write", {"file_path": str(data / "reports-old" / "r.md")})), "deny")
+        self.assertEqual(decision(self.check("Write", {"file_path": str(other / "r.md")})), "deny")
+
+    def test_bad_settings_give_no_exceptions(self):
+        data = scratch_dir(self)
+        for text in ("{not json", json.dumps({"permissions": {"additionalDirectories": str(data)}})):
+            self.settings("settings.json", text)
+            self.assertEqual(decision(self.check("Write", {"file_path": str(data / "r.md")})), "deny", text)
+
 
 class CommitGuardTest(unittest.TestCase):
     def check(self, command: str) -> str:
