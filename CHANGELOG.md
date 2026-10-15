@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.11.1 — 2026-10-15
+
+- `loc-planning` (`references/prd.md`) also replaces an old PRD header that still explains `→ przekazane` markers with the template's header, and tidies sections outside `Cel`, `Rdzeń idei` and `Kierunki`: a point the code shows is done moves into the `## Fragment PRD` of the plan that did it; a point with no such plan stays.
+
 ## 1.11.0 — 2026-10-15
 
 - **The judge also decides at planning.** When `loc-planning` plans from a `utknelo`, `przeglad` or `odlozone` that lists review findings (`references/findings.md`, new), the `judge` agent weighs every Blocking and Non-blocking one first: `fix` goes into the plan, `enough` becomes a `- dość (planowanie): …` line in the new plan's `## Uwagi z przeglądów`, so its reviews do not raise it again. Suggestions and Unrealistic findings become lines there too and never go into a plan; speed comes back only when the user reports something noticeably slow. With no `fix` at all, no plan is written.

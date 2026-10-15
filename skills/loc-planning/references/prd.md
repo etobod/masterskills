@@ -11,6 +11,10 @@ Take the date with `date "+%Y-%m-%d"`. `loc/` is not in git: nothing removed fro
 
 **Old markers.** A PRD written before this rule may still hold fragments marked `→ przekazane do loc/inbox/NNN-plan-….md`. Whenever you plan, move each such fragment the same way into the plan the marker names (in `loc/inbox/` or `loc/inbox/done/`), and remove it from the PRD. If that plan no longer exists, move it into the plan you are writing.
 
+**Old header.** A header (the text before the first `##`) that still explains `→ przekazane` markers is replaced by the header of `${CLAUDE_PLUGIN_ROOT}/templates/loc/PRD.md`, keeping any line that points to the project's decisions.
+
+**Other sections.** A section that is neither `Cel`, `Rdzeń idei` nor `Kierunki` (e.g. a list of features to cut): check each point against the code. A point already done moves, copied word for word, into the `## Fragment PRD` of the plan that did it; when you cannot name that plan, it stays. A section left empty is removed.
+
 ## `Cel` and `Rdzeń idei`
 
 After the plan's gate, before the report, compare the plan with `## Cel` and `## Rdzeń idei`:
