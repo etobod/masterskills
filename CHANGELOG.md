@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.15.0 — 2026-10-15
+
+- **A new OpenCode project works after `/loc-init`.** The OpenCode install adds to the global `opencode.json`, only where missing: `"CLAUDE.md"` in `instructions`, because OpenCode reads a project's `CLAUDE.md` only when there is no `AGENTS.md` (which OpenCode's `/init` creates); and `permission.external_directory` `allow` for the plugin's own files, so skills read their references and templates without a prompt. A config that is not plain JSON, or a single `external_directory` value, is left alone and the install prints what to add by hand. `loc-init` itself needs no change.
+- The plugin's `permission.ask` hook is gone; the config entry does that job and can be checked.
+
 ## 1.14.0 — 2026-10-15
 
 - **Hooks in OpenCode.** The OpenCode build adds `plugins/masterskills.ts`, which runs the same Python hooks as Claude Code, chosen by the matchers in `hooks/hooks.json`: the write guard and the commit guard stop a tool with the hook's reason; the core rules and the open inbox go into the system prompt once per session and again after compaction; the CI check text is appended to the output of `git push`; every shell command sees `CLAUDE_PLUGIN_ROOT` and `CLAUDE_PROJECT_DIR`; reading the plugin's own files needs no prompt. The install no longer adds the core rules to `instructions` in `opencode.json` and removes the entry 1.13.0 added, so the rules are not there twice.

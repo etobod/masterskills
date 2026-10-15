@@ -7,6 +7,7 @@ C:/BC/tmp/masterskills/oc-e2e/ (CLAUDE.md rule 1). Skipped without `opencode`.
 
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -101,6 +102,20 @@ class OpenCodeHooksTest(unittest.TestCase):
         for request in self.model.requests:
             system = json.dumps([m for m in request["messages"] if m.get("role") == "system"], ensure_ascii=False)
             self.assertEqual(system.count("masterskills — core rules"), 1)
+
+    def test_claude_md_is_read_next_to_agents_md(self):
+        (self.project / "AGENTS.md").write_text("# Agents\nAGENTS-MARKER\n", encoding="utf-8")
+        (self.project / "CLAUDE.md").write_text("# Project\nCLAUDE-MARKER\n", encoding="utf-8")
+        self.run_tool("bash", {"command": "echo hi", "description": "echo"})
+        system = json.dumps([m for m in self.model.requests[-1]["messages"] if m.get("role") == "system"])
+        self.assertEqual(system.count("CLAUDE-MARKER"), 1)
+
+    def test_loc_init_sets_up_the_project(self):
+        skill = (self.config / "skills" / "loc-init" / "SKILL.md").read_text(encoding="utf-8")
+        command = re.search(r"```sh\n(.+?)\n```", skill).group(1).replace("<dir>", self.project.as_posix())
+        answer = self.run_tool("bash", {"command": command, "description": "loc-init"})
+        self.assertTrue((self.project / "loc" / "inbox").is_dir(), answer)
+        self.assertTrue((self.project / "CLAUDE.md").is_file(), answer)
 
     def test_shell_commands_see_the_plugin_root(self):
         answer = self.run_tool("bash", {"command": "echo ROOT=$CLAUDE_PLUGIN_ROOT", "description": "echo"})

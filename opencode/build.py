@@ -18,7 +18,8 @@ Usage:
   python opencode/build.py --out <dir>   build into <dir>
   python opencode/build.py --install     build into the OpenCode config directory
                                          ($XDG_CONFIG_HOME/opencode, default
-                                         ~/.config/opencode)
+                                         ~/.config/opencode) and add to its
+                                         opencode.json what projects need
 Exit code 0 on success, 1 on an error.
 """
 
@@ -101,7 +102,7 @@ def files(out: Path) -> dict:
                 if source.suffix in TEXT else source
     base = out.resolve().as_posix()
     hooks = (ROOT / "opencode" / "plugin" / "masterskills.ts").read_text(encoding="utf-8")
-    result["plugins/masterskills.ts"] = hooks.replace("@@MASTERSKILLS_ROOT@@", f"{base}/masterskills")         .replace("@@MASTERSKILLS_SKILLS@@", f"{base}/skills")
+    result["plugins/masterskills.ts"] = hooks.replace("@@MASTERSKILLS_ROOT@@", f"{base}/masterskills")
     plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     result["masterskills/VERSION"] = plugin["version"] + "\n"
     return result
@@ -130,22 +131,41 @@ def build(out: Path) -> str:
     return new["masterskills/VERSION"].strip()
 
 
-def drop_rules(out: Path) -> None:
-    """Remove the core rules that 1.13.0 added to `instructions`: the plugin now puts them
-    in the system prompt. A file that is not plain JSON is left alone."""
+def configure(out: Path) -> list:
+    """Add to opencode.json what every project needs, leaving the user's values alone:
+    the project's CLAUDE.md in `instructions` (OpenCode skips it when an AGENTS.md
+    exists) and reading the plugin's own files without a prompt. Also removes the
+    core rules entry 1.13.0 added: the plugin now puts them in the system prompt.
+    Returns what could not be added, for the user to add by hand."""
     config = out / "opencode.json"
-    if not config.exists():
-        return
-    try:
-        data = json.loads(config.read_text(encoding="utf-8"))
-    except ValueError:
-        return
+    base = out.resolve().as_posix()
+    allow = {f"{base}/masterskills/**": "allow", f"{base}/skills/**": "allow"}
+    manual = ['"instructions": ["CLAUDE.md"]',
+              '"permission": {"external_directory": ' + json.dumps(allow) + "}"]
+    data = {"$schema": "https://opencode.ai/config.json"}
+    if config.exists():
+        try:
+            data = json.loads(config.read_text(encoding="utf-8"))
+        except ValueError:
+            return manual
+        if not isinstance(data, dict):
+            return manual
+    missing = []
+    instructions = data.setdefault("instructions", [])
     rules = (out / RULES).resolve().as_posix()
-    if rules in data.get("instructions", []):
-        data["instructions"].remove(rules)
-        if not data["instructions"]:
-            del data["instructions"]
-        config.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if rules in instructions:
+        instructions.remove(rules)
+    if "CLAUDE.md" not in instructions:
+        instructions.append("CLAUDE.md")
+    permission = data.setdefault("permission", {})
+    external = permission.setdefault("external_directory", {}) if isinstance(permission, dict) else None
+    if isinstance(external, dict):
+        for pattern, action in allow.items():
+            external.setdefault(pattern, action)
+    else:
+        missing.append(manual[1])
+    config.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return missing
 
 
 def main() -> int:
@@ -166,7 +186,11 @@ def main() -> int:
         return 1
     print(f"masterskills {version} -> {out.resolve().as_posix()}")
     if args.install:
-        drop_rules(out)
+        missing = configure(out)
+        if missing:
+            print(f"Could not edit {(out / 'opencode.json').as_posix()}; add by hand:")
+            for line in missing:
+                print(f"  {line}")
         print("Restart OpenCode to load it.")
     return 0
 

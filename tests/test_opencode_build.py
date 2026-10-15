@@ -83,7 +83,7 @@ class OpenCodeBuildTest(unittest.TestCase):
         plugin = (out / "plugins" / "masterskills.ts").read_text(encoding="utf-8")
         self.assertNotIn("@@", plugin)
         self.assertIn(f'"{out.resolve().as_posix()}/masterskills"', plugin)
-        self.assertIn(f'"{out.resolve().as_posix()}/skills"', plugin)
+        self.assertNotIn("permission.ask", plugin)
         hooks = json.loads((out / "masterskills" / "hooks" / "hooks.json").read_text(encoding="utf-8"))
         self.assertIn("PreToolUse", hooks["hooks"])
 
@@ -94,8 +94,9 @@ class OpenCodeBuildTest(unittest.TestCase):
         (config / "skills" / "my-skill" / "SKILL.md").write_text("mine\n", encoding="utf-8")
         rules = (config / "masterskills" / "rules" / "core.md").resolve().as_posix()
         # 1.13.0 added the core rules to `instructions`; the hooks plugin now puts them in the prompt.
-        (config / "opencode.json").write_text(json.dumps({"model": "local/qwen", "instructions": ["A.md", rules]}),
-                                              encoding="utf-8")
+        mine = {"model": "local/qwen", "instructions": ["A.md", rules],
+                "permission": {"bash": "ask", "external_directory": {"D:/data/**": "deny"}}}
+        (config / "opencode.json").write_text(json.dumps(mine), encoding="utf-8")
         self.run_build("--install", config_home=home)
         stale = config / "skills" / "loc-old" / "SKILL.md"
         stale.parent.mkdir()
@@ -109,10 +110,26 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertEqual((config / "skills" / "my-skill" / "SKILL.md").read_text(encoding="utf-8"), "mine\n")
         data = json.loads((config / "opencode.json").read_text(encoding="utf-8"))
         self.assertEqual(data["model"], "local/qwen")
-        self.assertEqual(data["instructions"], ["A.md"])
+        self.assertEqual(data["instructions"], ["A.md", "CLAUDE.md"])
+        base = config.resolve().as_posix()
+        self.assertEqual(data["permission"], {"bash": "ask", "external_directory": {
+            "D:/data/**": "deny", f"{base}/masterskills/**": "allow", f"{base}/skills/**": "allow"}})
         version = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
         self.assertIn(f"masterskills {version}", result.stdout)
         self.assertIn("Restart OpenCode", result.stdout)
+
+    def test_install_leaves_a_single_external_directory_value(self):
+        home = self.scratch()
+        config = home / "opencode"
+        config.mkdir()
+        (config / "opencode.json").write_text(json.dumps({"permission": {"external_directory": "ask"}}),
+                                              encoding="utf-8")
+        result = self.run_build("--install", config_home=home)
+        data = json.loads((config / "opencode.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["permission"], {"external_directory": "ask"})
+        self.assertEqual(data["instructions"], ["CLAUDE.md"])
+        self.assertIn("add by hand", result.stdout)
+        self.assertIn(f"{config.resolve().as_posix()}/masterskills/**", result.stdout)
 
     def test_install_does_not_touch_a_config_with_comments(self):
         home = self.scratch()
@@ -120,8 +137,9 @@ class OpenCodeBuildTest(unittest.TestCase):
         config.mkdir()
         text = '{\n  // my model\n  "model": "local/qwen"\n}\n'
         (config / "opencode.json").write_text(text, encoding="utf-8")
-        self.run_build("--install", config_home=home)
+        result = self.run_build("--install", config_home=home)
         self.assertEqual((config / "opencode.json").read_text(encoding="utf-8"), text)
+        self.assertIn('"instructions": ["CLAUDE.md"]', result.stdout)
 
 
 if __name__ == "__main__":

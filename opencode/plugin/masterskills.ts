@@ -1,10 +1,10 @@
 // masterskills for OpenCode: runs the plugin's Python hooks, the same ones Claude Code runs.
-// opencode/build.py copies this file to <config>/plugins/ and fills in the two paths below.
+// opencode/build.py copies this file to <config>/plugins/ and fills in the path below.
+// Reading the plugin's files without a prompt is set in opencode.json by the install.
 import { spawnSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 
 const ROOT = "@@MASTERSKILLS_ROOT@@" // <config>/masterskills: scripts, hooks, rules
-const SKILLS = "@@MASTERSKILLS_SKILLS@@" // <config>/skills
 const PYTHONS = ["python3", "python", "py"]
 
 // Which hook runs for which Claude Code tool: read from the plugin's own hooks.json,
@@ -84,11 +84,6 @@ function hook(name: string, data: object, directory: string): any {
   }
 }
 
-function inside(path: string, base: string): boolean {
-  const norm = (p: string) => p.replace(/\\/g, "/").replace(/\/?\*+$/, "/").toLowerCase()
-  return (norm(path) + "/").startsWith(norm(base) + "/")
-}
-
 export const Masterskills = async ({ directory }: { directory: string }) => {
   const rules = new Map<string, string>()
 
@@ -134,13 +129,6 @@ export const Masterskills = async ({ directory }: { directory: string }) => {
     "shell.env": async (_input: any, output: any) => {
       output.env.CLAUDE_PLUGIN_ROOT = ROOT
       output.env.CLAUDE_PROJECT_DIR = directory
-    },
-
-    // Reading the plugin's own skills, references and templates needs no prompt.
-    "permission.ask": async (input: any, output: any) => {
-      if (input?.type !== "external_directory") return
-      const paths = [input.pattern, ...(Array.isArray(input.patterns) ? input.patterns : [])].filter((p) => typeof p === "string")
-      if (paths.length && paths.every((p: string) => inside(p, ROOT) || inside(p, SKILLS))) output.status = "allow"
     },
   }
 }
