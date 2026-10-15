@@ -14,7 +14,7 @@ Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute 
 
 `$ARGUMENTS` is one of:
 
-- **An inbox number or file**: `brainstorm`, `przeglad`, `odlozone`, `utknelo`, or a `pytanie` that already has an answer under `## Rozstrzygnięcie`. The number is enough; find the file in `loc/inbox/`. Review findings in it: `references/findings.md` first.
+- **An inbox number or file**: `brainstorm`, `przeglad`, `odlozone`, `utknelo`, or a `pytanie` that already has an answer under `## Rozstrzygnięcie`. The number is enough; find the file in `loc/inbox/`. Review findings in it, or an `odlozone`: `references/findings.md` first.
 - **A fragment of `loc/PRD.md`**, named by its heading.
 - **Plain text**: the task itself; `popraw N`: the N-th `dość` line of the last report.
 

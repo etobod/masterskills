@@ -171,7 +171,9 @@ class CheckStateTest(unittest.TestCase):
         plan = self.with_notes(
             "- dość (planowanie): 012 #3 `parse.py:41` — „koło piątej” daje 17:00 przybliżoną. "
             "Powód: pora dnia ta sama, godzina oznaczona jako przybliżona\n"
-            "- sugestia (planowanie): 012 #6 `app.py:98` — stała powtarza listę z text.py")
+            "- sugestia (planowanie): 012 #6 `app.py:98` — stała powtarza listę z text.py\n"
+            "- dość (planowanie): 014 #3 — model dopisał nad listą własny nagłówek. "
+            "Powód: kosmetyka, treść listy poprawna [plan Cel]")
         code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
         self.assertEqual(code, 0, out)
 

@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.12.0 — 2026-10-15
+
+- **The judge weighs every `odlozone`.** `loc-planning` (`references/findings.md`) now sends every `odlozone` through the judge before planning: review findings, observations from a manual check and `fix` findings deferred earlier. An observation from a manual check has no category; it goes to the judge as Non-blocking, never as a suggestion or unrealistic, because it was seen in real use. Its `- dość (planowanie): …` line may have no `file:line`.
+
 ## 1.11.1 — 2026-10-15
 
 - `loc-planning` (`references/prd.md`) also replaces an old PRD header that still explains `→ przekazane` markers with the template's header, and tidies sections outside `Cel`, `Rdzeń idei` and `Kierunki`: a point the code shows is done moves into the `## Fragment PRD` of the plan that did it; a point with no such plan stays.
