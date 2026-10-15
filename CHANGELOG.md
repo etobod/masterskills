@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.14.0 — 2026-10-15
+
+- **Hooks in OpenCode.** The OpenCode build adds `plugins/masterskills.ts`, which runs the same Python hooks as Claude Code, chosen by the matchers in `hooks/hooks.json`: the write guard and the commit guard stop a tool with the hook's reason; the core rules and the open inbox go into the system prompt once per session and again after compaction; the CI check text is appended to the output of `git push`; every shell command sees `CLAUDE_PLUGIN_ROOT` and `CLAUDE_PROJECT_DIR`; reading the plugin's own files needs no prompt. The install no longer adds the core rules to `instructions` in `opencode.json` and removes the entry 1.13.0 added, so the rules are not there twice.
+- `tests/test_opencode_e2e.py` checks the hooks in a real OpenCode against a local stand-in model (`tests/fake_model.py`); nothing is sent outside the machine. It is skipped when `opencode` is not on PATH.
+
 ## 1.13.0 — 2026-10-15
 
 - **OpenCode version.** `opencode/build.py` builds the plugin for OpenCode from the same files: skills become `/loc-*` commands, agents become subagents with `permission:` instead of `tools:`, `${CLAUDE_PLUGIN_ROOT}` becomes the absolute install path, and the core rules are added to `instructions` in `opencode.json`. `opencode-install.bat` installs and updates it (`git pull`, then a build into `~/.config/opencode/` that replaces only the files of the previous install). Hooks and `loc-init` for OpenCode come later.

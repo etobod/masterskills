@@ -5,6 +5,9 @@ The Claude Code plugin is the source; this script only translates it:
 - `skills/<name>/` (SKILL.md and references): front matter cut to `name` and
   `description`, plus `metadata` that makes each skill a `/<name>` command;
 - `agents/<name>.md`: `mode: subagent`, and `tools:` turned into `permission:`;
+- `plugins/masterskills.ts`: runs the Python hooks from OpenCode's plugin hooks
+  (write and commit guards, core rules and inbox in the system prompt, the CI
+  check after a push);
 - `masterskills/`: scripts, hooks, rules and templates, with `VERSION` and
   `MANIFEST` (every file this build wrote, so the next one removes only those).
 
@@ -15,8 +18,7 @@ Usage:
   python opencode/build.py --out <dir>   build into <dir>
   python opencode/build.py --install     build into the OpenCode config directory
                                          ($XDG_CONFIG_HOME/opencode, default
-                                         ~/.config/opencode) and add the core
-                                         rules to `instructions` in opencode.json
+                                         ~/.config/opencode)
 Exit code 0 on success, 1 on an error.
 """
 
@@ -30,7 +32,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PAYLOAD = ("scripts", "hooks", "rules", "templates")
-SKIPPED = re.compile(r"(__pycache__|\.pyc$|^hooks/hooks\.json$)")
+SKIPPED = re.compile(r"(__pycache__|\.pyc$)")
 TEXT = {".md", ".json"}
 RULES = "masterskills/rules/core.md"
 NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -97,6 +99,9 @@ def files(out: Path) -> dict:
             target = f"masterskills/{rel}"
             result[target] = translate(source.read_text(encoding="utf-8"), out) \
                 if source.suffix in TEXT else source
+    base = out.resolve().as_posix()
+    hooks = (ROOT / "opencode" / "plugin" / "masterskills.ts").read_text(encoding="utf-8")
+    result["plugins/masterskills.ts"] = hooks.replace("@@MASTERSKILLS_ROOT@@", f"{base}/masterskills")         .replace("@@MASTERSKILLS_SKILLS@@", f"{base}/skills")
     plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     result["masterskills/VERSION"] = plugin["version"] + "\n"
     return result
@@ -125,21 +130,22 @@ def build(out: Path) -> str:
     return new["masterskills/VERSION"].strip()
 
 
-def add_rules(out: Path) -> str:
-    """Add the core rules to `instructions` in opencode.json; a message when it cannot."""
+def drop_rules(out: Path) -> None:
+    """Remove the core rules that 1.13.0 added to `instructions`: the plugin now puts them
+    in the system prompt. A file that is not plain JSON is left alone."""
     config = out / "opencode.json"
+    if not config.exists():
+        return
+    try:
+        data = json.loads(config.read_text(encoding="utf-8"))
+    except ValueError:
+        return
     rules = (out / RULES).resolve().as_posix()
-    data = {"$schema": "https://opencode.ai/config.json"}
-    if config.exists():
-        try:
-            data = json.loads(config.read_text(encoding="utf-8"))
-        except ValueError:
-            return f"{config} is not plain JSON; add {json.dumps(rules)} to its \"instructions\" yourself"
-    instructions = data.setdefault("instructions", [])
-    if rules not in instructions:
-        instructions.append(rules)
+    if rules in data.get("instructions", []):
+        data["instructions"].remove(rules)
+        if not data["instructions"]:
+            del data["instructions"]
         config.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return ""
 
 
 def main() -> int:
@@ -160,9 +166,7 @@ def main() -> int:
         return 1
     print(f"masterskills {version} -> {out.resolve().as_posix()}")
     if args.install:
-        warning = add_rules(out)
-        if warning:
-            print(warning)
+        drop_rules(out)
         print("Restart OpenCode to load it.")
     return 0
 

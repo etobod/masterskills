@@ -77,12 +77,24 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertIn("edit: allow", qa)
         self.assertIn("bash: allow", qa)
 
+    def test_the_hooks_plugin_points_at_the_install(self):
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        plugin = (out / "plugins" / "masterskills.ts").read_text(encoding="utf-8")
+        self.assertNotIn("@@", plugin)
+        self.assertIn(f'"{out.resolve().as_posix()}/masterskills"', plugin)
+        self.assertIn(f'"{out.resolve().as_posix()}/skills"', plugin)
+        hooks = json.loads((out / "masterskills" / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+        self.assertIn("PreToolUse", hooks["hooks"])
+
     def test_install_keeps_the_users_files_and_replaces_its_own(self):
         home = self.scratch()
         config = home / "opencode"
         (config / "skills" / "my-skill").mkdir(parents=True)
         (config / "skills" / "my-skill" / "SKILL.md").write_text("mine\n", encoding="utf-8")
-        (config / "opencode.json").write_text(json.dumps({"model": "local/qwen", "instructions": ["A.md"]}),
+        rules = (config / "masterskills" / "rules" / "core.md").resolve().as_posix()
+        # 1.13.0 added the core rules to `instructions`; the hooks plugin now puts them in the prompt.
+        (config / "opencode.json").write_text(json.dumps({"model": "local/qwen", "instructions": ["A.md", rules]}),
                                               encoding="utf-8")
         self.run_build("--install", config_home=home)
         stale = config / "skills" / "loc-old" / "SKILL.md"
@@ -96,9 +108,8 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertFalse(stale.parent.exists())
         self.assertEqual((config / "skills" / "my-skill" / "SKILL.md").read_text(encoding="utf-8"), "mine\n")
         data = json.loads((config / "opencode.json").read_text(encoding="utf-8"))
-        rules = (config / "masterskills" / "rules" / "core.md").resolve().as_posix()
         self.assertEqual(data["model"], "local/qwen")
-        self.assertEqual(data["instructions"], ["A.md", rules])
+        self.assertEqual(data["instructions"], ["A.md"])
         version = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
         self.assertIn(f"masterskills {version}", result.stdout)
         self.assertIn("Restart OpenCode", result.stdout)
@@ -109,9 +120,8 @@ class OpenCodeBuildTest(unittest.TestCase):
         config.mkdir()
         text = '{\n  // my model\n  "model": "local/qwen"\n}\n'
         (config / "opencode.json").write_text(text, encoding="utf-8")
-        result = self.run_build("--install", config_home=home)
+        self.run_build("--install", config_home=home)
         self.assertEqual((config / "opencode.json").read_text(encoding="utf-8"), text)
-        self.assertIn('"instructions"', result.stdout)
 
 
 if __name__ == "__main__":
