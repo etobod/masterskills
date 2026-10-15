@@ -3,7 +3,10 @@
 The Claude Code plugin is the source; this script only translates it:
 
 - `skills/<name>/` (SKILL.md and references): front matter cut to `name` and
-  `description`, plus `metadata` that makes each skill a `/<name>` command;
+  `description`;
+- `commands/<name>.md`: a `/<name>` command per skill that loads it (OpenCode
+  lists skills only in `/skills`, not as commands of their own); a skill with
+  `context: fork` runs in its `agent` as a subtask;
 - `agents/<name>.md`: `mode: subagent`, and `tools:` turned into `permission:`;
 - `plugins/masterskills.ts`: runs the Python hooks from OpenCode's plugin hooks
   (write and commit guards, core rules and inbox in the system prompt, the CI
@@ -68,9 +71,16 @@ def skill(source: Path, out: Path) -> str:
         raise ValueError(f"{source}: name {name!r} must match the directory and {NAME.pattern}")
     if not 1 <= len(description) <= 1024:
         raise ValueError(f"{source}: description must have 1-1024 characters")
-    head = (f"---\nname: {name}\ndescription: {json.dumps(description, ensure_ascii=False)}\n"
-            'metadata:\n  "opencode/slash": "true"\n---\n')
+    head = f"---\nname: {name}\ndescription: {json.dumps(description, ensure_ascii=False)}\n---\n"
     return head + translate(body, out)
+
+
+def command(source: Path) -> str:
+    fields, _ = front_matter(source.read_text(encoding="utf-8"))
+    head = f"---\ndescription: {json.dumps(fields['description'], ensure_ascii=False)}\n"
+    if fields.get("context") == "fork" and fields.get("agent"):
+        head += f"agent: {fields['agent'].removeprefix('masterskills:')}\nsubtask: true\n"
+    return head + f"---\nLoad the `{fields['name']}` skill with the skill tool and follow it.\n\n$ARGUMENTS\n"
 
 
 def agent(source: Path, out: Path) -> str:
@@ -90,6 +100,8 @@ def files(out: Path) -> dict:
         rel = source.relative_to(ROOT).as_posix()
         result[rel] = skill(source, out) if source.name == "SKILL.md" else translate(
             source.read_text(encoding="utf-8"), out)
+        if source.name == "SKILL.md":
+            result[f"commands/{source.parent.name}.md"] = command(source)
     for source in sorted((ROOT / "agents").glob("*.md")):
         result[f"agents/{source.name}"] = agent(source, out)
     for top in PAYLOAD:

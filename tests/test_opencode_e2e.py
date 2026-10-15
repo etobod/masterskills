@@ -119,6 +119,17 @@ class OpenCodeHooksTest(unittest.TestCase):
         self.assertTrue((self.project / "loc" / "inbox").is_dir(), answer)
         self.assertTrue((self.project / "CLAUDE.md").is_file(), answer)
 
+    def test_skills_are_slash_commands(self):
+        self.model.requests.clear()
+        self.model.tool_call = None
+        result = subprocess.run([OPENCODE, "run", "--command", "loc-init", "ARG-MARKER", "--auto", "--dir",
+                                 str(self.project)], env=self.env, capture_output=True, text=True,
+                                encoding="utf-8", timeout=180, stdin=subprocess.DEVNULL)
+        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
+        prompt = json.dumps([m for m in self.model.requests[-1]["messages"] if m.get("role") == "user"])
+        self.assertIn("Load the `loc-init` skill", prompt)
+        self.assertIn("ARG-MARKER", prompt)
+
     def test_shell_commands_see_the_plugin_root(self):
         answer = self.run_tool("bash", {"command": "echo ROOT=$CLAUDE_PLUGIN_ROOT", "description": "echo"})
         self.assertIn(f"ROOT={(self.config / 'masterskills').resolve().as_posix()}", answer)

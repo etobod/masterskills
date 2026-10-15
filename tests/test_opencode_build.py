@@ -61,9 +61,14 @@ class OpenCodeBuildTest(unittest.TestCase):
             self.assertRegex(name, r"^[a-z0-9]+(-[a-z0-9]+)*$")
             description = json.loads(re.search(r"^description: (.+)$", head, re.M).group(1))
             self.assertTrue(1 <= len(description) <= 1024, path)
-            self.assertIn('"opencode/slash": "true"', head)
-            for field in ("argument-hint", "context", "agent"):
+            for field in ("argument-hint", "context", "agent", "metadata"):
                 self.assertNotRegex(head, rf"^{field}:", path)
+            command = (out / "commands" / f"{name}.md").read_text(encoding="utf-8")
+            self.assertIn(f"Load the `{name}` skill", command)
+            self.assertIn("$ARGUMENTS", command)
+        qa = front((out / "commands" / "loc-qa.md").read_text(encoding="utf-8"))
+        self.assertIn("agent: qa", qa)
+        self.assertIn("subtask: true", qa)
 
     def test_agents_are_subagents_with_permissions(self):
         out = self.scratch()

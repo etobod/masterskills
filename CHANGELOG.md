@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.15.2 — 2026-10-15
+
+- OpenCode: every skill is a `/<name>` command again (`/loc-init`, `/loc-planning`…). OpenCode lists skills only in its `/skills` dialog, and the `opencode/slash` metadata the build used is not an OpenCode feature; the build now writes `commands/<name>.md`, which loads the skill and passes the arguments. `/loc-qa` runs in the `qa` agent as a subtask, as in Claude Code.
+
 ## 1.15.1 — 2026-10-15
 
 - OpenCode: the core rules are appended to OpenCode's system message instead of being sent as a second one. Chat templates such as Qwen's in LM Studio reject any system message that is not the first (`System message must be at the beginning`). The end-to-end test now checks for a single system message.
