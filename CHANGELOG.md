@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.9.0 — 2026-10-15
+
+- A milestone's `Dowód` runs only the tests of its criteria plus the fast layers of `loc/TEST-PLAN.md` (a), never the full suite (`loc-planning` `references/tests.md`); `rubber-duck` reports a proof that runs the full suite as Blocking. The proof runs in every round of its gate, and in real use a ten-minute suite ran up to three times per milestone; `loc-qa` still runs the full suite once.
+- The `TEST-PLAN.md` template asks for a fixed seed or deterministic mode in tests with random data (e.g. hypothesis), so a gate does not fail at random.
+
 ## 1.8.0 — 2026-09-30
 
 - Every plan has a `## Nie bronimy przed` section: who produces inputs the code deliberately does not defend against, with the reason, or `- brak`. `loc-planning` proposes it and shows it in its report; `rubber-duck` checks it at the plan gate; `check_plan.py` rejects a plan without it or with an empty one. In real use, reviews of a security-related plan kept inventing a new attacker each round, and every gate ended stuck.

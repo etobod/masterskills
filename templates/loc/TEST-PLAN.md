@@ -37,10 +37,11 @@ Przykład:
 
 ## (e) Jak tu wygląda test
 
-<!-- 3–6 linii konwencji:
+<!-- 3–7 linii konwencji:
 - framework i styl asercji;
 - gdzie kłaść testy (katalog, nazwy plików);
 - fikstury: w gicie tylko pisane ręcznie; dane nagrane tylko w katalogu ignorowanym;
+- testy z losowymi danymi (np. hypothesis): stałe ziarno albo tryb deterministyczny, żeby bramka nie padała losowo;
 - znacznik znanego defektu (np. `@pytest.mark.xfail(strict=True, reason="loc/inbox/NNN-…")`);
 - katalog danych nagranych.
 -->

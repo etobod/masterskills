@@ -22,7 +22,7 @@ The unit of testing is a criterion in a milestone, written as **what the code mu
 ```
 
 - Each criterion names its test in inline code: file and test name (`test_app.py::test_polish`) or the id the framework runs directly (`test_app.TestGreet.test_polish`). The test is assigned here and written **before** the code by `loc-orchestrate`.
-- The milestone's proof is the test command and its expected result.
+- The milestone's proof is the test command and its expected result. It runs only the tests of this milestone's criteria plus the fast layers of `loc/TEST-PLAN.md` (a), **never the full suite**: the proof runs in every round of its gate, and `loc-qa` runs the full suite once at the end.
 - Mark a criterion `(zachowanie)` when it describes behaviour seen from outside (a user-visible result, an error path, a contract), not an internal detail. `loc-orchestrate` gives those to a separate test author who has not seen the implementation. Keep internal details unmarked.
 - A test may be weakened later only openly, with the reason in the execution report. Say so in `## Ryzyka i decyzje` when a criterion is likely to change.
 
