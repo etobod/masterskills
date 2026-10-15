@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.15.1 — 2026-10-15
+
+- OpenCode: the core rules are appended to OpenCode's system message instead of being sent as a second one. Chat templates such as Qwen's in LM Studio reject any system message that is not the first (`System message must be at the beginning`). The end-to-end test now checks for a single system message.
+
 ## 1.15.0 — 2026-10-15
 
 - **A new OpenCode project works after `/loc-init`.** The OpenCode install adds to the global `opencode.json`, only where missing: `"CLAUDE.md"` in `instructions`, because OpenCode reads a project's `CLAUDE.md` only when there is no `AGENTS.md` (which OpenCode's `/init` creates); and `permission.external_directory` `allow` for the plugin's own files, so skills read their references and templates without a prompt. A config that is not plain JSON, or a single `external_directory` value, is left alone and the install prints what to add by hand. `loc-init` itself needs no change.

@@ -117,8 +117,12 @@ export const Masterskills = async ({ directory }: { directory: string }) => {
         const texts = hooksFor("SessionStart", "startup").map((n) => hook(n, data, directory)?.hookSpecificOutput?.additionalContext)
         rules.set(key, texts.filter(Boolean).join("\n\n"))
       }
+      // Appended to the last part, not pushed as a new one: OpenCode sends each part as its own
+      // system message, and chat templates such as Qwen's accept only one, at the beginning.
       const text = rules.get(key)
-      if (text) output.system.push(text)
+      if (!text) return
+      if (output.system.length) output.system[output.system.length - 1] += `\n\n${text}`
+      else output.system.push(text)
     },
 
     event: async ({ event }: any) => {

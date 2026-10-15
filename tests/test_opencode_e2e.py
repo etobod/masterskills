@@ -100,7 +100,9 @@ class OpenCodeHooksTest(unittest.TestCase):
     def test_core_rules_are_in_the_system_prompt_once(self):
         self.run_tool("bash", {"command": "echo hi", "description": "echo"})
         for request in self.model.requests:
-            system = json.dumps([m for m in request["messages"] if m.get("role") == "system"], ensure_ascii=False)
+            messages = [m for m in request["messages"] if m.get("role") == "system"]
+            self.assertEqual(len(messages), 1, "strict chat templates accept one system message")
+            system = json.dumps(messages, ensure_ascii=False)
             self.assertEqual(system.count("masterskills — core rules"), 1)
 
     def test_claude_md_is_read_next_to_agents_md(self):
