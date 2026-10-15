@@ -167,6 +167,14 @@ class CheckStateTest(unittest.TestCase):
         code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
         self.assertEqual(code, 0, out)
 
+    def test_notes_judged_at_planning_are_valid(self):
+        plan = self.with_notes(
+            "- dość (planowanie): 012 #3 `parse.py:41` — „koło piątej” daje 17:00 przybliżoną. "
+            "Powód: pora dnia ta sama, godzina oznaczona jako przybliżona\n"
+            "- sugestia (planowanie): 012 #6 `app.py:98` — stała powtarza listę z text.py")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
+
     def test_enough_note_needs_a_reason(self):
         gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
         for note in ("- dość (M1 code-review): `app.py:7` — godzina przybliżona",

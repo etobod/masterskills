@@ -35,7 +35,7 @@ Suggestions, Unrealistic findings and the judge's `enough` create **no inbox fil
 - dość (M8 code-review): `time.py:88` — „Rano, około siódmej” daje 08:00. Powód: pora dnia ta sama, cel to schematy [Cel 2]
 ```
 
-The gate is `M<n> code-review` or `final-review`. Only the finding: no proposed fix, no "when to come back". An Unrealistic line ends with `Kto to wytwarza:` and the answer, a `dość` line with `Powód:`, the judge's reason and its PRD point; `check_state.py` rejects the section otherwise. A finding already listed as `dość` goes to the judge marked as already judged; it stays `enough` without a new argument, and never gets a second line.
+The gate is `M<n> code-review`, `final-review` or `planowanie` (judged by `loc-planning`). Only the finding: no proposed fix, no "when to come back". An Unrealistic line ends with `Kto to wytwarza:` and the answer, a `dość` line with `Powód:`, the judge's reason and its PRD point; `check_state.py` rejects the section otherwise. A finding already listed as `dość` goes to the judge marked as already judged; it stays `enough` without a new argument, and never gets a second line.
 
 A run started on an older version may have a `deferred` `odlozone` file in the state file: keep appending its milestone Suggestions there, and close it as below.
 

@@ -6,7 +6,7 @@ argument-hint: "<inbox number or file | PRD fragment | task text>"
 
 # loc-planning
 
-Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute without deciding anything. Plans are made only here and executed only by `loc-orchestrate`.
+Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute without deciding anything.
 
 **Do not execute the plan, do not change code.**
 
@@ -14,16 +14,16 @@ Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute 
 
 `$ARGUMENTS` is one of:
 
-- **An inbox number or file**: `brainstorm`, `przeglad`, `odlozone`, `utknelo`, or a `pytanie` that already has an answer under `## Rozstrzygnięcie`. The number is enough; find the file in `loc/inbox/`.
+- **An inbox number or file**: `brainstorm`, `przeglad`, `odlozone`, `utknelo`, or a `pytanie` that already has an answer under `## Rozstrzygnięcie`. The number is enough; find the file in `loc/inbox/`. Review findings in it: `references/findings.md` first.
 - **A fragment of `loc/PRD.md`**, named by its heading.
-- **Plain text**: the task itself; `popraw N` after a report: that plan's N-th `dość` line.
+- **Plain text**: the task itself; `popraw N`: the N-th `dość` line of the last report.
 
-No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask what to plan. An open `pytanie` is not an input: the user has not answered it yet.
+No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask what to plan. An open `pytanie` is not an input.
 
 ## 2. Read the code, not documents about it
 
 1. The input, the project's `CLAUDE.md` (`Commands` gives the proof commands; `Invariants`, `Limits`, `Manual verification / UAT`) and `loc/PATTERNS.md` (entries whose **Kiedy stosować** matches).
-2. The code the change touches. For more than a couple of files, delegate to the `researcher` agent with the question "what exists today for <change>" and use its `file:line` report. Documents and old plans are not evidence; code is.
+2. The code the change touches. For more than a couple of files, delegate to the `researcher` agent with the question "what exists today for <change>" and use its `file:line` report. Documents are not evidence; code is.
 3. If the project has no `CLAUDE.md` `Commands` section, say so in the plan's risks and use the commands you verified by running them. A run leaves no files behind: nothing new in `git status --short` (Python: `python -B`).
 
 ## 3. Unknowns become questions, not holes
@@ -70,6 +70,7 @@ In the user's language, briefly:
 - the `Nie bronimy przed` list, for the user to accept before execution;
 - the gate result (rounds, "skan czysty, krytyk bez uwag blokujących", or what remains and the `utknelo` file);
 - new `pytanie` files, each with its question in one line;
+- the judge's `dość` lines, numbered;
 - what moved to `loc/inbox/done/`, and what changed in `loc/PRD.md`.
 
 End with the next step: `/masterskills:loc-orchestrate <NNN>` when the user decides. Do not start it.

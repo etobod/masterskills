@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.11.0 — 2026-10-15
+
+- **The judge also decides at planning.** When `loc-planning` plans from a `utknelo`, `przeglad` or `odlozone` that lists review findings (`references/findings.md`, new), the `judge` agent weighs every Blocking and Non-blocking one first: `fix` goes into the plan, `enough` becomes a `- dość (planowanie): …` line in the new plan's `## Uwagi z przeglądów`, so its reviews do not raise it again. Suggestions and Unrealistic findings become lines there too and never go into a plan; speed comes back only when the user reports something noticeably slow. With no `fix` at all, no plan is written.
+- `loc-planning` no longer asks the user which review findings to take, and no longer moves leftovers into `odlozone` files: in real use those files only fed the next plan of small cases, whose review got stuck again. An `odlozone` is only for a `fix` finding deliberately left out of a plan. Rule 3 says so.
+- `check_state.py` accepts the gate `planowanie` in review notes.
+
 ## 1.10.0 — 2026-10-15
 
 - **Judge.** A new `judge` agent weighs every Blocking and Non-blocking finding of a milestone code-review and of the final review: a broken criterion, `Invariants` entry or plan decision is fixed; otherwise it asks what the project's user loses if the finding stays (lost or distorted data, a crash, a wrong conclusion → fix; a small inaccuracy → `enough`); when unsure, fix. A review gate passes when the judge leaves nothing to fix. In real use every round of a review of free-form input found new cases (6, 7, then 9 findings, none breaking a criterion), and every plan ended in stuck gates that became the next plan.

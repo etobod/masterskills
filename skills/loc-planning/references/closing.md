@@ -6,7 +6,7 @@ Done after the plan passes the gate (or ends in `utknelo`). Take the time with `
 
 For a `brainstorm`, `przeglad`, `odlozone`, `utknelo` or an answered `pytanie`:
 
-1. Under `## Rozstrzygnięcie` write: `→ plan loc/inbox/NNN-plan-<topic>.md (<date>)`. For a `przeglad`, add every finding the plan does not fix, each with the reason and where it goes instead (usually a new `odlozone` file). Never rewrite the original content.
+1. Under `## Rozstrzygnięcie` write: `→ plan loc/inbox/NNN-plan-<topic>.md (<date>)`. For a `przeglad`, add every finding the plan does not fix, each with the reason (`references/findings.md`). Never rewrite the original content.
 2. Set `**Status:**` to `zamknięte <date>`.
 3. Move the file to `loc/inbox/done/` under the same name.
 4. In the plan's `**Źródło:**`, point to the new location: `loc/inbox/done/<name>`.

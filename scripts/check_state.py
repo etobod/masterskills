@@ -41,7 +41,7 @@ The plan's `## Uwagi z przeglądów` section, when present, holds review finding
 that are not fixed, one per line: `- sugestia (<gate>): <finding>` or
 `- nierealna (<gate>): <finding> Kto to wytwarza: <answer, 3+ words>` or
 `- dość (<gate>): <finding> Powód: <the judge's reason, 3+ words>`, where
-<gate> is `M<n> code-review` or `final-review`.
+<gate> is `M<n> code-review`, `final-review` or `planowanie` (judged by `loc-planning`).
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -65,7 +65,7 @@ PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
 NOTES = "Uwagi z przeglądów"
-NOTE = re.compile(r"^- (sugestia|nierealna|dość) \((M\d+ code-review|final-review)\): (.+)$")
+NOTE = re.compile(r"^- (sugestia|nierealna|dość) \((M\d+ code-review|final-review|planowanie)\): (.+)$")
 PRODUCER = re.compile(r"Kto to wytwarza:\s*(.+)$")
 REASON = re.compile(r"Powód:\s*(.+)$")
 DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-odlozone-[^/]+\.md$")
