@@ -1,12 +1,12 @@
 ---
 name: loc-init
-description: Use when the user wants to set up masterskills in a project, or to bring an existing project up to date with the current plugin version (missing loc/ files, CLAUDE.md sections, the loc/ ignore entry or .claude/settings.json keys). Safe to run again.
-argument-hint: "[project directory]"
+description: Use when the user wants to set up masterskills in a project (optionally filling CLAUDE.md and the PRD's goal from a brainstorm, e.g. "loc-init 001"), or to bring an existing project up to date with the current plugin version (missing loc/ files, CLAUDE.md sections, the loc/ ignore entry or .claude/settings.json keys). Safe to run again.
+argument-hint: "[project directory] [brainstorm number or file]"
 ---
 
 # loc-init
 
-Sets up the project structure. A script does all the work; you run it and report.
+Sets up the project structure. A script does all the work; you run it and report. Given a brainstorm, you then fill the empty sections that describe the project from it.
 
 ## Run
 
@@ -16,7 +16,17 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --project "<dir
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
-`<dir>` is `$ARGUMENTS` when given, otherwise `${CLAUDE_PROJECT_DIR}`. Run it exactly once. Do not create, edit or move any file yourself: the script decides what is missing and never overwrites anything.
+`$ARGUMENTS` may hold a project directory and a brainstorm, in any order:
+
+- a directory → `<dir>`; none → `${CLAUDE_PROJECT_DIR}`;
+- a number `NNN` → `loc/inbox/NNN-brainstorm-*.md` (or in `loc/inbox/done/`);
+- a path to a `.md` file → that file.
+
+Run the script exactly once. Do not create, edit or move any file yourself: the script decides what is missing and never overwrites anything. The only exception is filling sections from a brainstorm (below).
+
+## From a brainstorm
+
+Only when a brainstorm was given and the script printed `ok: true`: follow `references/brainstorm.md`. A brainstorm number or file that does not exist: say so and stop after the report.
 
 ## Report
 

@@ -41,7 +41,7 @@ Record only what the user decided as a decision. Your suggestion stays in `## Ot
 
 Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notatki: `loc/inbox/004-brainstorm-jezyk-powitan.md` (B-01…B-03)."
 
-When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. Do not start it yourself.
+When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. When `## Cel` in `loc/PRD.md` is still only the template, mention first that `/masterskills:loc-init <NNN>` fills the project's goal and `CLAUDE.md` from it. Do not start either yourself.
 
 ## Rules
 

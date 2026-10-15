@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.16.0 — 2026-10-16
+
+- `loc-init` takes a brainstorm (`loc-init 001`, or a path to a `.md` file) and fills the project's frame from its decisions: `Cel` and `Rdzeń idei` in `loc/PRD.md` and the `CLAUDE.md` sections. Only sections that still hold the template are filled, and each point names its source (`B-03`). `Commands` gets only commands written in the brainstorm. Ideas and features stay in the brainstorm, which `loc-init` never changes, for `loc-planning`.
+- `init_project.py` reports the empty sections in a new `empty` field.
+- `loc-brainstorm` suggests `loc-init <NNN>` while the project has no goal yet.
+
 ## 1.15.2 — 2026-10-15
 
 - OpenCode: every skill is a `/<name>` command again (`/loc-init`, `/loc-planning`…). OpenCode lists skills only in its `/skills` dialog, and the `opencode/slash` metadata the build used is not an OpenCode feature; the build now writes `commands/<name>.md`, which loads the skill and passes the arguments. `/loc-qa` runs in the `qa` agent as a subtask, as in Claude Code.

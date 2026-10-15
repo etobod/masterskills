@@ -9,9 +9,13 @@ attribution). Existing files are never overwritten: a missing `CLAUDE.md` sectio
 so running it again is safe. A project without git is refused and nothing is
 created.
 
+`empty` lists the sections that hold nothing but the template's comment or
+`<placeholder>`: the ones `loc-init` may fill from a brainstorm.
+
 Prints JSON to stdout:
     {"ok": true, "project": ..., "created": [...], "updated": [{"path", "added"}],
-     "existing": [...], "skipped": [{"path", "reason"}]}
+     "existing": [...], "skipped": [{"path", "reason"}],
+     "empty": {"CLAUDE.md": [...], "loc/PRD.md": [...]}}
 or, without git (exit code 2):
     {"ok": false, "project": ..., "error": "no-git", "message": ...}
 """
@@ -29,6 +33,8 @@ TEMPLATES = PLUGIN_ROOT / "templates"
 DIRS = ["loc/inbox", "loc/inbox/done"]
 DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"]
 LOC_ENTRY = re.compile(r"^/?loc(/(\*\*?)?)?\s*$")
+PRD_FRAME = ["Cel", "Rdzeń idei"]  # Kierunki is work to plan, not the project's frame
+PLACEHOLDER = re.compile(r"<!--.*?-->|^#*\s*<[^>\n]*>\s*$", re.S | re.M)
 
 NO_GIT = (
     "This directory is not the root of a git repository. masterskills needs git: plans take a "
@@ -151,6 +157,16 @@ def ensure_settings(project: Path, report: dict) -> None:
     report["updated"].append({"path": ".claude/settings.json", "added": missing})
 
 
+def empty_sections(path: Path, names: list) -> list:
+    """The sections among `names` whose body is only template comments or placeholders."""
+    if not path.is_file():
+        return []
+    text = path.read_bytes().decode("utf-8", errors="replace")
+    parts = re.split(r"(?m)^(?=## )", text)
+    bodies = {p.splitlines()[0][3:].strip(): p.partition("\n")[2] for p in parts if p.startswith("## ")}
+    return [name for name in names if name in bodies and not PLACEHOLDER.sub("", bodies[name]).strip()]
+
+
 def init(project: Path) -> dict:
     report = {"ok": True, "project": project.as_posix(), "created": [], "updated": [], "existing": [],
               "skipped": []}
@@ -175,6 +191,10 @@ def init(project: Path) -> dict:
     ensure_claude_md(project, report)
     ensure_gitignore(project, report)
     ensure_settings(project, report)
+    report["empty"] = {
+        "CLAUDE.md": empty_sections(project / "CLAUDE.md", [name for name, _ in claude_sections()]),
+        "loc/PRD.md": empty_sections(project / "loc" / "PRD.md", PRD_FRAME),
+    }
     return report
 
 
