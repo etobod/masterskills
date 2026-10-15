@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.13.0 — 2026-10-15
+
+- **OpenCode version.** `opencode/build.py` builds the plugin for OpenCode from the same files: skills become `/loc-*` commands, agents become subagents with `permission:` instead of `tools:`, `${CLAUDE_PLUGIN_ROOT}` becomes the absolute install path, and the core rules are added to `instructions` in `opencode.json`. `opencode-install.bat` installs and updates it (`git pull`, then a build into `~/.config/opencode/` that replaces only the files of the previous install). Hooks and `loc-init` for OpenCode come later.
+
 ## 1.12.0 — 2026-10-15
 
 - **The judge weighs every `odlozone`.** `loc-planning` (`references/findings.md`) now sends every `odlozone` through the judge before planning: review findings, observations from a manual check and `fix` findings deferred earlier. An observation from a manual check has no category; it goes to the judge as Non-blocking, never as a suggestion or unrealistic, because it was seen in real use. Its `- dość (planowanie): …` line may have no `file:line`.
