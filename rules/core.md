@@ -9,7 +9,7 @@
 7. **Flow.** When a conversation turns into planning, notes go into the active `brainstorm` file in `loc/inbox/` (`loc-brainstorm`). Plans are made only by `loc-planning`; plans are executed only by `loc-orchestrate`.
 7a. After work outside a plan that actually changed something, `loc-journal` adds an entry to `loc/MEMORY.md`.
 8. **Answered questions.** When the user answers a `pytanie` (in chat or in the file), write the answer under `## Rozstrzygnięcie` and move the file to `loc/inbox/done/`. If the answer differs from the interim option the work already used, create an `odlozone` file with what must change.
-9. **PRD.** `loc/PRD.md` says where the project is heading. Truth moves PRD → plan → code: a PRD fragment marked `→ przekazane do …` is no longer authoritative, so ignore its conflicts with code or plans. Precedence: code > plan in progress > unhanded PRD fragment.
+9. **PRD.** `loc/PRD.md` holds only what is current. `Cel` and `Rdzeń idei` are the project's guidelines, changed only with the user's consent (`loc-planning`). A `Kierunki` fragment moves into the plan made from it. An old fragment marked `→ przekazane do …` is not authoritative. Precedence: code > plan in progress > `Kierunki`.
 10. **Patterns.** Before running or configuring something, check `loc/PATTERNS.md`. When you find a way that works, record it there at once.
 11. **User vocabulary.** "Turn off 1M token" ("wyłącz 1M token"): set `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` in `settings.json` `env`. "Turn on" ("włącz"): remove it, or `/model opus[1m]`. Both apply next session; say so.
 12. **Decisions are not dogma.** When you see a better solution than the user's decision, propose it with reasons.

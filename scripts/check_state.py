@@ -39,7 +39,8 @@ Suggestions, which must exist in `loc/inbox/` or `loc/inbox/done/`.
 
 The plan's `## Uwagi z przeglądów` section, when present, holds review findings
 that are not fixed, one per line: `- sugestia (<gate>): <finding>` or
-`- nierealna (<gate>): <finding> Kto to wytwarza: <answer, 3+ words>`, where
+`- nierealna (<gate>): <finding> Kto to wytwarza: <answer, 3+ words>` or
+`- dość (<gate>): <finding> Powód: <the judge's reason, 3+ words>`, where
 <gate> is `M<n> code-review` or `final-review`.
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
@@ -64,8 +65,9 @@ PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
 NOTES = "Uwagi z przeglądów"
-NOTE = re.compile(r"^- (sugestia|nierealna) \((M\d+ code-review|final-review)\): (.+)$")
+NOTE = re.compile(r"^- (sugestia|nierealna|dość) \((M\d+ code-review|final-review)\): (.+)$")
 PRODUCER = re.compile(r"Kto to wytwarza:\s*(.+)$")
+REASON = re.compile(r"Powód:\s*(.+)$")
 DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-odlozone-[^/]+\.md$")
 QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
@@ -207,12 +209,18 @@ def check_notes(data: dict, project: Path, problems: list) -> None:
         match = NOTE.match(line)
         if not match:
             problems.append(f"plan line {number}: in ## {NOTES} expected "
-                            "'- sugestia (<gate>): ...' or '- nierealna (<gate>): ... Kto to wytwarza: ...'")
+                            "'- sugestia (<gate>): ...', '- nierealna (<gate>): ... Kto to wytwarza: ...' "
+                            "or '- dość (<gate>): ... Powód: ...'")
         elif match.group(1) == "nierealna":
             producer = PRODUCER.search(match.group(3))
             if not producer or len(producer.group(1).split()) < 3:
                 problems.append(f"plan line {number}: a nierealna finding needs 'Kto to wytwarza:' "
                                 "and who or what produces that input (3+ words)")
+        elif match.group(1) == "dość":
+            reason = REASON.search(match.group(3))
+            if not reason or len(reason.group(1).split()) < 3:
+                problems.append(f"plan line {number}: a dość finding needs 'Powód:' "
+                                "and the judge's reason (3+ words)")
 
 
 def check_qa(data: dict, project: Path, problems: list) -> None:

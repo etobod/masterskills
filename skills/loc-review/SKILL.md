@@ -41,9 +41,9 @@ One list: duplicates merged, each finding with `file:line`, category (**Blocking
 
 ## 4. Orchestrated mode: fix, at most 3 rounds
 
-Each round, in the state file's `final-review` gate: increase `rounds`, review (steps 1–3), fix the Blocking and Non-blocking findings, rerun the `Dowód` of every milestone the fixes touched. Suggestions and Unrealistic findings are not fixed and create no inbox file: one line each in the plan's `## Uwagi z przeglądów`, gate `final-review` (format in `gates.md`). A finding you reject goes into the report with the reason. The gate passes when a round has no Blocking or Non-blocking finding; set `passed: true`.
+Each round, in the state file's `final-review` gate: increase `rounds`, review (steps 1–3), give the Blocking and Non-blocking findings to the `judge` agent (`gates.md`, "The judge"), fix those it marks `fix`, rerun the `Dowód` of every milestone the fixes touched. Suggestions, Unrealistic findings and the judge's `enough` verdicts are not fixed and create no inbox file: one line each in the plan's `## Uwagi z przeglądów`, gate `final-review` (format in `gates.md`). A finding already there as `dość` goes to the judge marked as already judged and never gets a second line. The gate passes when the judge leaves nothing to fix; set `passed: true`.
 
-After a third round that still has Blocking or Non-blocking findings: do not start a fourth and change no more code. Create a `utknelo` file (`next_number.py --type utknelo`, source: the plan) with its `**Kategoria:**`, each round's findings, what was changed, what remains with `file:line`, and whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, which closes the plan anyway.
+After a third round that still leaves something to fix: do not start a fourth and change no more code. Add a `## final-review` section to the plan run's `utknelo` file (the path in any `stuck` of the state file), creating it if none exists (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`): each round's findings, what was changed, what remains with `file:line`, whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, which closes the plan anyway.
 
 ## 5. Standalone mode: report to inbox
 

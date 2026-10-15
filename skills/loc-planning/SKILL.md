@@ -16,7 +16,7 @@ Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute 
 
 - **An inbox number or file**: `brainstorm`, `przeglad`, `odlozone`, `utknelo`, or a `pytanie` that already has an answer under `## Rozstrzygnięcie`. The number is enough; find the file in `loc/inbox/`.
 - **A fragment of `loc/PRD.md`**, named by its heading.
-- **Plain text**: the task itself.
+- **Plain text**: the task itself; `popraw N` after a report: that plan's N-th `dość` line.
 
 No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask what to plan. An open `pytanie` is not an input: the user has not answered it yet.
 
@@ -47,7 +47,7 @@ The file comes from the template with all sections. Fill them in Polish:
 - **Kamienie milowe**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Dowód:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Sprawdzenie ręczne:**` per `Manual verification / UAT`. Code and its tests go in the same milestone; for code, criteria, tests and performer follow `references/tests.md`. A milestone's product is never a decision, an audit or a question.
 - **Ryzyka i decyzje**: references to brainstorm decisions (`B-01`…) and `pytanie` files, and what each risk would cost.
 
-Keep it proportional: a small change gets one or two milestones.
+Small change, one or two milestones.
 
 ## 5. Gate: at most 3 rounds
 
@@ -60,7 +60,7 @@ The round passes when the script exits `0` and the critic reports nothing blocki
 
 ## 6. Close the input
 
-Follow `references/closing.md` for the input's type: the input file gets its `## Rozstrzygnięcie` and moves to `loc/inbox/done/`, a PRD fragment gets the `→ przekazane` marker; then the journal entry.
+Follow `references/closing.md` for the input's type, then the journal entry. Then `references/prd.md`: stale PRD fragments, changes to `Cel` or `Rdzeń idei`.
 
 ## 7. Report
 
@@ -70,6 +70,6 @@ In the user's language, briefly:
 - the `Nie bronimy przed` list, for the user to accept before execution;
 - the gate result (rounds, "skan czysty, krytyk bez uwag blokujących", or what remains and the `utknelo` file);
 - new `pytanie` files, each with its question in one line;
-- what moved to `loc/inbox/done/`.
+- what moved to `loc/inbox/done/`, and what changed in `loc/PRD.md`.
 
 End with the next step: `/masterskills:loc-orchestrate <NNN>` when the user decides. Do not start it.

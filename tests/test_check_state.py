@@ -160,6 +160,21 @@ class CheckStateTest(unittest.TestCase):
             self.assertEqual(code, 1, note)
             self.assertIn("Kto to wytwarza", "\n".join(out["problems"]))
 
+    def test_enough_note_is_valid(self):
+        plan = self.with_notes(
+            "- dość (M1 code-review): `app.py:7` — „Rano, około siódmej” daje 08:00 przybliżoną. "
+            "Powód: pora dnia ta sama, cel to schematy")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
+
+    def test_enough_note_needs_a_reason(self):
+        gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
+        for note in ("- dość (M1 code-review): `app.py:7` — godzina przybliżona",
+                     "- dość (final-review): `app.py:7` — godzina. Powód: nieistotne"):
+            code, out = self.run_check(self.finished("done", gates), self.with_notes(note))
+            self.assertEqual(code, 1, note)
+            self.assertIn("Powód", "\n".join(out["problems"]))
+
     def test_review_notes_accept_only_suggestion_and_unrealistic(self):
         gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
         for note in ("- blokująca (M1 code-review): `app.py:3` — zły wynik",

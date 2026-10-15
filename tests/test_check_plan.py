@@ -84,6 +84,13 @@ class CheckPlanTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unfilled placeholder", self.problems(out))
 
+    def test_moved_prd_fragment_is_history(self):
+        text = plan("### M1 — opis\n**Dowód:** `grep x` → `1`\n").replace(
+            "## Ryzyka i decyzje", "## Fragment PRD\nPrzeniesione z loc/PRD.md 2026-10-15.\n"
+            "### Eksport\nFormat do ustalenia, TODO.\n\n## Ryzyka i decyzje")
+        code, out = self.run_check(text)
+        self.assertEqual(code, 0, out)
+
     def test_criteria_with_tests_pass(self):
         code, out = self.run_check(plan(
             "### M1 — powitanie po polsku\n"

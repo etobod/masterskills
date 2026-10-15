@@ -6,7 +6,7 @@ Checks, in order:
     Kontekst z kodu, Kamienie milowe, Ryzyka i decyzje), and `Nie bronimy przed`
     has at least one `- ` line (`- brak` when the code defends against everything);
   - no forbidden phrase that marks an undecided plan ("do ustalenia", "TODO"...),
-    outside inline code and outside the `## Bramka planu`, `## Uwagi z przeglądów`
+    outside inline code and outside the `## Bramka planu`, `## Uwagi z przeglądów`, `## Fragment PRD`
     and `## Rozstrzygnięcie` sections, which record history rather than instructions;
   - no unfilled template placeholder such as `<co powstaje>`;
   - milestones (`### ` headings under `## Kamienie milowe`) and `**Dowód:**`
@@ -32,7 +32,7 @@ from pathlib import Path
 
 REQUIRED = ["Cel", "Czego nie robimy", "Nie bronimy przed", "Kontekst z kodu", "Kamienie milowe", "Ryzyka i decyzje"]
 DEFENCE = "Nie bronimy przed"
-HISTORY = {"Bramka planu", "Uwagi z przeglądów", "Rozstrzygnięcie"}
+HISTORY = {"Bramka planu", "Uwagi z przeglądów", "Fragment PRD", "Rozstrzygnięcie"}
 FORBIDDEN = [
     "do ustalenia", "do decyzji", "do rozstrzygnięcia", "do sprawdzenia", "sprawdzić, czy",
     "zobaczymy", "jeśli się okaże", "ewentualnie", "być może", "prawdopodobnie",

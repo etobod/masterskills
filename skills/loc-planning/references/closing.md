@@ -15,13 +15,7 @@ A `pytanie` whose `## Rozstrzygnięcie` is empty is not closed: it stays open in
 
 ## Fragment of `loc/PRD.md`
 
-Directly under the fragment's heading, add one line:
-
-```
-→ przekazane do loc/inbox/NNN-plan-<topic>.md (<date>)
-```
-
-Change nothing else in the PRD: no summary, no status, no milestone list. From now on the plan and the code are the truth for this fragment; the PRD fragment is history.
+Move it into the plan and remove it from the PRD: `references/prd.md`.
 
 ## Plain text
 

@@ -2,6 +2,17 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.10.0 — 2026-10-15
+
+- **Judge.** A new `judge` agent weighs every Blocking and Non-blocking finding of a milestone code-review and of the final review: a broken criterion, `Invariants` entry or plan decision is fixed; otherwise it asks what the project's user loses if the finding stays (lost or distorted data, a crash, a wrong conclusion → fix; a small inaccuracy → `enough`); when unsure, fix. A review gate passes when the judge leaves nothing to fix. In real use every round of a review of free-form input found new cases (6, 7, then 9 findings, none breaking a criterion), and every plan ended in stuck gates that became the next plan.
+- An `enough` verdict is a `- dość (<gate>): … Powód: …` line in the plan's `## Uwagi z przeglądów` (checked by `check_state.py`) and is not raised again. The final report of `loc-orchestrate` lists them, numbered and grouped by the PRD point they rest on; the user may answer "popraw 2".
+- Rounds 2 and 3 of a milestone code-review review only the diff of the previous round's fixes. The final review still covers the whole plan.
+- One `utknelo` file per plan run, one section per stuck gate (`references/stuck.md`, new; the `utknelo` template changed). Older files with one gate each are closed as before.
+- **PRD holds only what is current.** The template has `## Cel`, `## Rdzeń idei` (the guidelines the judge reads, never handed to a plan) and `## Kierunki`. A `Kierunki` fragment that becomes a plan moves into the plan's `## Fragment PRD` section and leaves the PRD; old `→ przekazane` fragments are moved the same way at the next planning (`loc-planning` `references/prd.md`, new). `check_plan.py` treats `## Fragment PRD` as history.
+- `loc-planning` proposes any change to `Cel` or `Rdzeń idei` (or both, when the PRD has none) in a `pytanie` titled `PRD:` and asks the user in the conversation; the PRD is written only after a yes. `loc-orchestrate` does not start while that `pytanie` is open. Rule 9 says the same.
+- Rounds 2 and 3 keep the start of their fix diff in the gate's `review_from`, so a resumed run reviews the same fixes. `popraw N` after a report is an input for `loc-planning`.
+- Existing projects need no manual change: the next `loc-planning` run proposes `Rdzeń idei` if it is missing and tidies the PRD.
+
 ## 1.9.0 — 2026-10-15
 
 - A milestone's `Dowód` runs only the tests of its criteria plus the fast layers of `loc/TEST-PLAN.md` (a), never the full suite (`loc-planning` `references/tests.md`); `rubber-duck` reports a proof that runs the full suite as Blocking. The proof runs in every round of its gate, and in real use a ten-minute suite ran up to three times per milestone; `loc-qa` still runs the full suite once.
