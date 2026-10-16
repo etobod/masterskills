@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.3.0 — 2026-10-16
+
+- **Tests run the real code.** New `scripts/test_copies.py` lists functions a test defines with the name and nearly the body of a function in the code (Python `def`, JavaScript `function` and arrow functions, also inside a page's `<script>`). Such a test passes whatever the code does. `loc-qa` (new step 4a) rewrites it to run the real code; a page's script is loaded with `readFileSync` and `vm`. A deliberate mock is INFO. `loc-planning` says a test never copies the code, and the `judge` marks such a finding `fix`.
+- **Deferrable manual checks are not lost.** `loc-orchestrate` writes a `user (deferrable)` milestone's `**Manual check:**` into a `deferred` file once the proof and the review pass (planning no longer does, since no code existed then). `loc-qa` creates the file when it is missing.
+- `loc-orchestrate`: a skipped step of the skill (the red gate, the `test-author` agent, a review) is not a deviation; do it, or the gate is stuck.
+- Word budgets: `loc-planning` `SKILL.md` 2600, `loc-qa` `SKILL.md` 1000.
+
 ## 2.2.0 — 2026-10-16
 
 - **The user checks after the model's tests, never instead of them.** A milestone that changes code has criteria with tests and a command proof also when a person must look at the result; `→ manual` criteria are allowed only next to criteria with tests. `check_plan.py` no longer exempts a `**Performer:** user (...)` milestone from criteria or from a command proof, and says why: "the user checks after your tests, not instead of them".

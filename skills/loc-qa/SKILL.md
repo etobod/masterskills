@@ -55,13 +55,25 @@ For every criterion ``- K<n>: … → `<test>` `` in the plan:
 
 1. The named test exists and passed in step 2 → **PASS**.
 2. It is missing → write it, following TEST-PLAN (e), and run it. At most 3 rounds for all missing tests together. It passes → **PASS** ("written by loc-qa"). It fails on its assertion → **FAIL**: the code does not meet the criterion; do not touch the code. Still broken after round 3 → **FAIL**.
-3. `→ manual` → **INFO** with the performer.
+3. `→ manual` → **INFO** with the performer. For `user (deferrable)` the milestone's `**Manual check:**` must be in a `deferred` file whose `**Source:**` names the plan; if none holds it, create one (command below) with the check and the milestone, and list it.
 
 A milestone that changed code without `**Criteria:**` → **INFO**. A gap in TEST-PLAN itself (section (b) says what to extend and nothing was) → a `deferred` file, never an edit:
 
 ```sh
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<few words>" --title "<title>" --source "loc-qa <NNN>"
 ```
+
+## 4a. Tests run the real code
+
+```sh
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/test_copies.py
+```
+
+It lists functions a test file defines with the name and nearly the body of a function in the code (`fft` copied from `fourier.html`). Such a test passes whatever the code does. For each copy in a test this plan names or changed:
+
+- Rewrite the test to run the real code: import it; for a script inside a page, read the page, take its `<script>` text and run it (Node: `readFileSync` and `vm.runInContext`, then the functions are on the context). Run it → **PASS** ("rewritten by loc-qa"). It now fails on its assertion → **FAIL**: the code does not do what the copy did.
+- A deliberate mock (it replaces a dependency the test does not check) → **INFO** with the reason.
+- Copies in tests this plan did not touch → **INFO**, one row.
 
 ## 5. Project `qa-*` skills
 
