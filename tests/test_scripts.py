@@ -66,6 +66,22 @@ class InitProjectTest(unittest.TestCase):
         after = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
         self.assertEqual(before, after)
 
+    def test_check_reports_without_writing(self):
+        run("init_project.py", "--project", ".", cwd=self.project)
+        claude = self.project / "CLAUDE.md"
+        text = claude.read_text(encoding="utf-8").replace("## Limits\n", "## Limits\nJeden plik, zero zależności.\n")
+        text = text.replace("## Invariants\n", "## Invariants\n- One file only.\n")
+        claude.write_text(text, encoding="utf-8")
+        before = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
+        out = run("init_project.py", "--project", ".", "--check", cwd=self.project)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        result = json.loads(out.stdout)
+        self.assertIn("Cel", result["empty"]["loc/PRD.md"])
+        self.assertEqual(result["not_english"], ["Limits"])
+        self.assertNotIn("created", result)
+        after = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
+        self.assertEqual(before, after)
+
     def test_git_sees_nothing_from_loc(self):
         run("init_project.py", "--project", ".", cwd=self.project)
         status = subprocess.run(["git", "status", "--short", "--untracked-files=all"], cwd=self.project,

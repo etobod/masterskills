@@ -34,6 +34,12 @@ Where things go:
 | what is not allowed (cloud, data, costs) | `Limits` |
 | a feature, an idea, a task | nowhere: it is for `loc-planning` |
 
+`Cel` is never left empty: the brainstorm's `## Temat` always says what the project is.
+
+## Check
+
+After filling, run once: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --project "<dir>" --check`. It writes nothing. Each section still in `empty` must be one the brainstorm has nothing for; fill the others. Each section in `not_english` holds Polish: translate it.
+
 ## The brainstorm itself
 
 Read it only. Do not edit, move or close it: `loc-planning` closes it when it makes the plan. Create no plan and no inbox file.

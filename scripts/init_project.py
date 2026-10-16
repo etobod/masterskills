@@ -12,6 +12,11 @@ created.
 `empty` lists the sections that hold nothing but the template's comment or
 `<placeholder>`: the ones `loc-init` may fill from a brainstorm.
 
+`--check` writes nothing. After filling sections from a brainstorm it prints
+{"ok": true, "project": ..., "empty": {...}, "not_english": [...]}, where
+`not_english` lists the `CLAUDE.md` sections holding Polish letters
+(`CLAUDE.md` is written in English).
+
 Prints JSON to stdout:
     {"ok": true, "project": ..., "created": [...], "updated": [{"path", "added"}],
      "existing": [...], "skipped": [{"path", "reason"}],
@@ -34,6 +39,7 @@ DIRS = ["loc/inbox", "loc/inbox/done"]
 DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"]
 LOC_ENTRY = re.compile(r"^/?loc(/(\*\*?)?)?\s*$")
 PRD_FRAME = ["Cel", "Rdzeń idei"]  # Kierunki is work to plan, not the project's frame
+POLISH = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
 PLACEHOLDER = re.compile(r"<!--.*?-->|^#*\s*<[^>\n]*>\s*$", re.S | re.M)
 
 NO_GIT = (
@@ -157,14 +163,34 @@ def ensure_settings(project: Path, report: dict) -> None:
     report["updated"].append({"path": ".claude/settings.json", "added": missing})
 
 
-def empty_sections(path: Path, names: list) -> list:
-    """The sections among `names` whose body is only template comments or placeholders."""
+def section_bodies(path: Path) -> dict:
+    """Each `## ` section's body, template comments and placeholders removed."""
     if not path.is_file():
-        return []
+        return {}
     text = path.read_bytes().decode("utf-8", errors="replace")
     parts = re.split(r"(?m)^(?=## )", text)
-    bodies = {p.splitlines()[0][3:].strip(): p.partition("\n")[2] for p in parts if p.startswith("## ")}
-    return [name for name in names if name in bodies and not PLACEHOLDER.sub("", bodies[name]).strip()]
+    return {p.splitlines()[0][3:].strip(): PLACEHOLDER.sub("", p.partition("\n")[2]).strip()
+            for p in parts if p.startswith("## ")}
+
+
+def empty_sections(path: Path, names: list) -> list:
+    """The sections among `names` whose body is only template comments or placeholders."""
+    bodies = section_bodies(path)
+    return [name for name in names if name in bodies and not bodies[name]]
+
+
+def empty_report(project: Path) -> dict:
+    return {
+        "CLAUDE.md": empty_sections(project / "CLAUDE.md", [name for name, _ in claude_sections()]),
+        "loc/PRD.md": empty_sections(project / "loc" / "PRD.md", PRD_FRAME),
+    }
+
+
+def check(project: Path) -> dict:
+    bodies = section_bodies(project / "CLAUDE.md")
+    names = [name for name, _ in claude_sections()]
+    return {"ok": True, "project": project.as_posix(), "empty": empty_report(project),
+            "not_english": [name for name in names if POLISH.search(bodies.get(name, ""))]}
 
 
 def init(project: Path) -> dict:
@@ -191,10 +217,7 @@ def init(project: Path) -> dict:
     ensure_claude_md(project, report)
     ensure_gitignore(project, report)
     ensure_settings(project, report)
-    report["empty"] = {
-        "CLAUDE.md": empty_sections(project / "CLAUDE.md", [name for name, _ in claude_sections()]),
-        "loc/PRD.md": empty_sections(project / "loc" / "PRD.md", PRD_FRAME),
-    }
+    report["empty"] = empty_report(project)
     return report
 
 
@@ -206,7 +229,10 @@ def main() -> int:
         default=Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()),
         help="project root (default: $CLAUDE_PROJECT_DIR, then the current directory)",
     )
-    project = parser.parse_args().project.resolve()
+    parser.add_argument("--check", action="store_true",
+                        help="write nothing; report empty sections and CLAUDE.md sections not in English")
+    args = parser.parse_args()
+    project = args.project.resolve()
 
     if not project.is_dir():
         print(json.dumps({"ok": False, "project": project.as_posix(), "error": "not-a-directory",
@@ -216,7 +242,7 @@ def main() -> int:
         print(json.dumps({"ok": False, "project": project.as_posix(), "error": "no-git", "message": NO_GIT}))
         return 2
 
-    print(json.dumps(init(project), indent=2))
+    print(json.dumps(check(project) if args.check else init(project), indent=2))
     return 0
 
 

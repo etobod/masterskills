@@ -22,7 +22,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 - a number `NNN` → `loc/inbox/NNN-brainstorm-*.md` (or in `loc/inbox/done/`);
 - a path to a `.md` file → that file.
 
-Run the script exactly once. Do not create, edit or move any file yourself: the script decides what is missing and never overwrites anything. The only exception is filling sections from a brainstorm (below).
+Run the script exactly once (a brainstorm adds its read-only `--check`). Do not create, edit or move any file yourself: the script decides what is missing and never overwrites anything. The only exception is filling sections from a brainstorm (below).
 
 ## From a brainstorm
 

@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.19.1 — 2026-10-16
+
+- `loc-init` with a brainstorm ends with `init_project.py --check`, which writes nothing and lists the sections still empty and the `CLAUDE.md` sections written in Polish. A model that left the PRD's `Cel` empty, or wrote `Invariants` in Polish, now sees it. `Cel` is never left empty: the brainstorm's `## Temat` says what the project is.
+
 ## 1.19.0 — 2026-10-16
 
 - `loc-orchestrate` commits each finished plan with the new `commit_plan.py`. The commit holds only the files the plan changed since its first snapshot, `loc/` left out, so the user's own uncommitted work stays as it was. The message must be Conventional Commits and must not mention AI. Nothing is pushed. A project whose `CLAUDE.md` says the user commits is skipped with a reason. `check_state.py` requires the result (`commit` in the state file) in the `done` phase.
