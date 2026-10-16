@@ -1,17 +1,17 @@
-# Wzorce
+# Patterns
 
-Tylko to, czego nie da się odczytać z kodu. Każdy wpis ma **Kiedy stosować**,
-żeby planowanie i recenzja znalazły go grepem. Sprzeczność ze starszym wpisem
-oznacza poprawienie starego, a nie dopisanie drugiego.
+Only what cannot be read from the code. Every entry has **When to use**,
+so planning and review find it with grep. When it contradicts an older entry,
+fix the old one instead of adding a second.
 
-<!-- Wzór wpisu:
-### <krótki tytuł>
-**Kiedy stosować:** <sytuacja, w której ten wpis ma znaczenie>
-<co robić albo czego nie robić, z przykładem lub komendą>
+<!-- Entry format:
+### <short title>
+**When to use:** <the situation in which this entry matters>
+<what to do or not to do, with an example or a command>
 -->
 
-## ✅ Działa
+## ✅ Works
 
-## ❌ Nie działa
+## ❌ Does not work
 
-## ⚠️ Pułapki
+## ⚠️ Pitfalls

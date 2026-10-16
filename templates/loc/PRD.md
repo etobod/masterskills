@@ -1,33 +1,33 @@
-# PRD — {PROJEKT}
+# PRD — {PROJECT}
 
-Po co jest projekt i dokąd zmierza. Tylko rzeczy aktualne.
+What the project is for and where it is heading. Only what is current.
 
-- `## Cel`, `## Rdzeń idei` i `## Scenariusze` są stałe: nigdy nie przechodzą do planu. Sędzia
-  przeglądów waży według nich, co poprawka realnie daje projektowi. Każdą ich
-  zmianę `loc-planning` proponuje w rozmowie, a zapisuje dopiero po zgodzie
-  użytkownika.
-- `## Kierunki` to pomysły czekające na plan. Fragment, z którego powstaje plan,
-  przenosi się w całości do sekcji `## Fragment PRD` tego planu i znika stąd.
-  O tym, co zrobiono, mówi `loc/MEMORY.md`.
+- `## Goal`, `## Core idea` and `## Scenarios` are fixed: they never move into a plan. The
+  review judge weighs by them what a fix really gives the project. `loc-planning`
+  proposes every change to them in conversation and writes it only after the
+  user agrees.
+- `## Directions` are ideas waiting for a plan. The fragment a plan is made from
+  moves in full into that plan's `## PRD fragment` section and disappears from here.
+  What was done is told by `loc/MEMORY.md`.
 
-## Cel
-<po co jest ten projekt i dla kogo; kilka zdań albo krótka numerowana lista>
+## Goal
+<what this project is for and for whom; a few sentences or a short numbered list>
 
-## Rdzeń idei
-<!-- Kilka punktów, na których stoi projekt: cel albo priorytet z powodem, nie
-opis kodu i nie powtórzenie `Invariants` z `CLAUDE.md`. Przykład:
-- **Dane są fundamentem.** Każde słowo użytkownika jest przechowane w oryginale
-  i da się je przetworzyć ponownie po zmianach, bez ponownego wpisywania.
+## Core idea
+<!-- A few points the project stands on: a goal or a priority with its reason, not
+a description of the code and not a repeat of `Invariants` in `CLAUDE.md`. Example:
+- **Data is the foundation.** Every word of the user is kept in the original
+  and can be processed again after changes, without typing it again.
 -->
 
-## Scenariusze
-<!-- 3–7 sposobów użycia, które projekt musi obsługiwać: kto, co robi, czego
-oczekuje. Sędzia sprawdza, czy znalezisko psuje któryś z nich. To nie lista
-funkcji: nowe funkcje to `## Kierunki` i kryteria planów. Przykład:
-1. Użytkownik dyktuje notatkę w biegu i wieczorem widzi ją w dzienniku
-   z właściwą porą dnia.
+## Scenarios
+<!-- 3–7 ways of use the project must support: who, what they do, what they
+expect. The judge checks whether a finding breaks one of them. Not a list of
+features: new features are `## Directions` and plan criteria. Example:
+1. The user dictates a note on the run and in the evening sees it in the journal
+   with the right time of day.
 -->
 
-## Kierunki
-### <nazwa fragmentu>
-<co ma powstać i dlaczego>
+## Directions
+### <fragment name>
+<what should be built and why>

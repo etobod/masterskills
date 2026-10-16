@@ -3,8 +3,8 @@
 
 An entry is a level-2 heading and the text under it:
 
-    ## 2026-01-15 14:30 — [Plan] Eksport do CSV
-    Do 3 zdań. Szczegóły: loc/inbox/done/007-plan-eksport-csv.md
+    ## 2026-01-15 14:30 — [Plan] CSV export
+    Up to 3 sentences. Details: loc/inbox/done/007-plan-csv-export.md
 
 The index is a table (date, type, topic, line of the entry) rewritten between
 `<!-- index:start -->` and `<!-- index:end -->`; never edit it by hand. Only the
@@ -27,7 +27,7 @@ from pathlib import Path
 
 START, END = "<!-- index:start -->", "<!-- index:end -->"
 ENTRY = re.compile(r"^## (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) — \[([^\]]+)\] (.+?)\s*$")
-TYPES = ["Plan", "Planowanie", "Przegląd", "Poprawka", "Decyzja"]
+TYPES = ["Plan", "Planning", "Review", "Fix", "Decision"]
 
 
 def split_entries(lines: list) -> tuple:
@@ -61,7 +61,7 @@ def build(head: list, preamble: list, entries: list) -> str:
     # The index has a fixed number of lines, so each entry's line is known before it is written.
     index_lines = len(entries) + 2 if entries else 0
     out = head + [START] + [""] * index_lines + [END] + ([""] + preamble if preamble else [])
-    rows = ["| Data | Typ | Temat | Linia |", "|---|---|---|---|"] if entries else []
+    rows = ["| Date | Type | Topic | Line |", "|---|---|---|---|"] if entries else []
     for entry in entries:
         out.append("")
         date, kind, title = ENTRY.match(entry[0]).groups()

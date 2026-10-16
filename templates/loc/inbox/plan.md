@@ -1,38 +1,38 @@
-# {NNN} — {TYTUL}
+# {NNN} — {TITLE}
 
-**Typ:** plan
-**Status:** otwarte
-**Utworzono:** {DATA}
-**Źródło:** {ZRODLO}
+**Type:** plan
+**Status:** open
+**Created:** {DATE}
+**Source:** {SOURCE}
 
-## Cel
-<co ma działać po wykonaniu planu, jednym akapitem>
+## Goal
+<what works after the plan is executed, in one paragraph>
 
-## Czego nie robimy
-- <świadomie poza zakresem>
+## Out of scope
+- <deliberately outside the scope>
 
-## Nie bronimy przed
-- <kto albo co wytwarza wejście, przed którym kod świadomie nie broni, i dlaczego; `- brak`, gdy nic>
+## Not defended against
+- <who or what produces input the code deliberately does not defend against, and why; `- none` when nothing>
 
-## Kontekst z kodu
-- `<plik:linia>` — <co tam jest i dlaczego ważne>
+## Code context
+- `<file:line>` — <what is there and why it matters>
 
-## Kamienie milowe
+## Milestones
 
-### M1 — <nazwa>
-<co powstaje>
-**Kryteria:**
-- K1: <co kod ma robić> → `<plik testu::nazwa testu>`
-<!-- Kamień, który nie zmienia kodu: zamiast Kryteriów `**Bez testów:** <powód>`. -->
-**Wykonawca:** auto
-**Dowód:** `<komenda>` → `<oczekiwany wynik>`
-**Sprawdzenie ręczne:** <opcjonalnie, według `Manual verification / UAT` z `CLAUDE.md`>
+### M1 — <name>
+<what is built>
+**Criteria:**
+- K1: <what the code must do> → `<test file::test name>`
+<!-- A milestone that changes no code: instead of Criteria, `**No tests:** <reason>`. -->
+**Performer:** auto
+**Proof:** `<command>` → `<expected output>`
+**Manual check:** <optional, per `Manual verification / UAT` in `CLAUDE.md`>
 
-## Ryzyka i decyzje
-- <ryzyko albo decyzja, z odwołaniem do B-xx lub pliku `pytanie`>
+## Risks and decisions
+- <a risk or a decision, referring to B-xx or a `question` file>
 
-## Bramka planu
-<zapis rund bramki: runda, wynik `check_plan.py`, uwagi rubber-duck i co poprawiono; najwyżej 3 rundy>
+## Plan gate
+<record of the gate rounds: round, `check_plan.py` result, rubber-duck notes and what was fixed; at most 3 rounds>
 
-## Rozstrzygnięcie
-<puste do czasu obsłużenia: wynik wykonania, data, commit>
+## Resolution
+<empty until handled: result of execution, date, commit>

@@ -2,32 +2,32 @@
 """Mechanical gate for a plan file: no open questions, every milestone has a proof.
 
 Checks, in order:
-  - the required sections exist (Cel, Czego nie robimy, Nie bronimy przed,
-    Kontekst z kodu, Kamienie milowe, Ryzyka i decyzje), and `Nie bronimy przed`
-    has at least one `- ` line (`- brak` when the code defends against everything);
+  - the required sections exist (Goal, Out of scope, Not defended against,
+    Code context, Milestones, Risks and decisions), and `Not defended against`
+    has at least one `- ` line (`- none` when the code defends against everything);
   - no forbidden phrase that marks an undecided plan ("do ustalenia", "TODO"...),
-    outside inline code and outside the `## Bramka planu`, `## Uwagi z przeglądów`, `## Fragment PRD`
-    and `## Rozstrzygnięcie` sections, which record history rather than instructions;
+    outside inline code and outside the `## Plan gate`, `## Review notes`, `## PRD fragment`
+    and `## Resolution` sections, which record history rather than instructions;
   - no unfilled template placeholder such as `<co powstaje>`;
-  - milestones (`### ` headings under `## Kamienie milowe`) and `**Dowód:**`
+  - milestones (`### ` headings under `## Milestones`) and `**Proof:**`
     lines are both counted, both > 0 and equal;
-  - in a milestone with `**Kryteria:**`, every criterion
-    `- K<n>[ (zachowanie)]: <what the code must do> → <test>` names its test in
-    inline code, or `ręcznie` when the performer is the user;
-  - every milestone has `**Kryteria:**` or `**Bez testów:** <reason>`, unless it
+  - in a milestone with `**Criteria:**`, every criterion
+    `- K<n>[ (behaviour)]: <what the code must do> → <test>` names its test in
+    inline code, or `manual` when the performer is the user;
+  - every milestone has `**Criteria:**` or `**No tests:** <reason>`, unless it
     sets up the test suite (names `TEST-PLAN.md`) or the user performs it;
   - in a project without a test suite ($CLAUDE_PROJECT_DIR, else the current
     directory), a plan with criteria sets up the suite in M1; the suite is
     `loc/TEST-PLAN.md` plus a test command (`test` or `spec`) in `CLAUDE.md`
     `## Commands`, since a stub file alone proves nothing runs;
-  - `**Wykonawca:**`, when present, is `auto`, `agent`, or `użytkownik` with
-    `(blokujący)` or `(odkładalny)`;
+  - `**Performer:**`, when present, is `auto`, `agent`, or `user` with
+    `(blocking)` or `(deferrable)`;
   - a criterion's test is not a shell check (`grep`, `test -f`, `open`...) and
     names a test (`test` or `spec` in it), not a source file;
   - an automatic proof reads `` `<command>` → `<output>` `` and does not just
     open a file;
-  - with `--ready` (before execution): `## Bramka planu` records a round, and
-    the input file named in `**Źródło:**` is no longer open in `loc/inbox/`;
+  - with `--ready` (before execution): `## Plan gate` records a round, and
+    the input file named in `**Source:**` is no longer open in `loc/inbox/`;
   - no expanded path of this plugin: a plan names plugin files as
     `${CLAUDE_PLUGIN_ROOT}/...`, so it still works on another machine.
 
@@ -42,40 +42,41 @@ import re
 import sys
 from pathlib import Path
 
-REQUIRED = ["Cel", "Czego nie robimy", "Nie bronimy przed", "Kontekst z kodu", "Kamienie milowe", "Ryzyka i decyzje"]
-DEFENCE = "Nie bronimy przed"
-HISTORY = {"Bramka planu", "Uwagi z przeglądów", "Fragment PRD", "Rozstrzygnięcie"}
+REQUIRED = ["Goal", "Out of scope", "Not defended against", "Code context", "Milestones", "Risks and decisions"]
+DEFENCE = "Not defended against"
+HISTORY = {"Plan gate", "Review notes", "PRD fragment", "Resolution"}
 FORBIDDEN = [
     "do ustalenia", "do decyzji", "do rozstrzygnięcia", "do sprawdzenia", "sprawdzić, czy",
     "zobaczymy", "jeśli się okaże", "ewentualnie", "być może", "prawdopodobnie",
-    "TODO", "TBD", "to be decided", "to be determined", "???",
+    "TODO", "TBD", "to be decided", "to be determined", "to be confirmed", "to be checked", "we will see",
+    "if it turns out", "maybe", "perhaps", "probably", "???",
 ]
 PHRASE = re.compile(
     "|".join(r"(?<!\w)" + re.escape(p) + (r"(?!\w)" if p[-1].isalnum() else "") for p in FORBIDDEN),
     re.IGNORECASE,
 )
 PLACEHOLDER = re.compile(
-    r"<(co |kto albo|nazwa|plik:linia|komenda|oczekiwany|ryzyko|opcjonalnie|świadomie|puste do)[^>]*>"
+    r"<(what |who or what|name|file:line|command|expected|a risk|optional|deliberately|empty until|test file)[^>]*>"
 )
 CODE = re.compile(r"`[^`]*`")
 COMMENT = re.compile(r"<!--.*?-->", re.S)
-PROOF = re.compile(r"^\*\*Dowód:\*\*")
-CRITERIA = re.compile(r"^\*\*Kryteria:\*\*\s*$")
-CRITERION = re.compile(r"^- (K\d+)( \(zachowanie\))?: (?P<what>.+?)(?: → (?P<test>.*))?$")
-PERFORMER = re.compile(r"^\*\*Wykonawca:\*\*\s*(?P<value>.*?)\s*$")
-PERFORMERS = re.compile(r"^(auto|agent|użytkownik \((blokujący|odkładalny)\))$")
-NO_TESTS = re.compile(r"^\*\*Bez testów:\*\*\s*(?P<reason>.*?)\s*$")
+PROOF = re.compile(r"^\*\*Proof:\*\*")
+CRITERIA = re.compile(r"^\*\*Criteria:\*\*\s*$")
+CRITERION = re.compile(r"^- (K\d+)( \(behaviour\))?: (?P<what>.+?)(?: → (?P<test>.*))?$")
+PERFORMER = re.compile(r"^\*\*Performer:\*\*\s*(?P<value>.*?)\s*$")
+PERFORMERS = re.compile(r"^(auto|agent|user \((blocking|deferrable)\))$")
+NO_TESTS = re.compile(r"^\*\*No tests:\*\*\s*(?P<reason>.*?)\s*$")
 SUITE = "TEST-PLAN.md"
 # A criterion's "test" that is really a shell check: it proves a word or a file exists, not behaviour.
 SHELL_CHECK = re.compile(r"^`\s*(grep|test|open|start|xdg-open|ls|cat|find|echo|wc|type|dir|curl)\b|&&|\|\||[|;]")
 # A criterion names a test: test frameworks put "test" or "spec" in file or test names.
 TEST_NAME = re.compile(r"test|spec", re.I)
 # A command and an arrow, but the expected result written as prose.
-PROSE_RESULT = re.compile(r"^\*\*Dowód:\*\*\s*`[^`]+`\s*→\s*(?P<result>[^`\s][^`]*?)\s*$")
-CHECKABLE_PROOF = re.compile(r"^\*\*Dowód:\*\*\s*`(?P<command>[^`]+)`\s*→\s*`[^`]+`")
+PROSE_RESULT = re.compile(r"^\*\*Proof:\*\*\s*`[^`]+`\s*→\s*(?P<result>[^`\s][^`]*?)\s*$")
+CHECKABLE_PROOF = re.compile(r"^\*\*Proof:\*\*\s*`(?P<command>[^`]+)`\s*→\s*`[^`]+`")
 BROWSER = re.compile(r"^\s*(open|start|xdg-open)\b")
-GATE_RECORD = "Bramka planu"
-INPUT = re.compile(r"\b\d{3,}-(brainstorm|przeglad|odlozone|utknelo|pytanie)-[^\s`/\\)]+\.md\b")
+GATE_RECORD = "Plan gate"
+INPUT = re.compile(r"\b\d{3,}-(brainstorm|review|deferred|stuck|question)-[^\s`/\\)]+\.md\b")
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -99,12 +100,12 @@ def normal(text: str) -> str:
 def check_milestone(name: str, criteria: list, performer, issues: list, tested: dict) -> None:
     """criteria: [(line number, text)]; performer: (line number, value) or None;
     tested: {"criteria", "no_tests" (reason or None), "suite"} seen in the milestone."""
-    user = performer is not None and performer[1].startswith("użytkownik")
+    user = performer is not None and performer[1].startswith("user")
     if tested["no_tests"] == "":
-        issues.append({"line": 0, "problem": f"{name}: **Bez testów:** needs a reason, e.g. 'tylko dokumenty'"})
+        issues.append({"line": 0, "problem": f"{name}: **No tests:** needs a reason, e.g. 'documents only'"})
     elif not (tested["criteria"] or tested["no_tests"] or tested["suite"] or user):
-        issues.append({"line": 0, "problem": f"{name}: no **Kryteria:** (with tests) and no "
-                       "**Bez testów:** <reason>; a milestone that changes code needs criteria"})
+        issues.append({"line": 0, "problem": f"{name}: no **Criteria:** (with tests) and no "
+                       "**No tests:** <reason>; a milestone that changes code needs criteria"})
     proof = tested.get("proof")
     automatic = performer is None or performer[1] == "auto"
     if proof and automatic:
@@ -116,14 +117,14 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
                            f"found: '{prose.group('result')}'"})
         elif not match:
             issues.append({"line": proof[0], "problem": f"{name}: an automatic proof reads "
-                           "'**Dowód:** `<command>` → `<expected output>`'; a result you only see "
-                           "needs **Wykonawca:** użytkownik (blokujący) or (odkładalny)"})
+                           "'**Proof:** `<command>` → `<expected output>`'; a result you only see "
+                           "needs **Performer:** user (blocking) or (deferrable)"})
         elif BROWSER.match(match.group("command")):
             issues.append({"line": proof[0], "problem": f"{name}: the proof only opens a file; "
                            "run a test command, or make the user the performer"})
     if performer is not None and not PERFORMERS.match(performer[1]):
         issues.append({"line": performer[0], "problem": f"{name}: performer must be auto, agent, "
-                       "użytkownik (blokujący) or użytkownik (odkładalny)"})
+                       "user (blocking) or user (deferrable)"})
     for number, text in criteria:
         match = CRITERION.match(text)
         if not match:
@@ -131,7 +132,7 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
                            "'- K<n>: <what the code must do> → `<test>`'"})
             continue
         test = (match.group("test") or "").strip()
-        if test == "ręcznie" and user and not match.group(2):
+        if test == "manual" and user and not match.group(2):
             continue
         if not re.fullmatch(r"`[^`]+`", test):
             issues.append({"line": number, "problem": f"{name}: criterion {match.group(1)} has no test "
@@ -173,7 +174,7 @@ def check_ready(text: str, issues: list) -> None:
     if not record:
         issues.append({"line": 0, "problem": f"## {GATE_RECORD} records no round: the plan never went "
                        "through the loc-planning gate; run loc-planning on it"})
-    source = re.search(r"^\*\*Źródło:\*\*(.*)$", text, re.MULTILINE)
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
     for match in INPUT.finditer(source.group(1) if source else ""):
         if (project_dir() / "loc" / "inbox" / match.group(0)).is_file():
             issues.append({"line": 0, "problem": f"input loc/inbox/{match.group(0)} is still open: loc-planning "
@@ -215,7 +216,7 @@ def check(text: str) -> dict:
             continue
         if section == DEFENCE and line.startswith("- "):
             defended += 1
-        if section == "Kamienie milowe" and line.startswith("### "):
+        if section == "Milestones" and line.startswith("### "):
             close_milestone()
             milestones += 1
             milestone, criteria, performer, in_criteria = f"M{milestones}", [], None, False
@@ -252,11 +253,11 @@ def check(text: str) -> dict:
         if name not in sections:
             issues.append({"line": 0, "problem": f"missing section: ## {name}"})
     if DEFENCE in sections and defended == 0:
-        issues.append({"line": 0, "problem": f"empty section: ## {DEFENCE} (write `- brak` when nothing)"})
+        issues.append({"line": 0, "problem": f"empty section: ## {DEFENCE} (write `- none` when nothing)"})
     if milestones == 0:
-        issues.append({"line": 0, "problem": "no milestones (### headings under ## Kamienie milowe)"})
+        issues.append({"line": 0, "problem": "no milestones (### headings under ## Milestones)"})
     if proofs == 0:
-        issues.append({"line": 0, "problem": "no **Dowód:** lines"})
+        issues.append({"line": 0, "problem": "no **Proof:** lines"})
     if milestones != proofs:
         issues.append({"line": 0, "problem": f"{milestones} milestones but {proofs} proofs"})
     project = project_dir()

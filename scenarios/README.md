@@ -45,7 +45,7 @@ DATE: 2026-09-26
 PLUGIN: 1.0.0
 RESULT: PASS | FAIL
 
-- E1 PASS — loc/inbox/004-utknelo-m1-proof.md exists
+- E1 PASS — loc/inbox/004-stuck-m1-proof.md exists
 - E2 FAIL — loc/state/003.json: gate "m1-proof" rounds = 5, expected 3
 ```
 
@@ -56,9 +56,9 @@ RESULT: PASS | FAIL
 | File | Covers |
 |---|---|
 | `01-conversation-becomes-plan.md` | conversation → `brainstorm` → `loc-planning` → `plan` |
-| `02-gate-fails-three-times.md` | 3-round gate limit, `utknelo` file, work continues |
+| `02-gate-fails-three-times.md` | 3-round gate limit, `stuck` file, work continues |
 | `03-new-project-loc-init.md` | `loc-init` on a new project, idempotent second run |
-| `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `pytanie` → `loc/inbox/done/` + `odlozone` |
+| `04-question-in-conversation.md` | question in conversation creates no file; chat answer to a `question` → `loc/inbox/done/` + `deferred` |
 | `05-first-plan-with-code.md` | first plan with code: test-suite milestone, criteria with tests |
 | `06-test-before-code.md` | `loc-orchestrate` with criteria: red gate on an assertion, `test-author`, test copy, no open mutation |
 | `07-qa-paths-field.md` | `loc-qa` runs a project `qa-*` skill whose `qa-paths:` match, lists one without `qa-paths:` as not run |

@@ -18,6 +18,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
 from inbox_summary import summarize  # noqa: E402
+from migrate import FORMAT, read_format  # noqa: E402
 from mutate import restore  # noqa: E402
 
 
@@ -62,7 +63,7 @@ def inbox_commands() -> str:
         "\nInbox commands: run each alone in the Bash tool, from the project directory "
         "(no `cd`, `&&` or PowerShell), so they need no approval.\n"
         f'- New file from its template, time from the clock: `{script_command(root, "scripts/next_number.py")} '
-        '--type <pytanie|odlozone|...> --slug "<few words>" --title "<title>" --source "<where it came from>"`\n'
+        '--type <question|deferred|...> --slug "<few words>" --title "<title>" --source "<where it came from>"`\n'
         "- Close a file: `mv loc/inbox/<file> loc/inbox/done/`"
     )
 
@@ -80,6 +81,14 @@ def mutation_section(project: Path) -> str:
     return ""
 
 
+def migration_section(project: Path) -> str:
+    version = read_format(project / "loc")
+    if version is None or version >= FORMAT:
+        return ""
+    return (f"\n\n## Old loc/ format\n`loc/` is in format {version}. Before other work, ask the user to run "
+            f"/masterskills:loc-init to migrate loc/ to format {FORMAT}.")
+
+
 def main() -> int:
     hook_input = read_input()
     project = project_dir(hook_input).resolve()
@@ -87,7 +96,7 @@ def main() -> int:
     rules = (PLUGIN_ROOT / "rules" / "core.md").read_text(encoding="utf-8").strip()
     summary = summarize(project)
 
-    context = f"{rules}\n\n{inbox_section(summary)}{mutation}\n"
+    context = f"{rules}\n\n{inbox_section(summary)}{migration_section(project)}{mutation}\n"
     output = {
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",

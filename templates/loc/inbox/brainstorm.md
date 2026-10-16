@@ -1,21 +1,21 @@
-# {NNN} — {TYTUL}
+# {NNN} — {TITLE}
 
-**Typ:** brainstorm
-**Status:** otwarte
-**Utworzono:** {DATA}
-**Źródło:** {ZRODLO}
+**Type:** brainstorm
+**Status:** open
+**Created:** {DATE}
+**Source:** {SOURCE}
 
-## Temat
-<o czym rozmawiamy, jednym akapitem>
+## Topic
+<what the conversation is about, in one paragraph>
 
-## Notatki
-<dopisywane na bieżąco, bez limitu długości>
+## Notes
+<added as the conversation goes, no length limit>
 
-## Decyzje
-- B-01 — <decyzja i krótko dlaczego>
+## Decisions
+- B-01 — <the decision and briefly why>
 
-## Otwarte
-<co jeszcze nie jest ustalone; każda pozycja z rekomendacją, jeśli jest>
+## Open
+<what is not decided yet; each item with a recommendation, when there is one>
 
-## Rozstrzygnięcie
-<puste do czasu obsłużenia: który plan z tego powstał>
+## Resolution
+<empty until handled: which plan came from this>

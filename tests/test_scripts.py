@@ -42,6 +42,15 @@ class InitProjectTest(unittest.TestCase):
         self.assertIn(".gitignore", first["created"])
         self.assertEqual(second["created"] + second["updated"], [])
 
+    def test_new_loc_gets_the_current_format_and_an_old_one_does_not(self):
+        run("init_project.py", "--project", ".", cwd=self.project)
+        self.assertEqual((self.project / "loc" / "VERSION").read_text(encoding="utf-8").strip(), "2")
+        old = scratch_dir(self)
+        subprocess.run(["git", "init", "-q"], cwd=old, check=True)
+        (old / "loc" / "inbox").mkdir(parents=True)
+        run("init_project.py", "--project", ".", cwd=old)
+        self.assertFalse((old / "loc" / "VERSION").exists())
+
     def test_test_plan_comes_only_from_a_plan(self):
         run("init_project.py", "--project", ".", cwd=self.project)
         self.assertFalse((self.project / "loc" / "TEST-PLAN.md").exists())
@@ -49,7 +58,7 @@ class InitProjectTest(unittest.TestCase):
 
     def test_reports_the_empty_sections_a_brainstorm_may_fill(self):
         fresh = json.loads(run("init_project.py", "--project", ".", cwd=self.project).stdout)["empty"]
-        self.assertEqual(fresh["loc/PRD.md"], ["Cel", "Rdzeń idei", "Scenariusze"])
+        self.assertEqual(fresh["loc/PRD.md"], ["Goal", "Core idea", "Scenarios"])
         self.assertIn("Commands", fresh["CLAUDE.md"])
         self.assertIn("Limits", fresh["CLAUDE.md"])
         claude = self.project / "CLAUDE.md"
@@ -57,12 +66,12 @@ class InitProjectTest(unittest.TestCase):
         claude.write_text(text, encoding="utf-8")
         prd = self.project / "loc" / "PRD.md"
         prd.write_text(prd.read_text(encoding="utf-8").replace(
-            "## Cel\n", "## Cel\nA diary that stays offline.\n"), encoding="utf-8")
+            "## Goal\n", "## Goal\nA diary that stays offline.\n"), encoding="utf-8")
         before = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
         again = json.loads(run("init_project.py", "--project", ".", cwd=self.project).stdout)["empty"]
         self.assertNotIn("Limits", again["CLAUDE.md"])
         self.assertIn("Commands", again["CLAUDE.md"])
-        self.assertEqual(again["loc/PRD.md"], ["Rdzeń idei", "Scenariusze"])
+        self.assertEqual(again["loc/PRD.md"], ["Core idea", "Scenarios"])
         after = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
         self.assertEqual(before, after)
 
@@ -76,7 +85,7 @@ class InitProjectTest(unittest.TestCase):
         out = run("init_project.py", "--project", ".", "--check", cwd=self.project)
         self.assertEqual(out.returncode, 0, out.stderr)
         result = json.loads(out.stdout)
-        self.assertIn("Cel", result["empty"]["loc/PRD.md"])
+        self.assertIn("Goal", result["empty"]["loc/PRD.md"])
         self.assertEqual(result["not_english"], ["Limits"])
         self.assertNotIn("created", result)
         after = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
@@ -85,10 +94,10 @@ class InitProjectTest(unittest.TestCase):
     def test_check_reports_a_missing_prd_section(self):
         run("init_project.py", "--project", ".", cwd=self.project)
         prd = self.project / "loc" / "PRD.md"
-        prd.write_text("# PRD\n\n## Cel\nA diary.\n\n## Rdzeń idei\n- Offline.\n\n## Kierunki\n", encoding="utf-8")
+        prd.write_text("# PRD\n\n## Goal\nA diary.\n\n## Core idea\n- Offline.\n\n## Directions\n", encoding="utf-8")
         before = prd.read_bytes()
         result = json.loads(run("init_project.py", "--project", ".", "--check", cwd=self.project).stdout)
-        self.assertEqual(result["empty"]["loc/PRD.md"], ["Scenariusze"])
+        self.assertEqual(result["empty"]["loc/PRD.md"], ["Scenarios"])
         self.assertEqual(prd.read_bytes(), before)
 
     def test_git_sees_nothing_from_loc(self):
@@ -103,12 +112,23 @@ class NextNumberTest(unittest.TestCase):
         project = scratch_dir(self)
         (project / "loc" / "inbox" / "done").mkdir(parents=True)
         (project / "loc" / "inbox" / "done" / "004-plan-a.md").write_text("x", encoding="utf-8")
-        out = run("next_number.py", "--project", ".", "--type", "odlozone", "--slug", "later", "--title", "Later",
+        out = run("next_number.py", "--project", ".", "--type", "deferred", "--slug", "later", "--title", "Later",
                   "--source", "test", cwd=project)
         result = json.loads(out.stdout)
         self.assertEqual(result["number"], "005")
-        self.assertEqual(result["path"], "loc/inbox/005-odlozone-later.md")
+        self.assertEqual(result["path"], "loc/inbox/005-deferred-later.md")
         self.assertTrue((project / result["path"]).is_file())
+
+    def test_question_has_english_headings_and_old_types_are_rejected(self):
+        project = scratch_dir(self)
+        out = run("next_number.py", "--project", ".", "--type", "question", "--slug", "colour", "--title", "Colour",
+                  "--source", "test", cwd=project)
+        text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
+        for heading in ("**Type:** question", "## Question", "## Options", "## Interim", "## Resolution"):
+            self.assertIn(heading, text)
+        old = run("next_number.py", "--project", ".", "--type", "pytanie", "--slug", "x", "--title", "X",
+                  "--source", "test", cwd=project)
+        self.assertNotEqual(old.returncode, 0)
 
 
 class ReviewDiffTest(unittest.TestCase):

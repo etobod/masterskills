@@ -114,7 +114,7 @@ class OpenCodeHooksTest(unittest.TestCase):
 
     def test_loc_init_sets_up_the_project(self):
         skill = (self.config / "skills" / "loc-init" / "SKILL.md").read_text(encoding="utf-8")
-        command = re.search(r"```sh\n(.+?)\n```", skill).group(1).replace("<dir>", self.project.as_posix())
+        command = re.search(r"```sh\n(.+?init_project.+?)\n```", skill).group(1).replace("<dir>", self.project.as_posix())
         answer = self.run_tool("bash", {"command": command, "description": "loc-init"})
         self.assertTrue((self.project / "loc" / "inbox").is_dir(), answer)
         self.assertTrue((self.project / "CLAUDE.md").is_file(), answer)

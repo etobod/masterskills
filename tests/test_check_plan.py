@@ -15,32 +15,32 @@ SCRATCH = ROOT / "tmp" / "scratch" / "tests"
 
 HEAD = """# 007 — Plan: powitania
 
-**Typ:** plan
-**Status:** otwarte
+**Type:** plan
+**Status:** open
 
-## Cel
+## Goal
 Powitanie w wybranym języku.
 
-## Czego nie robimy
+## Out of scope
 Tłumaczeń spoza listy.
 
-## Nie bronimy przed
-- brak
+## Not defended against
+- none
 
-## Kontekst z kodu
+## Code context
 - `app.py:1`
 
-## Kamienie milowe
+## Milestones
 
 """
 TAIL = """
-## Ryzyka i decyzje
+## Risks and decisions
 Brak.
 """
 
-SUITE = """### M1 — zestaw testów
+SUITE = """### M1 — test suite
 `loc/TEST-PLAN.md` skopiowany z `{path}`.
-**Dowód:** `python -m unittest -v` → `Ran 1 test`
+**Proof:** `python -m unittest -v` → `Ran 1 test`
 """
 
 COMMANDS = """# app
@@ -88,33 +88,39 @@ class CheckPlanTest(unittest.TestCase):
         return "\n".join(issue["problem"] for issue in out["issues"])
 
     def defended(self, section: str) -> str:
-        text = plan("### M1 — opis\n**Bez testów:** tylko dokumenty\n**Dowód:** `grep x` → `1`\n")
-        return text.replace("## Nie bronimy przed\n- brak\n", section)
+        text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n")
+        return text.replace("## Not defended against\n- none\n", section)
 
     def test_none_defended_against_passes(self):
-        code, out = self.run_check(self.defended("## Nie bronimy przed\n- brak\n"))
+        code, out = self.run_check(self.defended("## Not defended against\n- none\n"))
         self.assertEqual(code, 0, out)
 
     def test_missing_defence_section_fails(self):
         code, out = self.run_check(self.defended(""))
         self.assertEqual(code, 1)
-        self.assertIn("missing section: ## Nie bronimy przed", self.problems(out))
+        self.assertIn("missing section: ## Not defended against", self.problems(out))
 
     def test_empty_defence_section_fails(self):
-        code, out = self.run_check(self.defended("## Nie bronimy przed\nNic.\n"))
+        code, out = self.run_check(self.defended("## Not defended against\nNic.\n"))
         self.assertEqual(code, 1)
-        self.assertIn("empty section: ## Nie bronimy przed", self.problems(out))
+        self.assertIn("empty section: ## Not defended against", self.problems(out))
 
     def test_unfilled_defence_placeholder_fails(self):
         code, out = self.run_check(self.defended(
-            "## Nie bronimy przed\n- <kto albo co wytwarza wejście, przed którym kod nie broni>\n"))
+            "## Not defended against\n- <who or what produces input the code does not defend against>\n"))
         self.assertEqual(code, 1)
         self.assertIn("unfilled placeholder", self.problems(out))
 
+    def test_vague_english_phrase_fails(self):
+        for phrase in ("to be confirmed", "we will see", "if it turns out", "maybe", "perhaps", "probably"):
+            code, out = self.run_check(plan(f"### M1 — opis\n**No tests:** {phrase} later\n**Proof:** `grep x` → `1`\n"))
+            self.assertEqual(code, 1, phrase)
+            self.assertIn(phrase, self.problems(out).lower())
+
     def test_moved_prd_fragment_is_history(self):
-        text = plan("### M1 — opis\n**Bez testów:** tylko dokumenty\n**Dowód:** `grep x` → `1`\n").replace(
-            "## Ryzyka i decyzje", "## Fragment PRD\nPrzeniesione z loc/PRD.md 2026-10-15.\n"
-            "### Eksport\nFormat do ustalenia, TODO.\n\n## Ryzyka i decyzje")
+        text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n").replace(
+            "## Risks and decisions", "## PRD fragment\nPrzeniesione z loc/PRD.md 2026-10-15.\n"
+            "### Eksport\nFormat do ustalenia, TODO.\n\n## Risks and decisions")
         code, out = self.run_check(text)
         self.assertEqual(code, 0, out)
 
@@ -122,23 +128,23 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(plan(
             "### M1 — powitanie po polsku\n"
             "Funkcja `greet`.\n"
-            "**Kryteria:**\n"
+            "**Criteria:**\n"
             "- K1: `greet(\"Ann\", \"pl\")` zwraca `\"Cześć, Ann\"` → `test_app.py::test_polish`\n"
-            "- K2 (zachowanie): nieznany język daje angielskie powitanie → `test_app.py::test_unknown`\n"
-            "**Wykonawca:** auto\n"
-            "**Dowód:** `python -m unittest test_app` → `OK`\n"))
+            "- K2 (behaviour): nieznany język daje angielskie powitanie → `test_app.py::test_unknown`\n"
+            "**Performer:** auto\n"
+            "**Proof:** `python -m unittest test_app` → `OK`\n"))
         self.assertEqual(code, 0, out)
 
     def test_criterion_without_test_fails_naming_the_milestone(self):
         code, out = self.run_check(plan(
-            "### M1 — zestaw testów\n"
+            "### M1 — test suite\n"
             "Smoke test i `loc/TEST-PLAN.md`.\n"
-            "**Dowód:** `python -m unittest` → `OK`\n\n"
+            "**Proof:** `python -m unittest` → `OK`\n\n"
             "### M2 — powitanie\n"
-            "**Kryteria:**\n"
+            "**Criteria:**\n"
             "- K1: `greet(\"Ann\", \"pl\")` zwraca `\"Cześć, Ann\"`\n"
-            "**Wykonawca:** auto\n"
-            "**Dowód:** `python -m unittest` → `OK`\n"))
+            "**Performer:** auto\n"
+            "**Proof:** `python -m unittest` → `OK`\n"))
         self.assertEqual(code, 1)
         self.assertIn("M2: criterion K1 has no test", self.problems(out))
         self.assertNotIn("M1:", self.problems(out))
@@ -146,18 +152,18 @@ class CheckPlanTest(unittest.TestCase):
     def test_user_performer_without_flag_fails(self):
         code, out = self.run_check(plan(
             "### M1 — wygląd strony\n"
-            "**Wykonawca:** użytkownik\n"
-            "**Dowód:** użytkownik potwierdza wygląd → `ok, <data>`\n"))
+            "**Performer:** user\n"
+            "**Proof:** użytkownik potwierdza wygląd → `ok, <data>`\n"))
         self.assertEqual(code, 1)
         self.assertIn("M1: performer must be", self.problems(out))
 
     def test_manual_criterion_allowed_only_for_the_user(self):
         milestone = ("### M1 — wygląd strony\n"
-                     "**Kryteria:**\n"
-                     "- K1: przycisk jest widoczny na telefonie → ręcznie\n"
-                     "**Wykonawca:** {performer}\n"
-                     "**Dowód:** potwierdzenie użytkownika z datą → `ok`\n")
-        code, out = self.run_check(plan(milestone.format(performer="użytkownik (odkładalny)")))
+                     "**Criteria:**\n"
+                     "- K1: przycisk jest widoczny na telefonie → manual\n"
+                     "**Performer:** {performer}\n"
+                     "**Proof:** potwierdzenie użytkownika z datą → `ok`\n")
+        code, out = self.run_check(plan(milestone.format(performer="user (deferrable)")))
         self.assertEqual(code, 0, out)
         code, out = self.run_check(plan(milestone.format(performer="auto")))
         self.assertEqual(code, 1)
@@ -167,21 +173,21 @@ class CheckPlanTest(unittest.TestCase):
         milestone = ("### M1 — opis w README\n"
                      "Sekcja o powitaniach.\n"
                      "{line}"
-                     "**Dowód:** `grep -c Powitania README.md` → `1`\n")
-        code, out = self.run_check(plan(milestone.format(line="**Bez testów:** tylko dokumenty\n")))
+                     "**Proof:** `grep -c Powitania README.md` → `1`\n")
+        code, out = self.run_check(plan(milestone.format(line="**No tests:** tylko dokumenty\n")))
         self.assertEqual(code, 0, out)
-        code, out = self.run_check(plan(milestone.format(line="**Bez testów:**\n")))
+        code, out = self.run_check(plan(milestone.format(line="**No tests:**\n")))
         self.assertEqual(code, 1)
-        self.assertIn("M1: **Bez testów:** needs a reason", self.problems(out))
+        self.assertIn("M1: **No tests:** needs a reason", self.problems(out))
         code, out = self.run_check(plan(milestone.format(line="")))
         self.assertEqual(code, 1)
-        self.assertIn("M1: no **Kryteria:**", self.problems(out))
+        self.assertIn("M1: no **Criteria:**", self.problems(out))
 
     def test_project_without_suite_starts_with_it(self):
         feature = ("### M{n} — powitanie\n"
-                   "**Kryteria:**\n"
+                   "**Criteria:**\n"
                    "- K1: `greet(\"Ann\", \"pl\")` zwraca `\"Cześć, Ann\"` → `test_app.py::test_polish`\n"
-                   "**Dowód:** `python -m unittest test_app` → `OK`\n")
+                   "**Proof:** `python -m unittest test_app` → `OK`\n")
         code, out = self.run_check(plan(feature.format(n=1)), suite=False)
         self.assertEqual(code, 1)
         self.assertIn("M1 must set up the test suite", self.problems(out))
@@ -193,9 +199,9 @@ class CheckPlanTest(unittest.TestCase):
 
     def test_suite_needs_a_test_command(self):
         feature = ("### M1 — powitanie\n"
-                   "**Kryteria:**\n"
+                   "**Criteria:**\n"
                    "- K1: `greet(\"Ann\", \"pl\")` zwraca `\"Cześć, Ann\"` → `test_app.py::test_polish`\n"
-                   "**Dowód:** `python -m unittest test_app` → `OK`\n")
+                   "**Proof:** `python -m unittest test_app` → `OK`\n")
         stub = ("loc/TEST-PLAN.md",)
         for command in ("", "`open fourier.html`"):
             with self.subTest(command=command):
@@ -211,9 +217,9 @@ class CheckPlanTest(unittest.TestCase):
 
     def test_shell_check_is_not_a_test(self):
         milestone = ("### M1 — kolor krzywej\n"
-                     "**Kryteria:**\n"
+                     "**Criteria:**\n"
                      "- K1: krzywa jest łososiowa → {test}\n"
-                     "**Dowód:** `node --test` → `pass 1`\n")
+                     "**Proof:** `node --test` → `pass 1`\n")
         for test in ('`grep "salmon" fourier.html`', "`test -f parse_svg.html && open parse_svg.html`",
                      "`open butterfly.html`", "`node --test | grep pass`"):
             with self.subTest(test=test):
@@ -225,9 +231,9 @@ class CheckPlanTest(unittest.TestCase):
 
     def test_automatic_proof_must_be_checkable(self):
         milestone = ("### M1 — pusta animacja\n"
-                     "**Bez testów:** tylko szkielet strony\n"
+                     "**No tests:** tylko szkielet strony\n"
                      "{performer}"
-                     "**Dowód:** {proof}\n")
+                     "**Proof:** {proof}\n")
         for proof in ("`open fourier.html` → czarny canvas na pełnym ekranie",
                       "`start fourier.html` → `czarny canvas`"):
             with self.subTest(proof=proof):
@@ -235,23 +241,23 @@ class CheckPlanTest(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertIn("M1: ", self.problems(out))
         code, out = self.run_check(plan(milestone.format(
-            performer="**Wykonawca:** użytkownik (odkładalny)\n",
+            performer="**Performer:** user (deferrable)\n",
             proof="użytkownik otwiera `fourier.html` i widzi czarny canvas → `ok, <data>`")))
         self.assertEqual(code, 0, out)
 
     def test_proof_with_prose_result_quotes_it(self):
         code, out = self.run_check(plan(
-            "### M1 — opis\n**Bez testów:** tylko dokumenty\n"
-            "**Dowód:** `grep -c x f.html` → znaleziono definicję\n"))
+            "### M1 — opis\n**No tests:** tylko dokumenty\n"
+            "**Proof:** `grep -c x f.html` → znaleziono definicję\n"))
         self.assertEqual(code, 1)
         self.assertIn("found: 'znaleziono definicję'", self.problems(out))
         self.assertIn("`<command>` → `<exact output>`", self.problems(out))
 
     def test_criterion_must_name_a_test(self):
         milestone = ("### M1 — dwa łańcuchy\n"
-                     "**Kryteria:**\n"
-                     "- K1 (zachowanie): x i y z osobnych FFT → {test}\n"
-                     "**Dowód:** `node --test` → `pass 1`\n")
+                     "**Criteria:**\n"
+                     "- K1 (behaviour): x i y z osobnych FFT → {test}\n"
+                     "**Proof:** `node --test` → `pass 1`\n")
         code, out = self.run_check(plan(milestone.format(test="`fourier.html`")))
         self.assertEqual(code, 1)
         self.assertIn("M1: criterion K1: `fourier.html` names no test", self.problems(out))
@@ -261,24 +267,24 @@ class CheckPlanTest(unittest.TestCase):
                 self.assertEqual(code, 0, out)
 
     def ready_plan(self, record: str) -> str:
-        return (plan("### M1 — opis\n**Bez testów:** tylko dokumenty\n**Dowód:** `grep x` → `1`\n")
-                .replace("**Status:** otwarte", "**Status:** otwarte\n**Źródło:** loc/inbox/done/001-brainstorm-fourier.md")
-                + "\n## Bramka planu\n" + record + "\n## Rozstrzygnięcie\n")
+        return (plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n")
+                .replace("**Status:** open", "**Status:** open\n**Source:** loc/inbox/done/001-brainstorm-fourier.md")
+                + "\n## Plan gate\n" + record + "\n## Resolution\n")
 
     def test_ready_needs_a_recorded_gate(self):
         for record in ("", "<zapis rund bramki: runda, wynik `check_plan.py`>\n"):
             with self.subTest(record=record):
                 code, out = self.run_check(self.ready_plan(record), ready=True)
                 self.assertEqual(code, 1)
-                self.assertIn("## Bramka planu records no round", self.problems(out))
-        done = self.ready_plan("- runda 1: skan czysty, krytyk bez uwag blokujących\n")
+                self.assertIn("## Plan gate records no round", self.problems(out))
+        done = self.ready_plan("- round 1: skan czysty, krytyk bez uwag blokujących\n")
         code, out = self.run_check(done, ready=True)
         self.assertEqual(code, 0, out)
         code, out = self.run_check(self.ready_plan(""))
         self.assertEqual(code, 0, out)
 
     def test_ready_needs_the_input_closed(self):
-        text = self.ready_plan("- runda 1: skan czysty\n")
+        text = self.ready_plan("- round 1: skan czysty\n")
         code, out = self.run_check(text, ready=True, files=("loc/inbox/001-brainstorm-fourier.md",))
         self.assertEqual(code, 1)
         self.assertIn("input loc/inbox/001-brainstorm-fourier.md is still open", self.problems(out))

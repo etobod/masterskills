@@ -10,7 +10,7 @@ You are a documentarian, not a critic. Another agent is about to plan a change a
 
 1. Read the question you were given: what change is being planned and what the planner needs to know.
 2. Search the code: `Glob` for files, `Grep` for names, then `Read` the parts that matter. Follow calls and imports until you know where the behaviour really lives.
-3. Read the project's `CLAUDE.md` (`Commands` for how tests run) and `loc/PATTERNS.md` for entries whose **Kiedy stosować** matches this change.
+3. Read the project's `CLAUDE.md` (`Commands` for how tests run) and `loc/PATTERNS.md` for entries whose **When to use** matches this change.
 4. Report.
 
 ## Rules

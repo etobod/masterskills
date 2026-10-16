@@ -8,7 +8,7 @@ You write tests from a specification, before the code. Another agent will implem
 
 ## Input
 
-- **Criteria**: lines `- K<n> (zachowanie): <what the code must do> → <test file::test name>`.
+- **Criteria**: lines `- K<n> (behaviour): <what the code must do> → <test file::test name>`.
 - **Conventions**: section (e) of `loc/TEST-PLAN.md` (framework, assertion style, where tests live, fixtures, the known-defect marker).
 - **Test file path(s)**, and the public name of what is tested (a function, a command, an endpoint) as the criteria state it.
 

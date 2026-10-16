@@ -2,6 +2,15 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.0.0 — 2026-10-16
+
+- **Breaking: `loc/` is in English.** Headings, fields, statuses, inbox types and markers are English (`question`, `deferred`, `review`, `stuck`; `## Goal`, `**Proof:**`, `**Status:** open`…), and so is the text the skills write. Only the text of a `question` file is in the `User language` of `CLAUDE.md`, so a design question can be answered in the user's own language. Scripts, hooks, templates, skills, agents and scenarios use the new names; `loc/state/mutacja*` is now `mutation*` and `qa-historia.log` is `qa-history.log`.
+- `loc/VERSION` holds the format of `loc/` (now `2`). `init_project.py` writes it into a new `loc/`.
+- `scripts/migrate.py` brings an older `loc/` to the current format: it renames inbox files and state files, fixes every reference to them, translates every heading, field and marker, adds `## User language` (Polish) to `CLAUDE.md` and lists the files whose prose the model translates. Running it again changes nothing. `loc-init` runs it first.
+- The session-start hook asks for `/masterskills:loc-init` when `loc/` is in an older format.
+- `check_plan.py` also rejects vague English phrases ("to be confirmed", "maybe", "probably"…).
+- Upgrading: run `/masterskills:loc-init` once in each project that already has `loc/`.
+
 ## 1.21.2 — 2026-10-16
 
 - `check_plan.py`: a project has a test suite only when it has `loc/TEST-PLAN.md` **and** a test command (`test` or `spec`) in `CLAUDE.md` `## Commands`. Before, the file alone was enough, so a model told "M1 must set up the test suite" could write a stub `loc/TEST-PLAN.md` while planning and pass the gate with no tests at all. The message now says not to create the file while planning; `loc-planning` `references/tests.md` says the same.

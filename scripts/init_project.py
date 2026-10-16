@@ -32,14 +32,16 @@ import re
 import sys
 from pathlib import Path
 
+from migrate import FORMAT
+
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates"
 
 DIRS = ["loc/inbox", "loc/inbox/done"]
 DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"]
 LOC_ENTRY = re.compile(r"^/?loc(/(\*\*?)?)?\s*$")
-PRD_FRAME = ["Cel", "Rdzeń idei", "Scenariusze"]  # Kierunki is work to plan, not the project's frame
-POLISH = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
+PRD_FRAME = ["Goal", "Core idea", "Scenarios"]  # Directions is work to plan, not the project's frame
+POLISH = re.compile("[\u0104\u0105\u0106\u0107\u0118\u0119\u0141\u0142\u0143\u0144\u00d3\u00f3\u015a\u015b\u0179\u017a\u017b\u017c]")
 PLACEHOLDER = re.compile(r"<!--.*?-->|^#*\s*<[^>\n]*>\s*$", re.S | re.M)
 
 NO_GIT = (
@@ -201,6 +203,7 @@ def init(project: Path) -> dict:
     report = {"ok": True, "project": project.as_posix(), "created": [], "updated": [], "existing": [],
               "skipped": []}
 
+    fresh = not (project / "loc").exists()
     for rel in DIRS:
         path = project / rel
         if path.is_dir():
@@ -215,8 +218,12 @@ def init(project: Path) -> dict:
             report["existing"].append(rel)
         else:
             text = (TEMPLATES / "loc" / path.name).read_text(encoding="utf-8")
-            write(path, text.replace("{PROJEKT}", project.name))
+            write(path, text.replace("{PROJECT}", project.name))
             report["created"].append(rel)
+
+    if fresh:
+        write(project / "loc" / "VERSION", f"{FORMAT}\n")
+        report["created"].append("loc/VERSION")
 
     ensure_claude_md(project, report)
     ensure_gitignore(project, report)

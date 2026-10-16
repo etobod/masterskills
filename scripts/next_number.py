@@ -25,7 +25,7 @@ from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates" / "loc" / "inbox"
-TYPES = ["brainstorm", "plan", "pytanie", "odlozone", "przeglad", "utknelo"]
+TYPES = ["brainstorm", "plan", "question", "deferred", "review", "stuck"]
 NUMBER = re.compile(r"^(\d{3,})-")
 
 
@@ -41,7 +41,7 @@ def next_number(project: Path) -> str:
 
 
 def slugify(text: str) -> str:
-    text = text.replace("ł", "l").replace("Ł", "L")
+    text = text.replace("\u0142", "l").replace("\u0141", "L")  # NFKD leaves the Polish l-stroke
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:50].rstrip("-")
 
@@ -57,7 +57,7 @@ def main() -> int:
     parser.add_argument("--type", choices=TYPES, help="create a file of this type")
     parser.add_argument("--slug", help="short description for the file name")
     parser.add_argument("--title", help="title for the file header")
-    parser.add_argument("--source", default="rozmowa", help="where it came from (Źródło)")
+    parser.add_argument("--source", default="conversation", help="where it came from (Source)")
     args = parser.parse_args()
 
     project = args.project.resolve()
@@ -77,8 +77,8 @@ def main() -> int:
             print(json.dumps({**result, "path": rel, "created": False, "error": "exists"}))
             return 1
         text = (TEMPLATES / f"{args.type}.md").read_text(encoding="utf-8")
-        for key, value in (("{NNN}", number), ("{TYTUL}", args.title),
-                           ("{DATA}", now), ("{ZRODLO}", args.source)):
+        for key, value in (("{NNN}", number), ("{TITLE}", args.title),
+                           ("{DATE}", now), ("{SOURCE}", args.source)):
             text = text.replace(key, value)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(text.encode("utf-8"))
