@@ -23,6 +23,7 @@
 <co powstaje>
 **Kryteria:**
 - K1: <co kod ma robić> → `<plik testu::nazwa testu>`
+<!-- Kamień, który nie zmienia kodu: zamiast Kryteriów `**Bez testów:** <powód>`. -->
 **Wykonawca:** auto
 **Dowód:** `<komenda>` → `<oczekiwany wynik>`
 **Sprawdzenie ręczne:** <opcjonalnie, według `Manual verification / UAT` z `CLAUDE.md`>

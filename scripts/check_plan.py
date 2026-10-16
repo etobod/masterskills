@@ -14,6 +14,10 @@ Checks, in order:
   - in a milestone with `**Kryteria:**`, every criterion
     `- K<n>[ (zachowanie)]: <what the code must do> → <test>` names its test in
     inline code, or `ręcznie` when the performer is the user;
+  - every milestone has `**Kryteria:**` or `**Bez testów:** <reason>`, unless it
+    sets up the test suite (names `TEST-PLAN.md`) or the user performs it;
+  - in a project without `loc/TEST-PLAN.md` ($CLAUDE_PROJECT_DIR, else the
+    current directory), a plan with criteria sets up the suite in M1;
   - `**Wykonawca:**`, when present, is `auto`, `agent`, or `użytkownik` with
     `(blokujący)` or `(odkładalny)`;
   - no expanded path of this plugin: a plan names plugin files as
@@ -51,6 +55,8 @@ CRITERIA = re.compile(r"^\*\*Kryteria:\*\*\s*$")
 CRITERION = re.compile(r"^- (K\d+)( \(zachowanie\))?: (?P<what>.+?)(?: → (?P<test>.*))?$")
 PERFORMER = re.compile(r"^\*\*Wykonawca:\*\*\s*(?P<value>.*?)\s*$")
 PERFORMERS = re.compile(r"^(auto|agent|użytkownik \((blokujący|odkładalny)\))$")
+NO_TESTS = re.compile(r"^\*\*Bez testów:\*\*\s*(?P<reason>.*?)\s*$")
+SUITE = "TEST-PLAN.md"
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -71,9 +77,15 @@ def normal(text: str) -> str:
     return text.lower() if os.name == "nt" else text
 
 
-def check_milestone(name: str, criteria: list, performer, issues: list) -> None:
-    """criteria: [(line number, text)]; performer: (line number, value) or None."""
+def check_milestone(name: str, criteria: list, performer, issues: list, tested: dict) -> None:
+    """criteria: [(line number, text)]; performer: (line number, value) or None;
+    tested: {"criteria", "no_tests" (reason or None), "suite"} seen in the milestone."""
     user = performer is not None and performer[1].startswith("użytkownik")
+    if tested["no_tests"] == "":
+        issues.append({"line": 0, "problem": f"{name}: **Bez testów:** needs a reason, e.g. 'tylko dokumenty'"})
+    elif not (tested["criteria"] or tested["no_tests"] or tested["suite"] or user):
+        issues.append({"line": 0, "problem": f"{name}: no **Kryteria:** (with tests) and no "
+                       "**Bez testów:** <reason>; a milestone that changes code needs criteria"})
     if performer is not None and not PERFORMERS.match(performer[1]):
         issues.append({"line": performer[0], "problem": f"{name}: performer must be auto, agent, "
                        "użytkownik (blokujący) or użytkownik (odkładalny)"})
@@ -99,10 +111,12 @@ def check(text: str) -> dict:
     milestones = proofs = 0
     in_fence = False
     milestone, criteria, performer, in_criteria = None, [], None, False
+    tested = {}
+    any_criteria = first_sets_up_suite = False
 
     def close_milestone():
         if milestone:
-            check_milestone(milestone, criteria, performer, issues)
+            check_milestone(milestone, criteria, performer, issues, tested)
 
     roots = plugin_roots()
     for number, line in enumerate(text.splitlines(), 1):
@@ -128,8 +142,13 @@ def check(text: str) -> dict:
             close_milestone()
             milestones += 1
             milestone, criteria, performer, in_criteria = f"M{milestones}", [], None, False
+            tested = {"criteria": False, "no_tests": None, "suite": SUITE in line}
         elif milestone and CRITERIA.match(line):
             in_criteria = True
+            tested["criteria"] = any_criteria = True
+        elif milestone and NO_TESTS.match(line):
+            tested["no_tests"] = NO_TESTS.match(line).group("reason")
+            in_criteria = False
         elif milestone and in_criteria and line.startswith("- "):
             criteria.append((number, line))
         elif milestone and PERFORMER.match(line):
@@ -137,6 +156,9 @@ def check(text: str) -> dict:
             in_criteria = False
         elif line.strip():
             in_criteria = False
+        if milestone and SUITE in line:
+            tested["suite"] = True
+            first_sets_up_suite = first_sets_up_suite or milestone == "M1"
         if PROOF.match(line):
             proofs += 1
 
@@ -158,6 +180,10 @@ def check(text: str) -> dict:
         issues.append({"line": 0, "problem": "no **Dowód:** lines"})
     if milestones != proofs:
         issues.append({"line": 0, "problem": f"{milestones} milestones but {proofs} proofs"})
+    project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+    if any_criteria and not first_sets_up_suite and not (project / "loc" / SUITE).is_file():
+        issues.append({"line": 0, "problem": "the project has no loc/TEST-PLAN.md: M1 must set up the "
+                       "test suite (framework, test command in CLAUDE.md Commands, smoke test, loc/TEST-PLAN.md)"})
 
     return {"ok": not issues, "milestones": milestones, "proofs": proofs, "issues": issues}
 

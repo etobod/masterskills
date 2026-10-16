@@ -54,7 +54,7 @@ A failed gate ends in `utknelo`, not in a stop.
 
 ## 5. At the end
 
-1. **QA gate** (`qa`), only when the plan has `**Kryteria:**`: `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never the tests; next round. After the third: **stuck**.
+1. **QA gate** (`qa`), only when the plan has `**Kryteria:**` (else report `**Bez testów:**`): `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never tests; next round. Third failure: **stuck**.
 2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode). It uses the state file's `final-review` gate.
 3. **Close what the plan resolved**: milestone `utknelo` files whose points are all fixed now get `## Rozstrzygnięcie` and move to `loc/inbox/done/` (`references/stuck.md`).
 4. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `otwarte — QA nie przeszło`, not moved. Update `plan` in the state file, set `phase: journal`, validate.

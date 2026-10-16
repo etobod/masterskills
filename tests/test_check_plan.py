@@ -1,6 +1,7 @@
 """Tests for scripts/check_plan.py: acceptance criteria and performer in milestones."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -47,21 +48,26 @@ def plan(milestones: str) -> str:
 
 
 class CheckPlanTest(unittest.TestCase):
-    def run_check(self, text: str) -> tuple:
+    def run_check(self, text: str, suite: bool = True) -> tuple:
+        """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md`) or not."""
         SCRATCH.mkdir(parents=True, exist_ok=True)
         directory = Path(tempfile.mkdtemp(dir=SCRATCH))
         self.addCleanup(shutil.rmtree, directory, True)
+        if suite:
+            (directory / "loc").mkdir()
+            (directory / "loc" / "TEST-PLAN.md").write_text("# TEST-PLAN\n", encoding="utf-8")
         path = directory / "007-plan-powitania.md"
         path.write_text(text, encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
         result = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_plan.py"), str(path)],
-                                capture_output=True, text=True, encoding="utf-8")
+                                capture_output=True, text=True, encoding="utf-8", cwd=directory, env=env)
         return result.returncode, json.loads(result.stdout)
 
     def problems(self, out: dict) -> str:
         return "\n".join(issue["problem"] for issue in out["issues"])
 
     def defended(self, section: str) -> str:
-        text = plan("### M1 — opis\n**Dowód:** `grep x` → `1`\n")
+        text = plan("### M1 — opis\n**Bez testów:** tylko dokumenty\n**Dowód:** `grep x` → `1`\n")
         return text.replace("## Nie bronimy przed\n- brak\n", section)
 
     def test_none_defended_against_passes(self):
@@ -85,7 +91,7 @@ class CheckPlanTest(unittest.TestCase):
         self.assertIn("unfilled placeholder", self.problems(out))
 
     def test_moved_prd_fragment_is_history(self):
-        text = plan("### M1 — opis\n**Dowód:** `grep x` → `1`\n").replace(
+        text = plan("### M1 — opis\n**Bez testów:** tylko dokumenty\n**Dowód:** `grep x` → `1`\n").replace(
             "## Ryzyka i decyzje", "## Fragment PRD\nPrzeniesione z loc/PRD.md 2026-10-15.\n"
             "### Eksport\nFormat do ustalenia, TODO.\n\n## Ryzyka i decyzje")
         code, out = self.run_check(text)
@@ -105,7 +111,7 @@ class CheckPlanTest(unittest.TestCase):
     def test_criterion_without_test_fails_naming_the_milestone(self):
         code, out = self.run_check(plan(
             "### M1 — zestaw testów\n"
-            "Smoke test.\n"
+            "Smoke test i `loc/TEST-PLAN.md`.\n"
             "**Dowód:** `python -m unittest` → `OK`\n\n"
             "### M2 — powitanie\n"
             "**Kryteria:**\n"
@@ -136,11 +142,32 @@ class CheckPlanTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("M1: criterion K1 has no test", self.problems(out))
 
-    def test_plan_without_criteria_passes(self):
-        code, out = self.run_check(plan(
-            "### M1 — opis w README\n"
-            "Sekcja o powitaniach.\n"
-            "**Dowód:** `grep -c Powitania README.md` → `1`\n"))
+    def test_milestone_without_tests_passes_only_with_a_reason(self):
+        milestone = ("### M1 — opis w README\n"
+                     "Sekcja o powitaniach.\n"
+                     "{line}"
+                     "**Dowód:** `grep -c Powitania README.md` → `1`\n")
+        code, out = self.run_check(plan(milestone.format(line="**Bez testów:** tylko dokumenty\n")))
+        self.assertEqual(code, 0, out)
+        code, out = self.run_check(plan(milestone.format(line="**Bez testów:**\n")))
+        self.assertEqual(code, 1)
+        self.assertIn("M1: **Bez testów:** needs a reason", self.problems(out))
+        code, out = self.run_check(plan(milestone.format(line="")))
+        self.assertEqual(code, 1)
+        self.assertIn("M1: no **Kryteria:**", self.problems(out))
+
+    def test_project_without_suite_starts_with_it(self):
+        feature = ("### M{n} — powitanie\n"
+                   "**Kryteria:**\n"
+                   "- K1: `greet(\"Ann\", \"pl\")` zwraca `\"Cześć, Ann\"` → `test_app.py::test_polish`\n"
+                   "**Dowód:** `python -m unittest test_app` → `OK`\n")
+        code, out = self.run_check(plan(feature.format(n=1)), suite=False)
+        self.assertEqual(code, 1)
+        self.assertIn("M1 must set up the test suite", self.problems(out))
+        setup = SUITE.format(path="${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md")
+        code, out = self.run_check(plan(setup + "\n" + feature.format(n=2)), suite=False)
+        self.assertEqual(code, 0, out)
+        code, out = self.run_check(plan(feature.format(n=1)), suite=True)
         self.assertEqual(code, 0, out)
 
 

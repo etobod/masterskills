@@ -1,6 +1,6 @@
 # Tests in a plan
 
-For every milestone that changes code. A milestone that changes only documents or configuration has no criteria: documents are not tested.
+For every milestone that changes code. A milestone that changes only documents or configuration has no criteria: documents are not tested. It says so instead, with the reason: `**Bez testów:** tylko dokumenty`. `check_plan.py` rejects a milestone with neither line, so a plan never drops tests silently.
 
 ## What gets tested
 
@@ -34,7 +34,7 @@ If the project has no test suite yet (no test command in `CLAUDE.md` `Commands`,
 - one smoke test, proof: the command → `1 passed` (or the framework's equivalent);
 - `loc/TEST-PLAN.md` copied from `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`, with sections (a) layers and commands and (e) how a test looks here filled in. Write the path exactly so, never expanded: `check_plan.py` rejects the plugin's own path, since the plan must work on another machine. To see the template, read it at that path (the plugin's directory, the same one its scripts run from); do not search the disk for it.
 
-Later milestones use that command in their proofs.
+Later milestones use that command in their proofs. `check_plan.py` rejects a plan with criteria for a project without `loc/TEST-PLAN.md` when its M1 does not name `loc/TEST-PLAN.md`. M1 itself needs no `**Kryteria:**`.
 
 ## `loc/TEST-PLAN.md`
 

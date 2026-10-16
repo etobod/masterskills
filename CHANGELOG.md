@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.17.0 — 2026-10-16
+
+- A plan can no longer drop tests silently. `check_plan.py` rejects a milestone with neither `**Kryteria:**` nor `**Bez testów:** <reason>`, for example `**Bez testów:** tylko dokumenty`. It also rejects a plan with criteria for a project without `loc/TEST-PLAN.md` unless its M1 sets up the test suite. Exempt: a milestone that sets up the suite, and one the user performs.
+- `loc-orchestrate` reports the `**Bez testów:**` milestones when it skips QA, instead of "no test suite".
+- Plans written before 1.17.0 may now stop `loc-orchestrate` at its start. Run `loc-planning` on the plan to fix it. A plan already being executed is not checked again.
+
 ## 1.16.0 — 2026-10-16
 
 - `loc-init` takes a brainstorm (`loc-init 001`, or a path to a `.md` file) and fills the project's frame from its decisions: `Cel` and `Rdzeń idei` in `loc/PRD.md` and the `CLAUDE.md` sections. Only sections that still hold the template are filled, and each point names its source (`B-03`). `Commands` gets only commands written in the brainstorm. Ideas and features stay in the brainstorm, which `loc-init` never changes, for `loc-planning`.
