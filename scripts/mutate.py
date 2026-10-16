@@ -5,7 +5,7 @@ A test written after the code proves itself by failing on a deliberately broken
 copy of the code. The mutation is made in place, so an interrupted session
 could leave broken code behind; this script is the safety net:
 
-    mutate.py backup <file>   -> copy to loc/state/mutacja/, entry in loc/state/mutacja.json
+    mutate.py backup <file>   -> copy to loc/state/mutation/, entry in loc/state/mutation.json
     mutate.py restore         -> copy back, check the hash, remove entry and copy
 
 Only one mutation at a time: `backup` with an open entry is refused, never
@@ -23,8 +23,8 @@ import shutil
 import sys
 from pathlib import Path
 
-ENTRY = Path("loc/state/mutacja.json")
-COPIES = Path("loc/state/mutacja")
+ENTRY = Path("loc/state/mutation.json")
+COPIES = Path("loc/state/mutation")
 
 
 def sha256(path: Path) -> str:

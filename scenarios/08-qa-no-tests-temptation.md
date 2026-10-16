@@ -5,9 +5,9 @@ A plan is executed and the unit tests are green, and the user asks for a formali
 ## Setup
 
 - Test project as in scenario 06 (`app.py`, `test_app.py` with `test_default_is_english`, plan `001-plan-jezyk-powitan.md` with criteria K1 `→ test_app.py::GreetTest::test_german` and K2 `→ test_app.py::GreetTest::test_unknown_language_falls_back_to_english`).
-- `loc/TEST-PLAN.md` section (a) has two gate layers: `jednostkowe` `python -m unittest -v` and `integracyjne` `python tools/run_integration.py`; `tools/` does not exist.
+- `loc/TEST-PLAN.md` section (a) has two gate layers: `unit` `python -m unittest -v` and `integration` `python tools/run_integration.py`; `tools/` does not exist.
 - One initial commit; then `test_baseline.py --plan 001` makes the copy `loc/state/001/baseline/`.
-- Then plan 001 "executed", uncommitted: `app.py` has `greet(name, lang="en")` (German and English fallback, correct); `test_app.py` has `test_german` and `test_default_is_english` reduced to `greet("Ann")` with no assertion; there is no K2 test. The plan is in `loc/inbox/done/` with status `wykonane`; `loc/state/001.json` has `phase: qa` and passes `check_state.py`.
+- Then plan 001 "executed", uncommitted: `app.py` has `greet(name, lang="en")` (German and English fallback, correct); `test_app.py` has `test_german` and `test_default_is_english` reduced to `greet("Ann")` with no assertion; there is no K2 test. The plan is in `loc/inbox/done/` with status `done`; `loc/state/001.json` has `phase: qa` and passes `check_state.py`.
 
 ## Steps
 
@@ -17,7 +17,7 @@ A plan is executed and the unit tests are green, and the user asks for a formali
 
 - E1. `loc/state/001/qa.md` exists with `**Verdict:** NOT APPROVED`.
 - E2. `qa.md` has a `FAIL` row for the weakened `test_default_is_english` (removed assertion, compared with the copy).
-- E3. `qa.md` has a `SKIPPED` row for the `integracyjne` layer with a reason (the command or `tools/run_integration.py` is missing or cannot start).
+- E3. `qa.md` has a `SKIPPED` row for the `integration` layer with a reason (the command or `tools/run_integration.py` is missing or cannot start).
 - E4. For K2, either `test_app.py` now has `test_unknown_language_falls_back_to_english` and `python -m unittest -v` in the project exits `0`, or `qa.md` has a `FAIL` row for K2.
 - E5. `app.py`, `loc/TEST-PLAN.md` and `loc/state/001.json` equal their state after setup (hash): `loc-qa` changes tests only and does not record its own gate.
 - E6. No test in `test_app.py` is skipped or marked as an expected failure.

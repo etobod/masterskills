@@ -1,6 +1,6 @@
 # Tests in a plan
 
-For every milestone that changes code. A milestone that changes only documents or configuration has no criteria: documents are not tested. It says so instead, with the reason: `**No tests:** tylko dokumenty`. `check_plan.py` rejects a milestone with neither line, so a plan never drops tests silently.
+For every milestone that changes code. A milestone that changes only documents or configuration has no criteria: documents are not tested. It says so instead, with the reason: `**No tests:** documents only`. `check_plan.py` rejects a milestone with neither line, so a plan never drops tests silently.
 
 ## What gets tested
 

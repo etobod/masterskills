@@ -16,7 +16,7 @@ Replace the section's template comment or placeholder with the content; keep the
 ## Where the content comes from
 
 - **Sources:** the decisions under `## Decisions` (`B-xx`) and the facts under `## Notes`. A struck-through decision does not count. When two decisions disagree, the higher number wins.
-- **Not a source:** `## Otwarte`, your own ideas, other projects.
+- **Not a source:** `## Open`, your own ideas, other projects.
 - **Every point** ends with its source, e.g. `(B-03)`, or `(Notes)`.
 - **A section the brainstorm says nothing about** stays empty. Do not fill it with a guess.
 - **`Commands`:** only commands written in the brainstorm, character for character. Skills run them and never guess, so a made-up command breaks every later plan.

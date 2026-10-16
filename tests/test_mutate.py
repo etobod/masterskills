@@ -38,8 +38,8 @@ class MutateTest(unittest.TestCase):
         code, out = self.run_mutate("restore")
         self.assertEqual((code, out["restored"]), (0, "app.py"))
         self.assertEqual(sha(self.app), original)
-        self.assertFalse((self.project / "loc" / "state" / "mutacja.json").exists())
-        self.assertFalse((self.project / "loc" / "state" / "mutacja").exists())
+        self.assertFalse((self.project / "loc" / "state" / "mutation.json").exists())
+        self.assertFalse((self.project / "loc" / "state" / "mutation").exists())
 
     def test_second_backup_is_refused_and_keeps_the_first_copy(self):
         original = sha(self.app)

@@ -15,7 +15,7 @@ SCRATCH = ROOT / "tmp" / "scratch" / "tests"
 TEST_PLAN = """# Test plan
 
 ## (a) Warstwy i komendy
-| jednostkowe | `python -m unittest` | bramka | szybkie |
+| unit | `python -m unittest` | gate | fast |
 
 ## (e) What a test looks like here
 <!-- przykład: `ignored_dir/` -->

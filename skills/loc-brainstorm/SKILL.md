@@ -33,9 +33,9 @@ Every reply in which something new was said updates the file **before** you answ
 - **`## Topic`**: what the conversation is about, one paragraph. Keep it current.
 - **`## Notes`**: what the user said and what you found (facts from the code with `file:line`). Append; no length limit. Record substance, not a transcript.
 - **`## Decisions`**: each decision the user made, numbered `B-01`, `B-02`… in order, one line each with the reason. Numbers are never reused. A decision the user changes is struck through (`~~B-02 …~~ → replaced by B-04`) and the new one gets the next number, so plans can refer to them safely.
-- **`## Otwarte`**: what is still undecided, each with your recommendation when you have one. Remove an item when it becomes a decision.
+- **`## Open`**: what is still undecided, each with your recommendation when you have one. Remove an item when it becomes a decision.
 
-Record only what the user decided as a decision. Your suggestion stays in `## Otwarte` until they agree.
+Record only what the user decided as a decision. Your suggestion stays in `## Open` until they agree.
 
 ## 3. Answer
 

@@ -14,7 +14,7 @@ Given a brainstorm, `loc-init` must fill only the empty frame sections (`Goal`, 
     - `B-03 Feature: export entries to PDF.`
     - `B-04 Tests run with pytest -q.`
     - `B-05 Cloud sync is allowed if encrypted.`
-  - `## Otwarte`: empty.
+  - `## Open`: empty.
 - Hash of the brainstorm file and of `.claude/settings.json` taken.
 
 ## Steps

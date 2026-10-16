@@ -255,7 +255,7 @@ class SessionStartTest(unittest.TestCase):
         text = self.context(project)
         self.assertIn("Restored `app.py`", text)
         self.assertEqual(hashlib.sha256(app.read_bytes()).hexdigest(), original)
-        self.assertFalse((project / "loc" / "state" / "mutacja.json").exists())
+        self.assertFalse((project / "loc" / "state" / "mutation.json").exists())
         self.assertNotIn("Interrupted mutation", self.context(project))
 
 

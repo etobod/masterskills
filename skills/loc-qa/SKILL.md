@@ -37,7 +37,7 @@ Each layer of TEST-PLAN section (a), in order:
 - **gate** layer: run its command once. PASS or FAIL from the output. Missing command, a command that cannot start, or zero tests run: **SKIPPED** with the reason.
 - **report** layer: run it; the result is **INFO**.
 - **CI only**: do not run; **INFO** "CI only".
-- **Model behaviour**: only with `model`; otherwise **SKIPPED** "not requested". When run, compare with the last line of `loc/state/qa-historia.log` and append one line: `<date> <plan or -> <layer> <result summary>`. Its result is **INFO**.
+- **Model behaviour**: only with `model`; otherwise **SKIPPED** "not requested". When run, compare with the last line of `loc/state/qa-history.log` and append one line: `<date> <plan or -> <layer> <result summary>`. Its result is **INFO**.
 
 ## 3. Tests against the copy
 
@@ -81,12 +81,12 @@ Write the QA file in English:
 # QA — plan <NNN>
 
 **Verdict:** APPROVED | NOT APPROVED
-**Data:** <date "+%Y-%m-%d %H:%M">
+**Date:** <date "+%Y-%m-%d %H:%M">
 **Scope:** <from>..<to>, <n> changed files
 
 | Check | Status | Proof or reason |
 |---|---|---|
-| warstwa jednostkowe: `python -m pytest -q` | PASS | `42 passed` |
+| layer unit: `python -m pytest -q` | PASS | `42 passed` |
 | K2 → `tests/test_export.py::test_empty` | FAIL | `AssertionError: …` |
 | qa-docs | INFO | available, not run |
 ```
