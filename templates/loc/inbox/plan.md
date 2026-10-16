@@ -26,7 +26,7 @@
 <!-- A milestone that changes no code: instead of Criteria, `**No tests:** <reason>`. -->
 **Performer:** auto
 **Proof:** `<command>` → `<expected output>`
-**Manual check:** <optional, per `Manual verification / UAT` in `CLAUDE.md`>
+<!-- Optional, only for what no command can see (look, feel, a real device), checked after the proof: `**Performer:** user (blocking)` or `user (deferrable)` and `**Manual check:** <what the user looks at>`. -->
 
 ## Risks and decisions
 - <a risk or a decision, referring to B-xx or a `question` file>

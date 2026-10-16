@@ -160,14 +160,72 @@ class CheckPlanTest(unittest.TestCase):
     def test_manual_criterion_allowed_only_for_the_user(self):
         milestone = ("### M1 — wygląd strony\n"
                      "**Criteria:**\n"
-                     "- K1: przycisk jest widoczny na telefonie → manual\n"
+                     "- K1: `layout()` daje jedną kolumnę poniżej 600 px → `test_app.py::test_narrow`\n"
+                     "- K2: przycisk jest widoczny na telefonie → manual\n"
                      "**Performer:** {performer}\n"
-                     "**Proof:** potwierdzenie użytkownika z datą → `ok`\n")
-        code, out = self.run_check(plan(milestone.format(performer="user (deferrable)")))
+                     "{manual}"
+                     "**Proof:** `python -m unittest test_app` → `OK`\n")
+        manual = "**Manual check:** przycisk widoczny na telefonie\n"
+        code, out = self.run_check(plan(milestone.format(performer="user (deferrable)", manual=manual)))
         self.assertEqual(code, 0, out)
-        code, out = self.run_check(plan(milestone.format(performer="auto")))
+        code, out = self.run_check(plan(milestone.format(performer="auto", manual="")))
         self.assertEqual(code, 1)
-        self.assertIn("M1: criterion K1 has no test", self.problems(out))
+        self.assertIn("M1: criterion K2 has no test", self.problems(out))
+
+    def test_user_performer_still_needs_tests(self):
+        """A weak model sent every check to the user; the user checks after the model's own tests."""
+        code, out = self.run_check(plan(
+            "### M1 — wygląd strony\n"
+            "**Criteria:**\n"
+            "- K1: przycisk jest widoczny na telefonie → manual\n"
+            "**Performer:** user (deferrable)\n"
+            "**Manual check:** przycisk widoczny na telefonie\n"
+            "**Proof:** `python -m unittest test_app` → `OK`\n"))
+        self.assertEqual(code, 1)
+        self.assertIn("M1: the user checks after your tests", self.problems(out))
+        code, out = self.run_check(plan(
+            "### M1 — wygląd strony\n"
+            "**Performer:** user (blocking)\n"
+            "**Manual check:** przycisk widoczny na telefonie\n"
+            "**Proof:** `python -m unittest test_app` → `OK`\n"))
+        self.assertEqual(code, 1)
+        self.assertIn("M1: no **Criteria:**", self.problems(out))
+
+    def test_user_proof_must_be_a_command(self):
+        code, out = self.run_check(plan(
+            "### M1 — wygląd strony\n"
+            "**Criteria:**\n"
+            "- K1: `layout()` daje jedną kolumnę poniżej 600 px → `test_app.py::test_narrow`\n"
+            "**Performer:** user (deferrable)\n"
+            "**Manual check:** układ na telefonie\n"
+            "**Proof:** użytkownik otwiera stronę na telefonie → `ok, <data>`\n"))
+        self.assertEqual(code, 1)
+        self.assertIn("**Manual check:**, after this proof", self.problems(out))
+
+    def test_manual_check_and_user_performer_go_together(self):
+        milestone = ("### M1 — wygląd strony\n"
+                     "**Criteria:**\n"
+                     "- K1: `layout()` daje jedną kolumnę poniżej 600 px → `test_app.py::test_narrow`\n"
+                     "**Performer:** {performer}\n"
+                     "{manual}"
+                     "**Proof:** `python -m unittest test_app` → `OK`\n")
+        code, out = self.run_check(plan(milestone.format(performer="user (blocking)", manual="")))
+        self.assertEqual(code, 1)
+        self.assertIn("M1: **Performer:** user needs a **Manual check:** line", self.problems(out))
+        code, out = self.run_check(plan(milestone.format(performer="auto", manual="**Manual check:** układ na telefonie\n")))
+        self.assertEqual(code, 1)
+        self.assertIn("M1: **Manual check:** needs **Performer:** user (blocking) or user (deferrable)", self.problems(out))
+
+    def test_combined_check_passes(self):
+        code, out = self.run_check(plan(
+            "### M1 — epicykle\n"
+            "**Criteria:**\n"
+            "- K1: `computeFourier([])` zwraca pustą listę bez błędu → `tests/fourier.test.js::empty input`\n"
+            "- K2: epicykle rysują kształt płynnie → manual\n"
+            "**Performer:** user (deferrable)\n"
+            "**Manual check:** epicykle płynnie rysują kształt\n"
+            "**Proof:** `node --test` → `pass 1`\n"))
+        self.assertEqual(code, 0, out)
 
     def test_milestone_without_tests_passes_only_with_a_reason(self):
         milestone = ("### M1 — opis w README\n"
@@ -241,8 +299,8 @@ class CheckPlanTest(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertIn("M1: ", self.problems(out))
         code, out = self.run_check(plan(milestone.format(
-            performer="**Performer:** user (deferrable)\n",
-            proof="użytkownik otwiera `fourier.html` i widzi czarny canvas → `ok, <data>`")))
+            performer="**Performer:** user (deferrable)\n**Manual check:** czarny canvas na pełnym ekranie\n",
+            proof="`node --test` → `pass 1`")))
         self.assertEqual(code, 0, out)
 
     def test_proof_with_prose_result_quotes_it(self):

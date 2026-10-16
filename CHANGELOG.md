@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.2.0 — 2026-10-16
+
+- **The user checks after the model's tests, never instead of them.** A milestone that changes code has criteria with tests and a command proof also when a person must look at the result; `→ manual` criteria are allowed only next to criteria with tests. `check_plan.py` no longer exempts a `**Performer:** user (...)` milestone from criteria or from a command proof, and says why: "the user checks after your tests, not instead of them".
+- `**Performer:** user (...)` and `**Manual check:** <what the user looks at>` go together; `check_plan.py` rejects one without the other. The plan template shows the pair as an optional comment.
+- `loc-orchestrate`: a new step 6 asks the user for a `user (blocking)` manual check only after the proof and the code review passed. A fault the user reports first becomes a failing test, then the fix; the user is asked again only when that test passes.
+- Older plans with only `→ manual` criteria no longer pass the gate; rerun `loc-planning` on them.
+
 ## 2.1.1 — 2026-10-16
 
 - `check_plan.py`: the message about an expanded plugin path gives the exact path to write (`` write `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md` ``) instead of a general hint, which a model followed by replacing the wrong prefix.

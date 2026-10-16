@@ -68,7 +68,7 @@ The file comes from the template with all sections. Fill them in English:
 - **Out of scope**: what is deliberately out of scope.
 - **Not defended against**: who produces inputs the code deliberately does not defend against, with the reason (e.g. an administrator who could disable the tool anyway). Never a foreseeable user mistake. `- none` when nothing. Reviews call such inputs Unrealistic.
 - **Code context**: the files and `file:line` the plan relies on, as read now.
-- **Milestones**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Proof:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Manual check:**` per `Manual verification / UAT`. Code and its tests go in the same milestone (below). A milestone's product is never a decision, an audit or a question.
+- **Milestones**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Proof:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Manual check:**` for what only a person can see (below). Code and its tests go in the same milestone (below). A milestone's product is never a decision, an audit or a question.
 - **Risks and decisions**: references to brainstorm decisions (`B-01`…) and `question` files, and what each risk would cost.
 
 Small change, one or two milestones.
@@ -99,7 +99,20 @@ A criterion says **what the code must do**, never "a test exists" or "it works":
 
 `loc/TEST-PLAN.md` is the project's test contract and changes only through a milestone: when the plan adds something new to the product, one milestone extends section (b) (tests only).
 
-**Performer** (`**Performer:**`): `auto`, the proof command run by `loc-orchestrate` (default); `agent`, a check an agent performs and records; `user (blocking)` or `user (deferrable)`, the user's word with a date, and a criterion may point to `manual` instead of a test. Use the user only when the proof cannot be a command. Blocking stays in the plan; deferrable becomes a `deferred` file (append to an open one with manual checks if it exists). There is no separate manual-test document.
+**The user checks after your tests, never instead of them.** A user who finds the tenth bug a test could have caught stops trusting the plan. So every milestone that changes code has criteria with tests and a command proof, also when a person must look at the result; the user gets only what no command can see: the look, the feel, a real device, per `Manual verification / UAT`. Even a canvas animation has testable logic (the math, the data, the empty input), and that is tested first.
+
+**Performer** (`**Performer:**`): `auto`, the proof command run by `loc-orchestrate` (default); `agent`, a check an agent performs and records; `user (blocking)` or `user (deferrable)`: after the proof and the code review pass, the user does the milestone's `**Manual check:**` and gives their word with a date. A user performer and a `**Manual check:**` line go together; a criterion may point to `manual` only next to criteria with tests:
+
+```
+**Criteria:**
+- K1: `computeFourier([])` returns an empty list, no error → `tests/fourier.test.js::empty input`
+- K2: the epicycles draw the shape smoothly → manual
+**Performer:** user (deferrable)
+**Manual check:** open `index.html`; the epicycles draw the shape smoothly
+**Proof:** `node --test` → `pass 1`
+```
+
+Blocking stays in the plan; deferrable becomes a `deferred` file (append to an open one with manual checks if it exists). There is no separate manual-test document.
 
 Fixtures committed to git are written by hand. Data recorded from real runs goes only to a directory the project ignores, named in `loc/TEST-PLAN.md` (e).
 

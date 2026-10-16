@@ -254,9 +254,11 @@ Parametr `lang`.
 ### M3 — wygląd
 Kolor tekstu.
 **Kryteria:**
-- K3: tekst jest czytelny na telefonie → ręcznie
+- K3: `contrast(text, background)` daje co najmniej 4.5 → `test_app.py::test_contrast`
+- K4: tekst jest czytelny na telefonie → ręcznie
 **Wykonawca:** użytkownik (blokujący)
-**Dowód:** potwierdzenie użytkownika z datą → `ok`
+**Sprawdzenie ręczne:** tekst czytelny na telefonie
+**Dowód:** `python -m unittest test_app` → `OK`
 
 ## Ryzyka i decyzje
 - Decyzja B-01 i pytanie loc/inbox/007-pytanie-kropka.md.

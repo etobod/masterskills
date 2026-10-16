@@ -32,7 +32,8 @@ Update the state file before and after every step.
 3. **Proof gate** (`M<n>/proof`). Increase `rounds`, run the `Proof` command exactly as written, compare with the expected result. Pass → next step. Fail → fix the cause (not the proof) and start the next round. After the third failed round: **stuck** (below).
 4. **Snapshot** `--point end`. It prints the changed files.
 5. **Code-review gate** (`M<n>/code-review`). Increase `rounds`, then `Skill(skill: "code-review", args: "<changed files> medium")`: always explicit files and level, **never `ultra`** (it leaves the machine). The `judge` agent weighs the Blocking and Non-blocking findings; fix those it marks `fix`. Suggestions, Unrealistic findings and its `enough` verdicts are not fixed: one line each in the plan's `## Review notes`. Rounds 2 and 3 review only the fixes (`references/gates.md`). Rerun the proof after the fixes and take a new `end` snapshot. Passed when the judge leaves nothing to fix. After the third failed round: **stuck**.
-6. Mark the milestone `done`, move to the next one.
+6. **Manual check**, only for `**Performer:** user (blocking)`, after the proof and the review passed: ask the user to do the milestone's `**Manual check:**`, exactly what to look at, and wait. (`user (deferrable)` is already a `deferred` file; do not ask.) A fault the user reports first becomes a test that fails on it, then the fix, the proof and the review again; ask the user again only when that test passes. The user's word with the date goes under the milestone in the plan.
+7. Mark the milestone `done`, move to the next one.
 
 **Stuck gate.** No fourth round, no more code changes: add the gate to the plan's single `stuck` file (`references/stuck.md`), record it in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
 

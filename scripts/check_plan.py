@@ -13,9 +13,11 @@ Checks, in order:
     lines are both counted, both > 0 and equal;
   - in a milestone with `**Criteria:**`, every criterion
     `- K<n>[ (behaviour)]: <what the code must do> → <test>` names its test in
-    inline code, or `manual` when the performer is the user;
+    inline code, or `manual` when the performer is the user and another
+    criterion names a test: the user checks after the tests, not instead;
   - every milestone has `**Criteria:**` or `**No tests:** <reason>`, unless it
-    sets up the test suite (names `TEST-PLAN.md`) or the user performs it;
+    sets up the test suite (names `TEST-PLAN.md`);
+  - `**Performer:** user (...)` and `**Manual check:**` go together;
   - in a project without a test suite ($CLAUDE_PROJECT_DIR, else the current
     directory), a plan with criteria sets up the suite in M1; the suite is
     `loc/TEST-PLAN.md` plus a test command (`test` or `spec`) in `CLAUDE.md`
@@ -24,7 +26,7 @@ Checks, in order:
     `(blocking)` or `(deferrable)`;
   - a criterion's test is not a shell check (`grep`, `test -f`, `open`...) and
     names a test (`test` or `spec` in it), not a source file;
-  - an automatic proof reads `` `<command>` → `<output>` `` and does not just
+  - a proof (any performer but `agent`) reads `` `<command>` → `<output>` `` and does not just
     open a file;
   - a plan whose `**Source:**` names a `review` (in `loc/inbox/` or `done/`)
     accounts for each of its findings (`NNN #n`, numbered in `## Findings`
@@ -71,6 +73,7 @@ CRITERIA = re.compile(r"^\*\*Criteria:\*\*\s*$")
 CRITERION = re.compile(r"^- (K\d+)( \(behaviour\))?: (?P<what>.+?)(?: → (?P<test>.*))?$")
 PERFORMER = re.compile(r"^\*\*Performer:\*\*\s*(?P<value>.*?)\s*$")
 PERFORMERS = re.compile(r"^(auto|agent|user \((blocking|deferrable)\))$")
+MANUAL_CHECK = re.compile(r"^\*\*Manual check:\*\*")
 NO_TESTS = re.compile(r"^\*\*No tests:\*\*\s*(?P<reason>.*?)\s*$")
 SUITE = "TEST-PLAN.md"
 # A criterion's "test" that is really a shell check: it proves a word or a file exists, not behaviour.
@@ -154,12 +157,11 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
     user = performer is not None and performer[1].startswith("user")
     if tested["no_tests"] == "":
         issues.append({"line": 0, "problem": f"{name}: **No tests:** needs a reason, e.g. 'documents only'"})
-    elif not (tested["criteria"] or tested["no_tests"] or tested["suite"] or user):
+    elif not (tested["criteria"] or tested["no_tests"] or tested["suite"]):
         issues.append({"line": 0, "problem": f"{name}: no **Criteria:** (with tests) and no "
                        "**No tests:** <reason>; a milestone that changes code needs criteria"})
     proof = tested.get("proof")
-    automatic = performer is None or performer[1] == "auto"
-    if proof and automatic:
+    if proof and (performer is None or performer[1] != "agent"):
         match = CHECKABLE_PROOF.match(proof[1])
         prose = PROSE_RESULT.match(proof[1])
         if prose:
@@ -168,14 +170,25 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
                            f"found: '{prose.group('result')}'"})
         elif not match:
             issues.append({"line": proof[0], "problem": f"{name}: an automatic proof reads "
-                           "'**Proof:** `<command>` → `<expected output>`'; a result you only see "
-                           "needs **Performer:** user (blocking) or (deferrable)"})
+                           "'**Proof:** `<command>` → `<expected output>`'; what only a person can see goes "
+                           "into **Manual check:**, after this proof"})
         elif BROWSER.match(match.group("command")):
             issues.append({"line": proof[0], "problem": f"{name}: the proof only opens a file; "
-                           "run a test command, or make the user the performer"})
+                           "run a test command; what only a person can see goes into **Manual check:**"})
     if performer is not None and not PERFORMERS.match(performer[1]):
         issues.append({"line": performer[0], "problem": f"{name}: performer must be auto, agent, "
                        "user (blocking) or user (deferrable)"})
+    if user and not tested.get("manual"):
+        issues.append({"line": performer[0], "problem": f"{name}: **Performer:** user needs a "
+                       "**Manual check:** line: what the user looks at"})
+    if tested.get("manual") and not user:
+        issues.append({"line": tested["manual"], "problem": f"{name}: **Manual check:** needs "
+                       "**Performer:** user (blocking) or user (deferrable)"})
+    if tested["criteria"] and criteria and all((CRITERION.match(t) and (CRITERION.match(t).group("test") or "")
+                                                .strip() == "manual") for _, t in criteria):
+        issues.append({"line": criteria[0][0], "problem": f"{name}: the user checks after your tests, not "
+                       "instead of them: add criteria with tests for what a command can check (logic, data, "
+                       "errors); only what a person must see goes into **Manual check:**"})
     for number, text in criteria:
         match = CRITERION.match(text)
         if not match:
@@ -338,6 +351,9 @@ def check(text: str) -> dict:
             in_criteria = False
         elif milestone and in_criteria and line.startswith("- "):
             criteria.append((number, line))
+        elif milestone and MANUAL_CHECK.match(line):
+            tested["manual"] = number
+            in_criteria = False
         elif milestone and PERFORMER.match(line):
             performer = (number, PERFORMER.match(line).group("value"))
             in_criteria = False
