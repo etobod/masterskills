@@ -83,6 +83,8 @@ def translate(text: str, out: Path) -> str:
     text = SCRIPT.sub(lambda m: f'{find_python()} -B "{base}/masterskills/{m.group(1)}"', text)
     text = text.replace("${CLAUDE_PLUGIN_ROOT}/skills/", f"{base}/skills/")
     text = text.replace("${CLAUDE_PLUGIN_ROOT}", f"{base}/masterskills")
+    # Only Claude Code has a session id to resume; OpenCode's launcher needs none.
+    text = text.replace(' --session "${CLAUDE_SESSION_ID}"', "")
     return re.sub(r"\bmasterskills:(?=[a-z])", "", text)
 
 
@@ -139,6 +141,8 @@ def files(out: Path) -> dict:
     result["plugins/masterskills.ts"] = hooks.replace("@@MASTERSKILLS_ROOT@@", f"{base}/masterskills")
     plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     result["masterskills/VERSION"] = plugin["version"] + "\n"
+    # init_project.py points open-code.bat at this repository's installer.
+    result["masterskills/SOURCE"] = str(ROOT.resolve()) + "\n"
     return result
 
 

@@ -145,5 +145,48 @@ class ReviewDiffTest(unittest.TestCase):
         self.assertIn("+const x = 1;", (project / "loc" / "review" / "x.diff").read_text(encoding="utf-8"))
 
 
+@unittest.skipUnless(sys.platform == "win32", "launchers are .bat files")
+class LauncherTest(unittest.TestCase):
+    """loc-init leaves a launcher for the tool that ran it, and never touches an existing one."""
+    SESSION = "4850f8d8-961b-41b6-af2d-aa21b2b73f24"
+
+    def setUp(self):
+        self.project = scratch_dir(self)
+        subprocess.run(["git", "init", "-q"], cwd=self.project, check=True)
+
+    def init(self, *args: str, scripts: Path = ROOT / "scripts") -> dict:
+        out = subprocess.run([sys.executable, "-B", str(scripts / "init_project.py"), "--project", ".", *args],
+                             cwd=self.project, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(out.returncode, 0, out.stderr)
+        return json.loads(out.stdout)
+
+    def test_claude_bat_resumes_the_session(self):
+        report = self.init("--session", self.SESSION)
+        self.assertIn("claude.bat", report["created"])
+        data = (self.project / "claude.bat").read_bytes()
+        self.assertIn(b"\r\n", data)
+        self.assertIn(f"--resume {self.SESSION}".encode(), data)
+        self.assertFalse((self.project / "open-code.bat").exists())
+        again = self.init("--session", "11111111-2222-3333-4444-555555555555")
+        self.assertIn("claude.bat", again["existing"])
+        self.assertEqual((self.project / "claude.bat").read_bytes(), data)
+
+    def test_claude_bat_needs_a_session(self):
+        report = self.init()
+        self.assertFalse((self.project / "claude.bat").exists())
+        self.assertIn("claude.bat", [item["path"] for item in report["skipped"]])
+
+    def test_open_code_bat_updates_the_plugin(self):
+        build = scratch_dir(self)
+        subprocess.run([sys.executable, "-B", str(ROOT / "opencode" / "build.py"), "--out", str(build)],
+                       check=True, capture_output=True)
+        report = self.init("--session", "${CLAUDE_SESSION_ID}", scripts=build / "masterskills" / "scripts")
+        self.assertIn("open-code.bat", report["created"])
+        self.assertFalse((self.project / "claude.bat").exists())
+        text = (self.project / "open-code.bat").read_text(encoding="utf-8")
+        self.assertIn(f'call "{ROOT / "opencode-install.bat"}"', text)
+        self.assertIn("opencode %*", text)
+
+
 if __name__ == "__main__":
     unittest.main()

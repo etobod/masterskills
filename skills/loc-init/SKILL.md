@@ -19,7 +19,7 @@ It brings an existing `loc/` to the current format and prints JSON. When `from` 
 ## Run
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --project "<dir>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --project "<dir>" --session "${CLAUDE_SESSION_ID}"
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
@@ -41,7 +41,7 @@ Only when a brainstorm was given and the script printed `ok: true`: follow `refe
 The script prints JSON.
 
 - **`ok: true`.** In one short list, tell the user:
-  - what was **created** (`created`);
+  - what was **created** (`created`); a new `claude.bat` resumes this session, `open-code.bat` updates the plugin and starts OpenCode;
   - what was **added** to existing files (`updated`: file and the sections or entries added);
   - that everything else **already existed**;
   - each `skipped` file with its reason: the user fixes it by hand.

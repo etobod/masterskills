@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.4.0 — 2026-10-16
+
+- `loc-init` leaves a launcher on Windows for the tool that ran it, and never touches an existing one. Claude Code: `claude.bat` resumes the session in which `loc-init` ran (`--session "${CLAUDE_SESSION_ID}"`). OpenCode: `open-code.bat` runs `opencode-install.bat` from the repository the plugin was built from (recorded by `opencode/build.py` in `masterskills/SOURCE`), then starts OpenCode.
+
 ## 2.3.1 — 2026-10-16
 
 - When `loc/` is in an old format, the session-start hook also returns a `systemMessage`, so the terminal shows the user "run /masterskills:loc-init" even when the model does not pass on the request in its context.

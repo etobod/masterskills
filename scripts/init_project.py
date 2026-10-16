@@ -9,6 +9,12 @@ attribution). Existing files are never overwritten: a missing `CLAUDE.md` sectio
 so running it again is safe. A project without git is refused and nothing is
 created.
 
+On Windows it also leaves a launcher for the tool that runs it, unless one
+exists: `claude.bat` resumes the Claude Code session given by `--session`;
+`open-code.bat` (plugin built for OpenCode, which records its source
+repository in `SOURCE`) updates the plugin from that repository and starts
+OpenCode.
+
 `empty` lists the sections that hold nothing but the template's comment or
 `<placeholder>`: the ones `loc-init` may fill from a brainstorm.
 
@@ -44,6 +50,22 @@ PRD_FRAME = ["Goal", "Core idea", "Scenarios"]  # Directions is work to plan, no
 POLISH = re.compile("[\u0104\u0105\u0106\u0107\u0118\u0119\u0141\u0142\u0143\u0144\u00d3\u00f3\u015a\u015b\u0179\u017a\u017b\u017c]")
 PLACEHOLDER = re.compile(r"<!--.*?-->|^#*\s*<[^>\n]*>\s*$", re.S | re.M)
 
+SESSION = re.compile(r"^[\w-]+$")
+CLAUDE_BAT = """@rem Resumes the Claude Code session in which loc-init ran.
+@cd /d "%~dp0"
+@set "CLAUDE=claude"
+@where claude >nul 2>nul || set "CLAUDE=%USERPROFILE%\\.local\\bin\\claude.exe"
+@"%CLAUDE%" --resume {session} %*
+@exit /b %ERRORLEVEL%
+"""
+OPENCODE_BAT = """@rem Updates masterskills for OpenCode, then starts OpenCode in this project.
+@cd /d "%~dp0"
+@call "{installer}"
+@cd /d "%~dp0"
+@opencode %*
+@exit /b %ERRORLEVEL%
+"""
+
 NO_GIT = (
     "This directory is not the root of a git repository. masterskills needs git: plans take a "
     "snapshot of every milestone with git, reviews read the diff "
@@ -74,6 +96,28 @@ def append(path: Path, text: str, block: str) -> None:
     if text.strip():
         text += nl
     write(path, text + block.replace("\n", nl))
+
+
+def ensure_launcher(project: Path, report: dict, session: str) -> None:
+    if sys.platform != "win32":
+        return
+    source = PLUGIN_ROOT / "SOURCE"
+    if (PLUGIN_ROOT / ".claude-plugin").is_dir():
+        name = "claude.bat"
+        text = CLAUDE_BAT.format(session=session) if SESSION.match(session) else None
+    elif source.is_file():
+        name = "open-code.bat"
+        installer = Path(source.read_text(encoding="utf-8").strip()) / "opencode-install.bat"
+        text = OPENCODE_BAT.format(installer=installer)
+    else:
+        return
+    if (project / name).exists():
+        report["existing"].append(name)
+    elif text is None:
+        report["skipped"].append({"path": name, "reason": "no session id to resume: run it from the loc-init skill"})
+    else:
+        write(project / name, text.replace("\n", "\r\n"))
+        report["created"].append(name)
 
 
 def claude_sections() -> list:
@@ -199,7 +243,7 @@ def check(project: Path) -> dict:
             "not_english": [name for name in names if POLISH.search(bodies.get(name, ""))]}
 
 
-def init(project: Path) -> dict:
+def init(project: Path, session: str = "") -> dict:
     report = {"ok": True, "project": project.as_posix(), "created": [], "updated": [], "existing": [],
               "skipped": []}
 
@@ -228,6 +272,7 @@ def init(project: Path) -> dict:
     ensure_claude_md(project, report)
     ensure_gitignore(project, report)
     ensure_settings(project, report)
+    ensure_launcher(project, report, session)
     report["empty"] = empty_report(project)
     return report
 
@@ -242,6 +287,7 @@ def main() -> int:
     )
     parser.add_argument("--check", action="store_true",
                         help="write nothing; report empty sections and CLAUDE.md sections not in English")
+    parser.add_argument("--session", default="", help="Claude Code session id for claude.bat to resume")
     args = parser.parse_args()
     project = args.project.resolve()
 
@@ -253,7 +299,7 @@ def main() -> int:
         print(json.dumps({"ok": False, "project": project.as_posix(), "error": "no-git", "message": NO_GIT}))
         return 2
 
-    print(json.dumps(check(project) if args.check else init(project), indent=2))
+    print(json.dumps(check(project) if args.check else init(project, args.session), indent=2))
     return 0
 
 
