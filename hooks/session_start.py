@@ -6,7 +6,8 @@ First it puts back a file left mutated by an interrupted session
 
 Runs on startup, /clear and after compaction, so the rules come back into
 context whenever it is rebuilt. Reads the hook input JSON from stdin and
-prints hookSpecificOutput.additionalContext as JSON.
+prints hookSpecificOutput.additionalContext as JSON. An old `loc/` format also
+gets a systemMessage, shown to the user whatever the model does with its context.
 """
 
 import json
@@ -103,6 +104,10 @@ def main() -> int:
             "additionalContext": context,
         }
     }
+    version = read_format(project / "loc")
+    if version is not None and version < FORMAT:
+        output["systemMessage"] = (f"masterskills: loc/ is in format {version}; run /masterskills:loc-init "
+                                   f"to migrate it to format {FORMAT}.")
     # ASCII-only JSON: safe whatever the console code page is on Windows.
     print(json.dumps(output))
     return 0

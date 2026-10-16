@@ -248,6 +248,16 @@ class SessionStartTest(unittest.TestCase):
         (project / "loc" / "VERSION").write_text("2\n", encoding="utf-8")
         self.assertNotIn("migrate", self.context(project))
 
+    def test_session_start_tells_the_user_about_migration(self):
+        """The model may skip the request in its context; the user sees systemMessage in the terminal."""
+        project = scratch_dir(self)
+        (project / "loc" / "inbox").mkdir(parents=True)
+        out = run_hook("session_start.py", {"cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
+        self.assertIn("/masterskills:loc-init", out.get("systemMessage", ""))
+        (project / "loc" / "VERSION").write_text("2\n", encoding="utf-8")
+        out = run_hook("session_start.py", {"cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
+        self.assertNotIn("systemMessage", out)
+
     def test_project_without_loc(self):
         self.assertIn("no `loc/inbox/` yet", self.context(scratch_dir(self)))
 

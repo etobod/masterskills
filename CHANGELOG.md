@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.3.1 — 2026-10-16
+
+- When `loc/` is in an old format, the session-start hook also returns a `systemMessage`, so the terminal shows the user "run /masterskills:loc-init" even when the model does not pass on the request in its context.
+
 ## 2.3.0 — 2026-10-16
 
 - **Tests run the real code.** New `scripts/test_copies.py` lists functions a test defines with the name and nearly the body of a function in the code (Python `def`, JavaScript `function` and arrow functions, also inside a page's `<script>`). Such a test passes whatever the code does. `loc-qa` (new step 4a) rewrites it to run the real code; a page's script is loaded with `readFileSync` and `vm`. A deliberate mock is INFO. `loc-planning` says a test never copies the code, and the `judge` marks such a finding `fix`.
