@@ -20,7 +20,8 @@ Checks, in order:
     current directory), a plan with criteria sets up the suite in M1;
   - `**Wykonawca:**`, when present, is `auto`, `agent`, or `użytkownik` with
     `(blokujący)` or `(odkładalny)`;
-  - a criterion's test is not a shell check (`grep`, `test -f`, `open`...);
+  - a criterion's test is not a shell check (`grep`, `test -f`, `open`...) and
+    names a test (`test` or `spec` in it), not a source file;
   - an automatic proof reads `` `<command>` → `<output>` `` and does not just
     open a file;
   - with `--ready` (before execution): `## Bramka planu` records a round, and
@@ -64,6 +65,10 @@ NO_TESTS = re.compile(r"^\*\*Bez testów:\*\*\s*(?P<reason>.*?)\s*$")
 SUITE = "TEST-PLAN.md"
 # A criterion's "test" that is really a shell check: it proves a word or a file exists, not behaviour.
 SHELL_CHECK = re.compile(r"^`\s*(grep|test|open|start|xdg-open|ls|cat|find|echo|wc|type|dir|curl)\b|&&|\|\||[|;]")
+# A criterion names a test: test frameworks put "test" or "spec" in file or test names.
+TEST_NAME = re.compile(r"test|spec", re.I)
+# A command and an arrow, but the expected result written as prose.
+PROSE_RESULT = re.compile(r"^\*\*Dowód:\*\*\s*`[^`]+`\s*→\s*(?P<result>[^`\s][^`]*?)\s*$")
 CHECKABLE_PROOF = re.compile(r"^\*\*Dowód:\*\*\s*`(?P<command>[^`]+)`\s*→\s*`[^`]+`")
 BROWSER = re.compile(r"^\s*(open|start|xdg-open)\b")
 GATE_RECORD = "Bramka planu"
@@ -101,7 +106,12 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
     automatic = performer is None or performer[1] == "auto"
     if proof and automatic:
         match = CHECKABLE_PROOF.match(proof[1])
-        if not match:
+        prose = PROSE_RESULT.match(proof[1])
+        if prose:
+            issues.append({"line": proof[0], "problem": f"{name}: after → give the exact output of the "
+                           f"command in backticks, '`<command>` → `<exact output>`' (e.g. `2`, `OK`); "
+                           f"found: '{prose.group('result')}'"})
+        elif not match:
             issues.append({"line": proof[0], "problem": f"{name}: an automatic proof reads "
                            "'**Dowód:** `<command>` → `<expected output>`'; a result you only see "
                            "needs **Wykonawca:** użytkownik (blokujący) or (odkładalny)"})
@@ -126,6 +136,9 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
         elif SHELL_CHECK.search(test):
             issues.append({"line": number, "problem": f"{name}: criterion {match.group(1)}: {test} is a shell "
                            "check, not a test; name a test that checks the behaviour (`test_app.py::test_polish`)"})
+        elif not TEST_NAME.search(test):
+            issues.append({"line": number, "problem": f"{name}: criterion {match.group(1)}: {test} names no "
+                           "test; give the test file and the test's name (`tests/app.test.js::polish greeting`)"})
 
 
 def project_dir() -> Path:

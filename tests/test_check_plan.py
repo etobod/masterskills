@@ -206,6 +206,27 @@ class CheckPlanTest(unittest.TestCase):
             proof="użytkownik otwiera `fourier.html` i widzi czarny canvas → `ok, <data>`")))
         self.assertEqual(code, 0, out)
 
+    def test_proof_with_prose_result_quotes_it(self):
+        code, out = self.run_check(plan(
+            "### M1 — opis\n**Bez testów:** tylko dokumenty\n"
+            "**Dowód:** `grep -c x f.html` → znaleziono definicję\n"))
+        self.assertEqual(code, 1)
+        self.assertIn("found: 'znaleziono definicję'", self.problems(out))
+        self.assertIn("`<command>` → `<exact output>`", self.problems(out))
+
+    def test_criterion_must_name_a_test(self):
+        milestone = ("### M1 — dwa łańcuchy\n"
+                     "**Kryteria:**\n"
+                     "- K1 (zachowanie): x i y z osobnych FFT → {test}\n"
+                     "**Dowód:** `node --test` → `pass 1`\n")
+        code, out = self.run_check(plan(milestone.format(test="`fourier.html`")))
+        self.assertEqual(code, 1)
+        self.assertIn("M1: criterion K1: `fourier.html` names no test", self.problems(out))
+        for test in ("`tests/fft.test.js::rms`", "`parse_test.go::TestParse`", "`spec/app_spec.rb`"):
+            with self.subTest(test=test):
+                code, out = self.run_check(plan(milestone.format(test=test)))
+                self.assertEqual(code, 0, out)
+
     def ready_plan(self, record: str) -> str:
         return (plan("### M1 — opis\n**Bez testów:** tylko dokumenty\n**Dowód:** `grep x` → `1`\n")
                 .replace("**Status:** otwarte", "**Status:** otwarte\n**Źródło:** loc/inbox/done/001-brainstorm-fourier.md")

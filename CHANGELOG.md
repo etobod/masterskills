@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.21.1 — 2026-10-16
+
+- `check_plan.py`: a proof with a command and `→` but its expected result written as prose now gets a message that quotes that result and shows the form, `` `<command>` → `<exact output>` ``. Before, one message mixed the format with the user-performer advice, and a model could spend a round guessing which applied.
+- `check_plan.py`: a criterion must name a test, with `test` or `spec` in it (`test_app.py::test_polish`, `tests/fft.test.js::rms`, `TestParse`). A criterion pointing at a source file (`→ \`app.html\``) used to pass the gate.
+
 ## 1.21.0 — 2026-10-16
 
 - `loc/PATTERNS.md` gets entries at concrete moments. Rule 10: when a command or setup fails and another way works (another path, shell, tool or flag), record both before the next step, `✅` and `❌`. `loc-orchestrate` checks this before the journal entry, `loc-review` before its report. Before, the only trigger was "when you find a way that works", and projects ended up with nearly empty patterns.
