@@ -43,23 +43,39 @@ SUITE = """### M1 — zestaw testów
 **Dowód:** `python -m unittest -v` → `Ran 1 test`
 """
 
+COMMANDS = """# app
+
+## Commands
+<!-- Exact build, test, lint and run commands. Skills use these and never guess. -->
+{command}
+
+## Invariants
+- two chains
+"""
+
 def plan(milestones: str) -> str:
     return HEAD + milestones + TAIL
 
 
 class CheckPlanTest(unittest.TestCase):
-    def run_check(self, text: str, suite: bool = True, ready: bool = False, files: tuple = ()) -> tuple:
-        """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md`) or not;
-        `files` are created in the project first, `ready` adds `--ready`."""
+    def run_check(self, text: str, suite: bool = True, ready: bool = False, files: tuple = (),
+                  claude: str = None) -> tuple:
+        """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md` and a test
+        command in `CLAUDE.md`) or not; `files` are created in the project first, `claude` is its
+        `CLAUDE.md`, `ready` adds `--ready`."""
         SCRATCH.mkdir(parents=True, exist_ok=True)
         directory = Path(tempfile.mkdtemp(dir=SCRATCH))
         self.addCleanup(shutil.rmtree, directory, True)
         if suite:
             (directory / "loc").mkdir()
             (directory / "loc" / "TEST-PLAN.md").write_text("# TEST-PLAN\n", encoding="utf-8")
+            (directory / "CLAUDE.md").write_text(COMMANDS.format(command="`python -m unittest`"),
+                                                 encoding="utf-8")
         for rel in files:
             (directory / rel).parent.mkdir(parents=True, exist_ok=True)
             (directory / rel).write_text("# 001\n", encoding="utf-8")
+        if claude is not None:
+            (directory / "CLAUDE.md").write_text(claude, encoding="utf-8")
         path = directory / "007-plan-powitania.md"
         path.write_text(text, encoding="utf-8")
         env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
@@ -173,6 +189,23 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(plan(setup + "\n" + feature.format(n=2)), suite=False)
         self.assertEqual(code, 0, out)
         code, out = self.run_check(plan(feature.format(n=1)), suite=True)
+        self.assertEqual(code, 0, out)
+
+    def test_suite_needs_a_test_command(self):
+        feature = ("### M1 — powitanie\n"
+                   "**Kryteria:**\n"
+                   "- K1: `greet(\"Ann\", \"pl\")` zwraca `\"Cześć, Ann\"` → `test_app.py::test_polish`\n"
+                   "**Dowód:** `python -m unittest test_app` → `OK`\n")
+        stub = ("loc/TEST-PLAN.md",)
+        for command in ("", "`open fourier.html`"):
+            with self.subTest(command=command):
+                code, out = self.run_check(plan(feature), suite=False, files=stub,
+                                           claude=COMMANDS.format(command=command))
+                self.assertEqual(code, 1)
+                self.assertIn("M1 must set up the test suite", self.problems(out))
+                self.assertIn("do not create loc/TEST-PLAN.md while planning", self.problems(out))
+        code, out = self.run_check(plan(feature), suite=False, files=stub,
+                                   claude=COMMANDS.format(command="`python -m unittest`"))
         self.assertEqual(code, 0, out)
 
 

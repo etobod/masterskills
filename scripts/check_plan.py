@@ -16,8 +16,10 @@ Checks, in order:
     inline code, or `ręcznie` when the performer is the user;
   - every milestone has `**Kryteria:**` or `**Bez testów:** <reason>`, unless it
     sets up the test suite (names `TEST-PLAN.md`) or the user performs it;
-  - in a project without `loc/TEST-PLAN.md` ($CLAUDE_PROJECT_DIR, else the
-    current directory), a plan with criteria sets up the suite in M1;
+  - in a project without a test suite ($CLAUDE_PROJECT_DIR, else the current
+    directory), a plan with criteria sets up the suite in M1; the suite is
+    `loc/TEST-PLAN.md` plus a test command (`test` or `spec`) in `CLAUDE.md`
+    `## Commands`, since a stub file alone proves nothing runs;
   - `**Wykonawca:**`, when present, is `auto`, `agent`, or `użytkownik` with
     `(blokujący)` or `(odkładalny)`;
   - a criterion's test is not a shell check (`grep`, `test -f`, `open`...) and
@@ -56,6 +58,7 @@ PLACEHOLDER = re.compile(
     r"<(co |kto albo|nazwa|plik:linia|komenda|oczekiwany|ryzyko|opcjonalnie|świadomie|puste do)[^>]*>"
 )
 CODE = re.compile(r"`[^`]*`")
+COMMENT = re.compile(r"<!--.*?-->", re.S)
 PROOF = re.compile(r"^\*\*Dowód:\*\*")
 CRITERIA = re.compile(r"^\*\*Kryteria:\*\*\s*$")
 CRITERION = re.compile(r"^- (K\d+)( \(zachowanie\))?: (?P<what>.+?)(?: → (?P<test>.*))?$")
@@ -143,6 +146,20 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
 
 def project_dir() -> Path:
     return Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+
+
+def has_suite(project: Path) -> bool:
+    """A test suite is `loc/TEST-PLAN.md` plus a test command in `CLAUDE.md` `## Commands`:
+    the file alone can be written in a minute and proves nothing runs."""
+    if not (project / "loc" / SUITE).is_file():
+        return False
+    try:
+        text = (project / "CLAUDE.md").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    section = re.search(r"(?ms)^## Commands\s*?$(.*?)(?=^## |\Z)", text)
+    body = COMMENT.sub("", section.group(1)) if section else ""
+    return any(TEST_NAME.search(line) for line in body.splitlines())
 
 
 def check_ready(text: str, issues: list) -> None:
@@ -243,9 +260,11 @@ def check(text: str) -> dict:
     if milestones != proofs:
         issues.append({"line": 0, "problem": f"{milestones} milestones but {proofs} proofs"})
     project = project_dir()
-    if any_criteria and not first_sets_up_suite and not (project / "loc" / SUITE).is_file():
-        issues.append({"line": 0, "problem": "the project has no loc/TEST-PLAN.md: M1 must set up the "
-                       "test suite (framework, test command in CLAUDE.md Commands, smoke test, loc/TEST-PLAN.md)"})
+    if any_criteria and not first_sets_up_suite and not has_suite(project):
+        issues.append({"line": 0, "problem": "the project has no test suite (loc/TEST-PLAN.md and a test "
+                       "command in CLAUDE.md Commands): M1 must set up the test suite (framework, test command "
+                       "in CLAUDE.md Commands, smoke test, loc/TEST-PLAN.md); do not create loc/TEST-PLAN.md "
+                       "while planning, M1 creates it"})
 
     return {"ok": not issues, "milestones": milestones, "proofs": proofs, "issues": issues}
 

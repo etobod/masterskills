@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.21.2 — 2026-10-16
+
+- `check_plan.py`: a project has a test suite only when it has `loc/TEST-PLAN.md` **and** a test command (`test` or `spec`) in `CLAUDE.md` `## Commands`. Before, the file alone was enough, so a model told "M1 must set up the test suite" could write a stub `loc/TEST-PLAN.md` while planning and pass the gate with no tests at all. The message now says not to create the file while planning; `loc-planning` `references/tests.md` says the same.
+
 ## 1.21.1 — 2026-10-16
 
 - `check_plan.py`: a proof with a command and `→` but its expected result written as prose now gets a message that quotes that result and shows the form, `` `<command>` → `<exact output>` ``. Before, one message mixed the format with the user-performer advice, and a model could spend a round guessing which applied.
