@@ -297,6 +297,14 @@ class CheckPlanTest(unittest.TestCase):
                 code, out = self.run_check(plan(SUITE.format(path=path)))
                 self.assertEqual(code, 1)
                 self.assertIn("plugin path in the plan", self.problems(out))
+                self.assertIn("write `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`", self.problems(out))
+
+    def test_missing_plugin_path_fails(self):
+        """A weak model fixed the prefix wrongly; the path must exist in the plugin."""
+        code, out = self.run_check(plan(SUITE.format(path="${CLAUDE_PLUGIN_ROOT}/masterskills/templates/loc/TEST-PLAN.md")))
+        self.assertEqual(code, 1)
+        self.assertIn("${CLAUDE_PLUGIN_ROOT}/masterskills/templates/loc/TEST-PLAN.md does not exist", self.problems(out))
+        self.assertIn("write `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`", self.problems(out))
 
     def test_plugin_root_variable_passes(self):
         code, out = self.run_check(plan(SUITE.format(path="${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md")))

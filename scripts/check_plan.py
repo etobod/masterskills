@@ -100,6 +100,49 @@ def plugin_roots() -> list:
     return [normal(root.rstrip("/")) + "/" for root in roots]
 
 
+PATH_END = re.compile(r"[\s`'\")\]]")
+ROOT_VAR = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([^\s`'\")\]]+)")
+
+
+def exists(rest: str) -> bool:
+    """OpenCode installs skills next to the plugin directory, not inside it."""
+    return (PLUGIN_ROOT / rest).exists() or (rest.startswith("skills/") and (PLUGIN_ROOT.parent / rest).exists())
+
+
+def in_plugin(rest: str) -> str:
+    """The shortest tail of `rest` that exists in the plugin, or `rest` itself."""
+    parts = rest.rstrip(".,;:").split("/")
+    for start in range(len(parts)):
+        tail = "/".join(parts[start:])
+        if tail and exists(tail):
+            return tail
+    return rest.rstrip(".,;:")
+
+
+def plugin_path_problems(line: str, roots: list) -> list:
+    """An expanded plugin path, or a `${CLAUDE_PLUGIN_ROOT}/...` path that does not exist.
+
+    Each message gives the exact path to write: a weak model told only to
+    "write it as ${CLAUDE_PLUGIN_ROOT}/..." replaced the wrong prefix.
+    """
+    problems, low = [], normal(line)
+    for root in roots:
+        at = low.find(root)
+        if at >= 0:
+            rest = PATH_END.split(line[at + len(root):].replace("\\", "/"), 1)[0]
+            problems.append("plugin path in the plan: write `${CLAUDE_PLUGIN_ROOT}/" + in_plugin(rest)
+                            + "`, so the plan works on another machine")
+            return problems
+    for match in ROOT_VAR.finditer(line):
+        rest = match.group(1).rstrip(".,;:")
+        if any(c in rest for c in "<*{") or exists(rest):
+            continue
+        fixed = in_plugin(rest)
+        hint = f": write `${{CLAUDE_PLUGIN_ROOT}}/{fixed}`" if fixed != rest else ""
+        problems.append(f"${{CLAUDE_PLUGIN_ROOT}}/{rest} does not exist in the plugin{hint}")
+    return problems
+
+
 def normal(text: str) -> str:
     text = text.replace("\\", "/")
     return text.lower() if os.name == "nt" else text
@@ -264,9 +307,9 @@ def check(text: str) -> dict:
 
     roots = plugin_roots()
     for number, line in enumerate(text.splitlines(), 1):
-        if section not in HISTORY and any(root in normal(line) for root in roots):
-            issues.append({"line": number, "problem": "plugin path in the plan: write it as "
-                           "${CLAUDE_PLUGIN_ROOT}/..., so the plan works on another machine"})
+        if section not in HISTORY:
+            for problem in plugin_path_problems(line, roots):
+                issues.append({"line": number, "problem": problem})
         if line.startswith("```"):
             in_fence = not in_fence
             continue

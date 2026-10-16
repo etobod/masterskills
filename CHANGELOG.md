@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.1.1 — 2026-10-16
+
+- `check_plan.py`: the message about an expanded plugin path gives the exact path to write (`` write `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md` ``) instead of a general hint, which a model followed by replacing the wrong prefix.
+- `check_plan.py`: a `${CLAUDE_PLUGIN_ROOT}/...` path in a plan must exist in the plugin; when a shorter tail exists, the message suggests it (`${CLAUDE_PLUGIN_ROOT}/masterskills/templates/...` → `${CLAUDE_PLUGIN_ROOT}/templates/...`). Paths with a placeholder (`<name>`, `*`) are not checked.
+
 ## 2.1.0 — 2026-10-16
 
 - `loc-planning`: the judge is now a required, numbered step (3) in `SKILL.md`, before the plan is written. A model that read it in `references/findings.md` could decide that "the plan gate will check" and skip it. `findings.md`, `closing.md` and `tests.md` are merged into `SKILL.md`, since nearly every plan needs them; only `prd.md` stays a reference.
