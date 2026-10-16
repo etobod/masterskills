@@ -48,18 +48,23 @@ def plan(milestones: str) -> str:
 
 
 class CheckPlanTest(unittest.TestCase):
-    def run_check(self, text: str, suite: bool = True) -> tuple:
-        """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md`) or not."""
+    def run_check(self, text: str, suite: bool = True, ready: bool = False, files: tuple = ()) -> tuple:
+        """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md`) or not;
+        `files` are created in the project first, `ready` adds `--ready`."""
         SCRATCH.mkdir(parents=True, exist_ok=True)
         directory = Path(tempfile.mkdtemp(dir=SCRATCH))
         self.addCleanup(shutil.rmtree, directory, True)
         if suite:
             (directory / "loc").mkdir()
             (directory / "loc" / "TEST-PLAN.md").write_text("# TEST-PLAN\n", encoding="utf-8")
+        for rel in files:
+            (directory / rel).parent.mkdir(parents=True, exist_ok=True)
+            (directory / rel).write_text("# 001\n", encoding="utf-8")
         path = directory / "007-plan-powitania.md"
         path.write_text(text, encoding="utf-8")
         env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
-        result = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_plan.py"), str(path)],
+        command = [sys.executable, str(ROOT / "scripts" / "check_plan.py"), str(path)] + (["--ready"] if ready else [])
+        result = subprocess.run(command,
                                 capture_output=True, text=True, encoding="utf-8", cwd=directory, env=env)
         return result.returncode, json.loads(result.stdout)
 
@@ -170,6 +175,61 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(plan(feature.format(n=1)), suite=True)
         self.assertEqual(code, 0, out)
 
+
+    def test_shell_check_is_not_a_test(self):
+        milestone = ("### M1 — kolor krzywej\n"
+                     "**Kryteria:**\n"
+                     "- K1: krzywa jest łososiowa → {test}\n"
+                     "**Dowód:** `node --test` → `pass 1`\n")
+        for test in ('`grep "salmon" fourier.html`', "`test -f parse_svg.html && open parse_svg.html`",
+                     "`open butterfly.html`", "`node --test | grep pass`"):
+            with self.subTest(test=test):
+                code, out = self.run_check(plan(milestone.format(test=test)))
+                self.assertEqual(code, 1)
+                self.assertIn("is a shell check, not a test", self.problems(out))
+        code, out = self.run_check(plan(milestone.format(test="`tests/curve.test.js::kolor łososiowy`")))
+        self.assertEqual(code, 0, out)
+
+    def test_automatic_proof_must_be_checkable(self):
+        milestone = ("### M1 — pusta animacja\n"
+                     "**Bez testów:** tylko szkielet strony\n"
+                     "{performer}"
+                     "**Dowód:** {proof}\n")
+        for proof in ("`open fourier.html` → czarny canvas na pełnym ekranie",
+                      "`start fourier.html` → `czarny canvas`"):
+            with self.subTest(proof=proof):
+                code, out = self.run_check(plan(milestone.format(performer="", proof=proof)))
+                self.assertEqual(code, 1)
+                self.assertIn("M1: ", self.problems(out))
+        code, out = self.run_check(plan(milestone.format(
+            performer="**Wykonawca:** użytkownik (odkładalny)\n",
+            proof="użytkownik otwiera `fourier.html` i widzi czarny canvas → `ok, <data>`")))
+        self.assertEqual(code, 0, out)
+
+    def ready_plan(self, record: str) -> str:
+        return (plan("### M1 — opis\n**Bez testów:** tylko dokumenty\n**Dowód:** `grep x` → `1`\n")
+                .replace("**Status:** otwarte", "**Status:** otwarte\n**Źródło:** loc/inbox/done/001-brainstorm-fourier.md")
+                + "\n## Bramka planu\n" + record + "\n## Rozstrzygnięcie\n")
+
+    def test_ready_needs_a_recorded_gate(self):
+        for record in ("", "<zapis rund bramki: runda, wynik `check_plan.py`>\n"):
+            with self.subTest(record=record):
+                code, out = self.run_check(self.ready_plan(record), ready=True)
+                self.assertEqual(code, 1)
+                self.assertIn("## Bramka planu records no round", self.problems(out))
+        done = self.ready_plan("- runda 1: skan czysty, krytyk bez uwag blokujących\n")
+        code, out = self.run_check(done, ready=True)
+        self.assertEqual(code, 0, out)
+        code, out = self.run_check(self.ready_plan(""))
+        self.assertEqual(code, 0, out)
+
+    def test_ready_needs_the_input_closed(self):
+        text = self.ready_plan("- runda 1: skan czysty\n")
+        code, out = self.run_check(text, ready=True, files=("loc/inbox/001-brainstorm-fourier.md",))
+        self.assertEqual(code, 1)
+        self.assertIn("input loc/inbox/001-brainstorm-fourier.md is still open", self.problems(out))
+        code, out = self.run_check(text, ready=True, files=("loc/inbox/done/001-brainstorm-fourier.md",))
+        self.assertEqual(code, 0, out)
 
     def test_expanded_plugin_path_fails(self):
         for path in (f"{ROOT.as_posix()}/templates/loc/TEST-PLAN.md", str(ROOT / "templates" / "loc" / "TEST-PLAN.md")):

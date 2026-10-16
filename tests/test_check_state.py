@@ -27,7 +27,11 @@ def state(gates: dict) -> dict:
     }
 
 
-PLAN_WITH_CRITERIA = """### M1 — powitanie
+PLAN_WITH_CRITERIA = """**Status:** wykonane 2026-10-16
+
+## Kamienie milowe
+
+### M1 — powitanie
 **Kryteria:**
 - K1: `greet("Ann", "pl")` zwraca `"Cześć, Ann"` → `test_app.py::GreetTest::test_polish`
 **Dowód:** `python -m unittest` → `OK`
@@ -83,7 +87,10 @@ class CheckStateTest(unittest.TestCase):
         self.assertIn("no such milestone", "\n".join(out["problems"]))
 
     def finished(self, phase: str, gates: dict) -> dict:
-        data = state(gates)
+        """A run past its last milestone, whose milestone and final review gates passed."""
+        passed = {"rounds": 1, "passed": True, "stuck": None}
+        data = state({"M1/red": {**passed, "output": "AssertionError"}, "M1/proof": passed,
+                      "M1/code-review": passed, "final-review": passed, **gates})
         data.update(plan="loc/inbox/done/007-plan-powitania.md", phase=phase)
         data["milestones"][0].update(status="done", end="def5678")
         return data
@@ -103,8 +110,49 @@ class CheckStateTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
     def test_journal_without_qa_is_valid_for_a_plan_without_criteria(self):
-        code, out = self.run_check(self.finished("done", {}), "### M1 — opis\n**Dowód:** `grep x` → `1`\n")
+        code, out = self.run_check(self.finished("done", {}), "**Status:** wykonane 2026-10-16\n\n"
+                                   "## Kamienie milowe\n\n### M1 — opis\n**Bez testów:** tylko dokumenty\n"
+                                   "**Dowód:** `grep x` → `1`\n")
         self.assertEqual(code, 0, out)
+
+    def test_done_milestone_needs_a_passed_code_review(self):
+        qa = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
+        for review in (None, {"rounds": 1, "passed": False, "stuck": None}):
+            data = self.finished("done", qa)
+            if review is None:
+                del data["gates"]["M1/code-review"]
+            else:
+                data["gates"]["M1/code-review"] = review
+            code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+            self.assertEqual(code, 1, review)
+            self.assertIn("M1 is done without a passed code review", "\n".join(out["problems"]))
+
+    def test_done_milestone_with_criteria_needs_a_red_gate_or_a_deviation(self):
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
+        del data["gates"]["M1/red"]
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        self.assertIn("gates.M1/red: M1 has **Kryteria:**", "\n".join(out["problems"]))
+        data["deviations"] = [{"milestone": "M1", "rule": 3, "note": "tests already existed and failed"}]
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 0, out)
+
+    def test_journal_needs_the_final_review(self):
+        data = self.finished("journal", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
+        del data["gates"]["final-review"]
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        self.assertIn("gates.final-review", "\n".join(out["problems"]))
+        data["gates"]["final-review"] = {"rounds": 3, "passed": False, "stuck": "loc/inbox/008-utknelo-x.md"}
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA, files=("loc/inbox/008-utknelo-x.md",))
+        self.assertEqual(code, 0, out)
+
+    def test_done_needs_the_plan_closed(self):
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
+        for status, expected in (("otwarte", 1), ("otwarte — QA nie przeszło", 0), ("wykonane 2026-10-16", 0)):
+            plan = PLAN_WITH_CRITERIA.replace("wykonane 2026-10-16", status, 1)
+            code, out = self.run_check(data, plan)
+            self.assertEqual(code, expected, (status, out))
 
     def test_behaviour_criterion_needs_the_test_author(self):
         red = {"rounds": 1, "passed": True, "stuck": None, "output": "AssertionError: 'Hello, Ann' != 'Hi'"}

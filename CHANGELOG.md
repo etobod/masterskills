@@ -2,6 +2,16 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.18.0 — 2026-10-16
+
+Gaps a weaker model showed, now checked by scripts instead of only described in skills:
+
+- `check_plan.py` rejects a criterion whose "test" is a shell check (`grep "salmon" page.html`, `test -f x.html`, `open x.html`, anything with `&&`, `|` or `;`). It also rejects an automatic proof that is not `` `<command>` → `<output>` `` or that only opens a file. A visual result needs the user as performer.
+- `check_plan.py --ready`, run by `loc-orchestrate` at its start, also requires a round recorded in `## Bramka planu` and the plan's input file (brainstorm, review…) closed, so a plan whose `loc-planning` stopped before its gate or before closing the input does not run.
+- `check_state.py`: a `done` milestone needs a passed `M<n>/code-review` gate and, with `**Kryteria:**`, a passed `M<n>/red` gate (or a deviation saying why). `journal` and `done` need a `final-review` gate. `done` needs the plan's status closed.
+- `loc-planning` `references/tests.md`: how to test a project with no obvious framework (pure functions plus the language's built-in runner, visual checks by the user).
+- Upgrading: a plan waiting in `loc/inbox/` with an empty `## Bramka planu` stops `loc-orchestrate`; run `loc-planning` on it. A run resumed from an older state may need its skipped code reviews done before the end.
+
 ## 1.17.0 — 2026-10-16
 
 - A plan can no longer drop tests silently. `check_plan.py` rejects a milestone with neither `**Kryteria:**` nor `**Bez testów:** <reason>`, for example `**Bez testów:** tylko dokumenty`. It also rejects a plan with criteria for a project without `loc/TEST-PLAN.md` unless its M1 sets up the test suite. Exempt: a milestone that sets up the suite, and one the user performs.

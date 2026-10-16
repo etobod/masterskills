@@ -20,6 +20,11 @@ Checks, in order:
     current directory), a plan with criteria sets up the suite in M1;
   - `**Wykonawca:**`, when present, is `auto`, `agent`, or `użytkownik` with
     `(blokujący)` or `(odkładalny)`;
+  - a criterion's test is not a shell check (`grep`, `test -f`, `open`...);
+  - an automatic proof reads `` `<command>` → `<output>` `` and does not just
+    open a file;
+  - with `--ready` (before execution): `## Bramka planu` records a round, and
+    the input file named in `**Źródło:**` is no longer open in `loc/inbox/`;
   - no expanded path of this plugin: a plan names plugin files as
     `${CLAUDE_PLUGIN_ROOT}/...`, so it still works on another machine.
 
@@ -57,6 +62,12 @@ PERFORMER = re.compile(r"^\*\*Wykonawca:\*\*\s*(?P<value>.*?)\s*$")
 PERFORMERS = re.compile(r"^(auto|agent|użytkownik \((blokujący|odkładalny)\))$")
 NO_TESTS = re.compile(r"^\*\*Bez testów:\*\*\s*(?P<reason>.*?)\s*$")
 SUITE = "TEST-PLAN.md"
+# A criterion's "test" that is really a shell check: it proves a word or a file exists, not behaviour.
+SHELL_CHECK = re.compile(r"^`\s*(grep|test|open|start|xdg-open|ls|cat|find|echo|wc|type|dir|curl)\b|&&|\|\||[|;]")
+CHECKABLE_PROOF = re.compile(r"^\*\*Dowód:\*\*\s*`(?P<command>[^`]+)`\s*→\s*`[^`]+`")
+BROWSER = re.compile(r"^\s*(open|start|xdg-open)\b")
+GATE_RECORD = "Bramka planu"
+INPUT = re.compile(r"\b\d{3,}-(brainstorm|przeglad|odlozone|utknelo|pytanie)-[^\s`/\\)]+\.md\b")
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -86,6 +97,17 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
     elif not (tested["criteria"] or tested["no_tests"] or tested["suite"] or user):
         issues.append({"line": 0, "problem": f"{name}: no **Kryteria:** (with tests) and no "
                        "**Bez testów:** <reason>; a milestone that changes code needs criteria"})
+    proof = tested.get("proof")
+    automatic = performer is None or performer[1] == "auto"
+    if proof and automatic:
+        match = CHECKABLE_PROOF.match(proof[1])
+        if not match:
+            issues.append({"line": proof[0], "problem": f"{name}: an automatic proof reads "
+                           "'**Dowód:** `<command>` → `<expected output>`'; a result you only see "
+                           "needs **Wykonawca:** użytkownik (blokujący) or (odkładalny)"})
+        elif BROWSER.match(match.group("command")):
+            issues.append({"line": proof[0], "problem": f"{name}: the proof only opens a file; "
+                           "run a test command, or make the user the performer"})
     if performer is not None and not PERFORMERS.match(performer[1]):
         issues.append({"line": performer[0], "problem": f"{name}: performer must be auto, agent, "
                        "użytkownik (blokujący) or użytkownik (odkładalny)"})
@@ -101,6 +123,31 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
         if not re.fullmatch(r"`[^`]+`", test):
             issues.append({"line": number, "problem": f"{name}: criterion {match.group(1)} has no test "
                            "(→ `<test file and name>`)"})
+        elif SHELL_CHECK.search(test):
+            issues.append({"line": number, "problem": f"{name}: criterion {match.group(1)}: {test} is a shell "
+                           "check, not a test; name a test that checks the behaviour (`test_app.py::test_polish`)"})
+
+
+def project_dir() -> Path:
+    return Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+
+
+def check_ready(text: str, issues: list) -> None:
+    """Planning finished: the gate is recorded and the input file is closed."""
+    section, record = None, []
+    for line in text.splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+        elif section == GATE_RECORD and line.strip() and not re.match(r"^\s*(<.*>|<!--.*-->)\s*$", line):
+            record.append(line)
+    if not record:
+        issues.append({"line": 0, "problem": f"## {GATE_RECORD} records no round: the plan never went "
+                       "through the loc-planning gate; run loc-planning on it"})
+    source = re.search(r"^\*\*Źródło:\*\*(.*)$", text, re.MULTILINE)
+    for match in INPUT.finditer(source.group(1) if source else ""):
+        if (project_dir() / "loc" / "inbox" / match.group(0)).is_file():
+            issues.append({"line": 0, "problem": f"input loc/inbox/{match.group(0)} is still open: loc-planning "
+                           "did not close it (its step 6, references/closing.md); run loc-planning on the plan"})
 
 
 def check(text: str) -> dict:
@@ -161,6 +208,8 @@ def check(text: str) -> dict:
             first_sets_up_suite = first_sets_up_suite or milestone == "M1"
         if PROOF.match(line):
             proofs += 1
+            if milestone:
+                tested["proof"] = (number, line)
 
         prose = CODE.sub("", line)
         for match in PHRASE.finditer(prose):
@@ -180,7 +229,7 @@ def check(text: str) -> dict:
         issues.append({"line": 0, "problem": "no **Dowód:** lines"})
     if milestones != proofs:
         issues.append({"line": 0, "problem": f"{milestones} milestones but {proofs} proofs"})
-    project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+    project = project_dir()
     if any_criteria and not first_sets_up_suite and not (project / "loc" / SUITE).is_file():
         issues.append({"line": 0, "problem": "the project has no loc/TEST-PLAN.md: M1 must set up the "
                        "test suite (framework, test command in CLAUDE.md Commands, smoke test, loc/TEST-PLAN.md)"})
@@ -191,6 +240,8 @@ def check(text: str) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("plan", type=Path, help="plan file, e.g. loc/inbox/007-plan-csv-export.md")
+    parser.add_argument("--ready", action="store_true",
+                        help="before execution: also require a recorded gate and a closed input file")
     args = parser.parse_args()
     try:
         text = args.plan.read_text(encoding="utf-8")
@@ -198,6 +249,9 @@ def main() -> int:
         print(json.dumps({"plan": args.plan.as_posix(), "ok": False, "error": str(error)}))
         return 2
     result = check(text)
+    if args.ready:
+        check_ready(text, result["issues"])
+        result["ok"] = not result["issues"]
     print(json.dumps({"plan": args.plan.as_posix(), **result}, indent=2))
     return 0 if result["ok"] else 1
 

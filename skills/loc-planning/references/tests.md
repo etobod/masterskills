@@ -34,6 +34,8 @@ If the project has no test suite yet (no test command in `CLAUDE.md` `Commands`,
 - one smoke test, proof: the command → `1 passed` (or the framework's equivalent);
 - `loc/TEST-PLAN.md` copied from `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md`, with sections (a) layers and commands and (e) how a test looks here filled in. Write the path exactly so, never expanded: `check_plan.py` rejects the plugin's own path, since the plan must work on another machine. To see the template, read it at that path (the plugin's directory, the same one its scripts run from); do not search the disk for it.
 
+No obvious framework (one HTML page, a script, "zero dependencies"): keep the logic in pure functions and test them with the language's built-in runner (`node --test`, `python -m unittest`); what can only be seen gets `**Wykonawca:** użytkownik (…)`. A criterion's test is never a shell check (`grep`, `test -f`, `open`): those prove a word or a file exists, not behaviour, and `check_plan.py` rejects them.
+
 Later milestones use that command in their proofs. `check_plan.py` rejects a plan with criteria for a project without `loc/TEST-PLAN.md` when its M1 does not name `loc/TEST-PLAN.md`. M1 itself needs no `**Kryteria:**`.
 
 ## `loc/TEST-PLAN.md`

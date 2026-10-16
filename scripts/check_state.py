@@ -33,7 +33,11 @@ failing test output in `output`; when the plan's milestone has a
 `(zachowanie)` criterion it also says whether the `test-author` agent wrote
 those tests (`test_author: true`), and `false` needs a deviation for that
 milestone explaining why. A plan with `**Kryteria:**` reaches `journal`
-or `done` only after a `qa` gate that passed or went stuck. `deferred`, when
+or `done` only after a `qa` gate that passed or went stuck. A `done` milestone
+needs a passed `M<n>/code-review` gate and, when it has `**Kryteria:**`, a passed
+`M<n>/red` gate (or a deviation for it). `journal` and `done` need a `final-review`
+gate that passed or went stuck; `done` needs the plan's `**Status:**` closed
+(`wykonane <date>` or `otwarte — QA nie przeszło`). `deferred`, when
 set (runs started before 1.6), names the plan's `odlozone` file of milestone
 Suggestions, which must exist in `loc/inbox/` or `loc/inbox/done/`.
 
@@ -72,6 +76,9 @@ DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-odlozone-[^/]+\.md$")
 QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
 BEHAVIOUR = re.compile(r"^- K\d+ \(zachowanie\):")
+CRITERIA = re.compile(r"^\*\*Kryteria:\*\*")
+STATUS = re.compile(r"^\*\*Status:\*\*\s*(.*?)\s*$", re.MULTILINE)
+CLOSED = re.compile(r"^(wykonane\b|otwarte — QA nie przeszło)")
 
 
 def is_int(value) -> bool:
@@ -152,17 +159,54 @@ def has_criteria(project: Path, plan) -> bool:
     return re.search(r"^\*\*Kryteria:\*\*", plan_text(project, plan), re.MULTILINE) is not None
 
 
-def behaviour_milestones(project: Path, plan) -> set:
-    """Milestones (M1, M2...) of the plan with a `(zachowanie)` criterion."""
+def milestones_with(project: Path, plan, pattern) -> set:
+    """Milestones (M1, M2...) of the plan with a line matching `pattern`."""
     found, section, number = set(), None, 0
     for line in plan_text(project, plan).splitlines():
         if line.startswith("## "):
             section = line[3:].strip()
         elif section == "Kamienie milowe" and line.startswith("### "):
             number += 1
-        elif number and section == "Kamienie milowe" and BEHAVIOUR.match(line):
+        elif number and section == "Kamienie milowe" and pattern.match(line):
             found.add(f"M{number}")
     return found
+
+
+def behaviour_milestones(project: Path, plan) -> set:
+    """Milestones (M1, M2...) of the plan with a `(zachowanie)` criterion."""
+    return milestones_with(project, plan, BEHAVIOUR)
+
+
+def finished_gate(gate) -> bool:
+    return isinstance(gate, dict) and (gate.get("passed") is True or bool(gate.get("stuck")))
+
+
+def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
+    """A done milestone went through its review (and its red gate when it has criteria);
+    a finished run went through the final review and closed the plan."""
+    gates = data.get("gates") if isinstance(data.get("gates"), dict) else {}
+    plan = data.get("plan")
+    tested = milestones_with(project, plan, CRITERIA)
+    deviated = {item.get("milestone") for item in data.get("deviations") or [] if isinstance(item, dict)}
+    for item in data.get("milestones") or []:
+        if not isinstance(item, dict) or item.get("status") != "done":
+            continue
+        name = item.get("id")
+        review = gates.get(f"{name}/code-review")
+        if not (isinstance(review, dict) and review.get("passed") is True):
+            problems.append(f"gates.{name}/code-review: {name} is done without a passed code review")
+        red = gates.get(f"{name}/red")
+        if name in tested and name not in deviated and not (isinstance(red, dict) and red.get("passed") is True):
+            problems.append(f"gates.{name}/red: {name} has **Kryteria:** but no passed red gate "
+                            "(tests first); a deviation for it must say why")
+    if data.get("phase") not in ("journal", "done"):
+        return
+    if not finished_gate(gates.get("final-review")):
+        problems.append("gates.final-review: journal and done need a final review that passed or went stuck")
+    status = STATUS.search(plan_text(project, plan))
+    if data.get("phase") == "done" and not (status and CLOSED.match(status.group(1))):
+        problems.append("plan: phase done but the plan's **Status:** is not 'wykonane <date>' "
+                        "or 'otwarte — QA nie przeszło' (close the plan, step 4 of the end)")
 
 
 def check_test_author(data: dict, project: Path, problems: list) -> None:
@@ -287,6 +331,7 @@ def check(path: Path, data) -> list:
     project = path.resolve().parent.parent.parent
     check_gates(data, ids, project, problems)
     check_qa(data, project, problems)
+    check_skipped_gates(data, project, problems)
     check_test_author(data, project, problems)
     check_deferred(data, project, problems)
     check_notes(data, project, problems)

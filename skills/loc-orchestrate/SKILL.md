@@ -17,7 +17,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 1. `$ARGUMENTS` is a plan number or file in `loc/inbox/`. No argument: if `loc/state/` holds a file whose `phase` is not `done`, resume it; otherwise, if `loc/inbox/` has exactly one plan, use it; else ask which.
 2. If `loc/state/<NNN>.json` exists, **resume** from its `next_action` (`references/state.md`).
 3. Read the plan, the project's `CLAUDE.md` (`Commands`, `Invariants`, `Limits`) and `loc/PATTERNS.md`.
-4. Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>`. If it does not exit `0`, the plan's status says the gate did not pass, or `loc/inbox/` has an open `pytanie` titled `PRD:`, **stop**: say why and point to `/masterskills:loc-planning`.
+4. Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py --ready <plan>`. If it exits non-zero, the plan's status says the gate failed, or `loc/inbox/` has an open `PRD:` `pytanie`, **stop**: say why, point to `/masterskills:loc-planning`.
 5. Choose the mode: **inline** for one or two small milestones; **subagent** otherwise. Create the state file (`references/state.md`) and validate it.
 6. Copy the tests: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/test_baseline.py --plan <NNN>`.
 
