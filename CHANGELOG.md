@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.21.0 — 2026-10-16
+
+- `loc/PATTERNS.md` gets entries at concrete moments. Rule 10: when a command or setup fails and another way works (another path, shell, tool or flag), record both before the next step, `✅` and `❌`. `loc-orchestrate` checks this before the journal entry, `loc-review` before its report. Before, the only trigger was "when you find a way that works", and projects ended up with nearly empty patterns.
+- Word budgets: rules 470, `loc-orchestrate` `SKILL.md` 970.
+
 ## 1.20.1 — 2026-10-16
 
 - OpenCode: script commands no longer need `sh`. On Windows OpenCode runs commands in PowerShell, so every `sh ".../py.sh" scripts/<name>.py` in a skill failed on the first try. The build now writes `<python> -B "<absolute path>/scripts/<name>.py"`, with the Python found at install time; the absolute path also stops a model from looking for the script under the skill's directory. The inbox and CI commands from the hooks follow the same form. Claude Code is unchanged.

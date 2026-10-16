@@ -4,7 +4,7 @@
 Counts whitespace-separated words in every always-loaded or on-demand text
 file of the plugin and compares them with their limit:
 
-    rules/*.md                    420 words in total (one always-loaded block)
+    rules/*.md                    470 words in total (one always-loaded block)
     skills/*/SKILL.md             800 words per skill core
     skills/*/references/*.md      800 words per reference
     agents/*.md                   500 words per agent definition
@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 LIMITS = {
-    "rule": 420,
+    "rule": 470,
     "skill": 800,
     "reference": 800,
     "agent": 500,
@@ -29,7 +29,7 @@ LIMITS = {
 
 # Per-file limits approved by the user; everything else uses LIMITS.
 OVERRIDES = {
-    "skills/loc-orchestrate/SKILL.md": 920,
+    "skills/loc-orchestrate/SKILL.md": 970,
     "skills/loc-planning/SKILL.md": 900,
     "agents/rubber-duck.md": 550,
     "agents/judge.md": 550,

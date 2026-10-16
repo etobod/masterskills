@@ -57,4 +57,6 @@ Do not fix anything: the user decides, and `loc-planning` can turn the review in
 
 ## 6. Report
 
+First, a command that failed during the review and worked another way goes to `loc/PATTERNS.md` (rule 10), if it is not there yet.
+
 In the user's language, briefly: scope and level; findings by severity (or "brak uwag"); in orchestrated mode the rounds and what was fixed; the `przeglad` or `utknelo` file, if one was created.
