@@ -48,7 +48,8 @@ HISTORY = {"Plan gate", "Review notes", "PRD fragment", "Resolution"}
 FORBIDDEN = [
     "do ustalenia", "do decyzji", "do rozstrzygnięcia", "do sprawdzenia", "sprawdzić, czy",
     "zobaczymy", "jeśli się okaże", "ewentualnie", "być może", "prawdopodobnie",
-    "TODO", "TBD", "to be decided", "to be determined", "???",
+    "TODO", "TBD", "to be decided", "to be determined", "to be confirmed", "to be checked", "we will see",
+    "if it turns out", "maybe", "perhaps", "probably", "???",
 ]
 PHRASE = re.compile(
     "|".join(r"(?<!\w)" + re.escape(p) + (r"(?!\w)" if p[-1].isalnum() else "") for p in FORBIDDEN),

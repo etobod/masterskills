@@ -19,7 +19,7 @@
 - E2. `CLAUDE.md` still contains `Always answer in short sentences.` unchanged, and now also has the headings `Commands`, `Invariants`, `Manual verification / UAT`, `Developer notes`, `Limits`.
 - E3. `CLAUDE.md` has no project-goal section (the goal belongs in `loc/PRD.md`).
 - E4. `.gitignore` still contains `*.log` and now also ignores `loc/`, in one line.
-- E5. `loc/PRD.md`, `loc/PATTERNS.md` and `loc/MEMORY.md` are templates in Polish; `PATTERNS.md` has the three sections: works, does not work, pitfalls.
+- E5. `loc/PRD.md`, `loc/PATTERNS.md` and `loc/MEMORY.md` are templates in English; `PATTERNS.md` has the three sections: works, does not work, pitfalls.
 - E6. No file outside the test project was created or changed.
 - E7. After step 2 every file hash matches the snapshot: the second run added nothing and overwrote nothing, and its reply says the project is already complete.
 - E8. `.claude/settings.json` exists with `"autoMemoryEnabled": false` and an `attribution` object whose `commit` and `pr` are empty strings.

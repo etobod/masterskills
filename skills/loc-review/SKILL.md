@@ -33,24 +33,24 @@ Start both in the same step:
 - **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `loc/PATTERNS.md`."
 - **`Skill(skill: "code-review", args: "<changed files> <level>")`**: always the explicit files and level, because `code-review` otherwise reuses the level typed last.
 
-Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` that the changed files touch, and every `❌` entry of `loc/PATTERNS.md` whose **Kiedy stosować** matches them.
+Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` that the changed files touch, and every `❌` entry of `loc/PATTERNS.md` whose **When to use** matches them.
 
 ## 3. Merge
 
-One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`nierealna`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[invariant]`). Check each against the code before accepting it; a finding the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
+One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`unrealistic`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[invariant]`). Check each against the code before accepting it; a finding the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
 
 ## 4. Orchestrated mode: fix, at most 3 rounds
 
-Each round, in the state file's `final-review` gate: increase `rounds`, review (steps 1–3), give the Blocking and Non-blocking findings to the `judge` agent (`gates.md`, "The judge"), fix those it marks `fix`, rerun the `Dowód` of every milestone the fixes touched. Suggestions, Unrealistic findings and the judge's `enough` verdicts are not fixed and create no inbox file: one line each in the plan's `## Uwagi z przeglądów`, gate `final-review` (format in `gates.md`). A finding already there as `dość` goes to the judge marked as already judged and never gets a second line. The gate passes when the judge leaves nothing to fix; set `passed: true`.
+Each round, in the state file's `final-review` gate: increase `rounds`, review (steps 1–3), give the Blocking and Non-blocking findings to the `judge` agent (`gates.md`, "The judge"), fix those it marks `fix`, rerun the `Proof` of every milestone the fixes touched. Suggestions, Unrealistic findings and the judge's `enough` verdicts are not fixed and create no inbox file: one line each in the plan's `## Review notes`, gate `final-review` (format in `gates.md`). A finding already there as `enough` goes to the judge marked as already judged and never gets a second line. The gate passes when the judge leaves nothing to fix; set `passed: true`.
 
-After a third round that still leaves something to fix: do not start a fourth and change no more code. Add a `## final-review` section to the plan run's `utknelo` file (the path in any `stuck` of the state file), creating it if none exists (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`): each round's findings, what was changed, what remains with `file:line`, whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, which closes the plan anyway.
+After a third round that still leaves something to fix: do not start a fourth and change no more code. Add a `## final-review` section to the plan run's `stuck` file (the path in any `stuck` of the state file), creating it if none exists (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`): each round's findings, what was changed, what remains with `file:line`, whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, which closes the plan anyway.
 
 ## 5. Standalone mode: report to inbox
 
-With findings: create the file and fill `## Zakres` (range, files, requirements) and `## Uwagi`, one line per finding in the merged format, the category first; an Unrealistic one with `Kto to wytwarza:` and the answer:
+With findings: create the file and fill `## Scope` (range, files, requirements) and `## Findings`, one line per finding in the merged format, the category first; an Unrealistic one with `Who produces it:` and the answer:
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type przeglad --slug "<scope>" --title "<what was reviewed>" --source "<range or plan>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type review --slug "<scope>" --title "<what was reviewed>" --source "<range or plan>"
 ```
 
 Do not fix anything: the user decides, and `loc-planning` can turn the review into a plan. With no findings, or only Unrealistic ones, create no file: nothing waits for the user; list them in the report.
@@ -59,4 +59,4 @@ Do not fix anything: the user decides, and `loc-planning` can turn the review in
 
 First, a command that failed during the review and worked another way goes to `loc/PATTERNS.md` (rule 10), if it is not there yet.
 
-In the user's language, briefly: scope and level; findings by severity (or "brak uwag"); in orchestrated mode the rounds and what was fixed; the `przeglad` or `utknelo` file, if one was created.
+In the user's language, briefly: scope and level; findings by severity (or "no findings"); in orchestrated mode the rounds and what was fixed; the `review` or `stuck` file, if one was created.

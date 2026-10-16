@@ -1,6 +1,6 @@
 # Tests while executing a plan
 
-For a milestone with `**Kryteria:**`. Each criterion names its test; the goal is a test that really checks something, not one fitted to the code.
+For a milestone with `**Criteria:**`. Each criterion names its test; the goal is a test that really checks something, not one fitted to the code.
 
 ## At the start of the plan
 
@@ -17,11 +17,11 @@ No `loc/TEST-PLAN.md` yet: nothing to copy, carry on (the first plan with code c
 Per milestone, in this order:
 
 1. **Write the tests** the criteria name, in the files they name, following `loc/TEST-PLAN.md` section (e).
-   - A criterion marked `(zachowanie)`: the `test-author` agent writes its test **before** any code, from the criteria, TEST-PLAN (e) and the test file path only. Do not give it the implementation or your idea of it.
+   - A criterion marked `(behaviour)`: the `test-author` agent writes its test **before** any code, from the criteria, TEST-PLAN (e) and the test file path only. Do not give it the implementation or your idea of it.
    - Other criteria: write the tests yourself.
    - *subagent* mode: start `test-author` yourself before the milestone's sub-agent (a sub-agent cannot start agents), and give that sub-agent this file's path.
 2. **Stub.** Add the smallest code that lets the tests run and returns a wrong result (e.g. `return ""`), so an import or a missing name cannot be the failure.
-3. **Red gate** (`M<n>/red`). Increase `rounds`, run the new tests. Every new test must fail **on its assertion** (`AssertionError`, `expected … got …`). An import, syntax or name error does not count: fix it and start the next round. A new test that passes on the stub checks nothing: fix the test. Passed: set `passed: true`, put the failing lines (assertion and test names, a few lines) in the gate's `output`, and with a `(zachowanie)` criterion set `test_author` (`references/state.md`). After the third failed round: **stuck**, as for other gates.
+3. **Red gate** (`M<n>/red`). Increase `rounds`, run the new tests. Every new test must fail **on its assertion** (`AssertionError`, `expected … got …`). An import, syntax or name error does not count: fix it and start the next round. A new test that passes on the stub checks nothing: fix the test. Passed: set `passed: true`, put the failing lines (assertion and test names, a few lines) in the gate's `output`, and with a `(behaviour)` criterion set `test_author` (`references/state.md`). After the third failed round: **stuck**, as for other gates.
 4. **Real code**, then the proof gate.
 
 ## Test written after the code
@@ -47,7 +47,7 @@ Removing an assertion, loosening a condition, skipping a test or deleting one is
 
 ## Known defect
 
-A test for a defect that stays open uses the strict marker from TEST-PLAN (e) (e.g. `xfail(strict=True)`) with the path of an `odlozone` file in its reason; create that file with `next_number.py --type odlozone`. When the test starts passing, the suite goes red: remove the marker, close the `odlozone`.
+A test for a defect that stays open uses the strict marker from TEST-PLAN (e) (e.g. `xfail(strict=True)`) with the path of a `deferred` file in its reason; create that file with `next_number.py --type deferred`. When the test starts passing, the suite goes red: remove the marker, close the `deferred`.
 
 ## Fixtures
 

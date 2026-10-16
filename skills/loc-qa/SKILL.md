@@ -47,7 +47,7 @@ With a plan and a copy:
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/test_baseline.py --plan <NNN> --compare
 ```
 
-For each `changed` or `removed` file, compare it with `loc/state/<NNN>/baseline/files/<path>`. A removed or loosened assertion, a new skip or expected-failure marker, or a deleted test is **FAIL** unless a deviation in the state file or the plan's `## Rozstrzygnięcie` gives the reason. Added tests are fine. No copy: **INFO** "no baseline".
+For each `changed` or `removed` file, compare it with `loc/state/<NNN>/baseline/files/<path>`. A removed or loosened assertion, a new skip or expected-failure marker, or a deleted test is **FAIL** unless a deviation in the state file or the plan's `## Resolution` gives the reason. Added tests are fine. No copy: **INFO** "no baseline".
 
 ## 4. Criteria have tests
 
@@ -55,12 +55,12 @@ For every criterion ``- K<n>: … → `<test>` `` in the plan:
 
 1. The named test exists and passed in step 2 → **PASS**.
 2. It is missing → write it, following TEST-PLAN (e), and run it. At most 3 rounds for all missing tests together. It passes → **PASS** ("written by loc-qa"). It fails on its assertion → **FAIL**: the code does not meet the criterion; do not touch the code. Still broken after round 3 → **FAIL**.
-3. `→ ręcznie` → **INFO** with the performer.
+3. `→ manual` → **INFO** with the performer.
 
-A milestone that changed code without `**Kryteria:**` → **INFO**. A gap in TEST-PLAN itself (section (b) says what to extend and nothing was) → an `odlozone` file, never an edit:
+A milestone that changed code without `**Criteria:**` → **INFO**. A gap in TEST-PLAN itself (section (b) says what to extend and nothing was) → a `deferred` file, never an edit:
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type odlozone --slug "<few words>" --title "<title>" --source "loc-qa <NNN>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<few words>" --title "<title>" --source "loc-qa <NNN>"
 ```
 
 ## 5. Project `qa-*` skills
@@ -75,23 +75,23 @@ Find `.claude/skills/qa-*/SKILL.md` in the project and read each header:
 
 **APPROVED** only when there is no FAIL and no SKIPPED gate layer. SKIPPED is allowed only in optional layers (report, model behaviour, CI only).
 
-Write the QA file in Polish (the language of `loc/`):
+Write the QA file in English:
 
 ```
 # QA — plan <NNN>
 
-**Werdykt:** APPROVED | NOT APPROVED
+**Verdict:** APPROVED | NOT APPROVED
 **Data:** <date "+%Y-%m-%d %H:%M">
-**Zakres:** <from>..<to>, <n> zmienionych plików
+**Scope:** <from>..<to>, <n> changed files
 
-| Sprawdzenie | Status | Dowód lub powód |
+| Check | Status | Proof or reason |
 |---|---|---|
 | warstwa jednostkowe: `python -m pytest -q` | PASS | `42 passed` |
 | K2 → `tests/test_export.py::test_empty` | FAIL | `AssertionError: …` |
-| qa-docs | INFO | dostępny, nie uruchomiony |
+| qa-docs | INFO | available, not run |
 ```
 
-Then the rows for tests written by `loc-qa` (file and name) and new `odlozone` files.
+Then the rows for tests written by `loc-qa` (file and name) and new `deferred` files.
 
 ## 7. Report
 

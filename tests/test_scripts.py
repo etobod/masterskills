@@ -110,6 +110,17 @@ class NextNumberTest(unittest.TestCase):
         self.assertEqual(result["path"], "loc/inbox/005-deferred-later.md")
         self.assertTrue((project / result["path"]).is_file())
 
+    def test_question_has_english_headings_and_old_types_are_rejected(self):
+        project = scratch_dir(self)
+        out = run("next_number.py", "--project", ".", "--type", "question", "--slug", "colour", "--title", "Colour",
+                  "--source", "test", cwd=project)
+        text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
+        for heading in ("**Type:** question", "## Question", "## Options", "## Interim", "## Resolution"):
+            self.assertIn(heading, text)
+        old = run("next_number.py", "--project", ".", "--type", "pytanie", "--slug", "x", "--title", "X",
+                  "--source", "test", cwd=project)
+        self.assertNotEqual(old.returncode, 0)
+
 
 class ReviewDiffTest(unittest.TestCase):
     def test_review_without_commits(self):

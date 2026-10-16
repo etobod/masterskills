@@ -111,6 +111,12 @@ class CheckPlanTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unfilled placeholder", self.problems(out))
 
+    def test_vague_english_phrase_fails(self):
+        for phrase in ("to be confirmed", "we will see", "if it turns out", "maybe", "perhaps", "probably"):
+            code, out = self.run_check(plan(f"### M1 — opis\n**No tests:** {phrase} later\n**Proof:** `grep x` → `1`\n"))
+            self.assertEqual(code, 1, phrase)
+            self.assertIn(phrase, self.problems(out).lower())
+
     def test_moved_prd_fragment_is_history(self):
         text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n").replace(
             "## Risks and decisions", "## PRD fragment\nPrzeniesione z loc/PRD.md 2026-10-15.\n"
