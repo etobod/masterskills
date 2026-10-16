@@ -8,6 +8,14 @@ argument-hint: "[project directory] [brainstorm number or file]"
 
 Sets up the project structure. A script does all the work; you run it and report. Given a brainstorm, you then fill the empty sections that describe the project from it.
 
+## Migrate first
+
+```sh
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/migrate.py --project "<dir>"
+```
+
+It brings an existing `loc/` to the current format and prints JSON. When `from` equals `to` (or is null), nothing changed: go on. Otherwise it already renamed the files and translated every heading, field and marker; you translate the prose of each file in `translate` into English. Keep headings, fields, file names, `file:line`, code and quotes of the user's words as they are; change nothing but the language. Leave `question` files and `loc/inbox/done/` as they are. In `MEMORY.md` translate only the text above the index. Report the migration (`from` → `to`, renamed files, translated files) before the rest.
+
 ## Run
 
 ```sh
@@ -22,7 +30,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 - a number `NNN` → `loc/inbox/NNN-brainstorm-*.md` (or in `loc/inbox/done/`);
 - a path to a `.md` file → that file.
 
-Run the script exactly once (a brainstorm adds its read-only `--check`). Do not create, edit or move any file yourself: the script decides what is missing and never overwrites anything. The only exception is filling sections from a brainstorm (below).
+Run each script exactly once (a brainstorm adds the read-only `--check`). Do not create, rename or move any file yourself: the scripts decide what is missing and never overwrite anything. The only exceptions are translating after a migration (above) and filling sections from a brainstorm (below).
 
 ## From a brainstorm
 

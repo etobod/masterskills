@@ -13,7 +13,8 @@ POLISH = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
 SHIPPED = ["templates", "scripts", "hooks", "skills", "agents", "rules", "scenarios"]
 SUFFIXES = {".md", ".py", ".json", ".ts", ".sh"}
 # file -> the only lines that may hold Polish
-ALLOWED = {"scripts/check_plan.py": re.compile(r"^\s+\"(do |sprawdzić|zobaczymy|jeśli|ewentualnie|być|prawdopodobnie)")}
+ALLOWED = {"scripts/migrate.py": re.compile(""),
+           "scripts/check_plan.py": re.compile(r"^\s+\"(do |sprawdzić|zobaczymy|jeśli|ewentualnie|być|prawdopodobnie)")}
 
 
 class LanguageTest(unittest.TestCase):

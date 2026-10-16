@@ -32,6 +32,8 @@ import re
 import sys
 from pathlib import Path
 
+from migrate import FORMAT
+
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates"
 
@@ -201,6 +203,7 @@ def init(project: Path) -> dict:
     report = {"ok": True, "project": project.as_posix(), "created": [], "updated": [], "existing": [],
               "skipped": []}
 
+    fresh = not (project / "loc").exists()
     for rel in DIRS:
         path = project / rel
         if path.is_dir():
@@ -217,6 +220,10 @@ def init(project: Path) -> dict:
             text = (TEMPLATES / "loc" / path.name).read_text(encoding="utf-8")
             write(path, text.replace("{PROJECT}", project.name))
             report["created"].append(rel)
+
+    if fresh:
+        write(project / "loc" / "VERSION", f"{FORMAT}\n")
+        report["created"].append("loc/VERSION")
 
     ensure_claude_md(project, report)
     ensure_gitignore(project, report)

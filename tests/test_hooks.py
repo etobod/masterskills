@@ -241,6 +241,13 @@ class SessionStartTest(unittest.TestCase):
         self.assertIn('`sh "C:/oc/masterskills/scripts/py.sh" scripts/next_number.py --type',
                       out["hookSpecificOutput"]["additionalContext"])
 
+    def test_session_start_asks_for_migration(self):
+        project = scratch_dir(self)
+        (project / "loc" / "inbox").mkdir(parents=True)
+        self.assertIn("/masterskills:loc-init to migrate loc/ to format 2", self.context(project))
+        (project / "loc" / "VERSION").write_text("2\n", encoding="utf-8")
+        self.assertNotIn("migrate", self.context(project))
+
     def test_project_without_loc(self):
         self.assertIn("no `loc/inbox/` yet", self.context(scratch_dir(self)))
 

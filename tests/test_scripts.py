@@ -42,6 +42,15 @@ class InitProjectTest(unittest.TestCase):
         self.assertIn(".gitignore", first["created"])
         self.assertEqual(second["created"] + second["updated"], [])
 
+    def test_new_loc_gets_the_current_format_and_an_old_one_does_not(self):
+        run("init_project.py", "--project", ".", cwd=self.project)
+        self.assertEqual((self.project / "loc" / "VERSION").read_text(encoding="utf-8").strip(), "2")
+        old = scratch_dir(self)
+        subprocess.run(["git", "init", "-q"], cwd=old, check=True)
+        (old / "loc" / "inbox").mkdir(parents=True)
+        run("init_project.py", "--project", ".", cwd=old)
+        self.assertFalse((old / "loc" / "VERSION").exists())
+
     def test_test_plan_comes_only_from_a_plan(self):
         run("init_project.py", "--project", ".", cwd=self.project)
         self.assertFalse((self.project / "loc" / "TEST-PLAN.md").exists())
