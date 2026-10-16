@@ -17,19 +17,19 @@ JOURNAL = """# Dziennik
 <!-- index:start -->
 <!-- index:end -->
 
-<!-- Wzór wpisu:
+<!-- Entry format:
 ## 2026-01-15 14:30 — [Plan] Eksport do CSV
-Do 3 zdań. Szczegóły: loc/inbox/done/007-plan-eksport-csv.md
+Up to 3 sentences. Details: loc/inbox/done/007-plan-csv-export.md
 -->
 
 ## 2026-09-30 10:00 — [Plan] Najnowszy
-Tekst. Szczegóły: loc/inbox/done/003-plan-c.md
+Tekst. Details: loc/inbox/done/003-plan-c.md
 
 ## 2026-09-29 10:00 — [Plan] Checker komentarzy
-Checker odrzuca każde <!-- poza znacznikami. Szczegóły: loc/inbox/done/002-plan-b.md
+Checker odrzuca każde <!-- poza znacznikami. Details: loc/inbox/done/002-plan-b.md
 
 ## 2026-09-28 10:00 — [Poprawka] Najstarszy
-Tekst. Szczegóły: loc/inbox/done/001-plan-a.md
+Tekst. Details: loc/inbox/done/001-plan-a.md
 """
 
 
@@ -66,11 +66,11 @@ class MemoryIndexTest(unittest.TestCase):
         self.run_index()
         self.assertFalse(self.run_index()["changed"])
 
-    def test_added_entry_of_type_planowanie(self):
-        out = self.run_index("--type", "Planowanie", "--title", "Plan eksportu",
-                             "--text", "Zaplanowano eksport. Szczegóły: loc/inbox/004-plan-d.md")
+    def test_added_entry_of_type_planning(self):
+        out = self.run_index("--type", "Planning", "--title", "Plan eksportu",
+                             "--text", "Zaplanowano eksport. Details: loc/inbox/004-plan-d.md")
         self.assertEqual(out["entries"], 4)
-        self.assertIn("[Planowanie] Plan eksportu", out["added"])
+        self.assertIn("[Planning] Plan eksportu", out["added"])
 
 
 if __name__ == "__main__":

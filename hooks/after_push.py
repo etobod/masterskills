@@ -4,7 +4,7 @@
 When the `Bash` command was a plain `git push ...` and the project has GitHub
 Actions workflows (`.github/workflows/*.yml` or `*.yaml`), adds one instruction
 to the context: run `gh run list` for the current branch once, record a failed
-run as a `utknelo` inbox file, and do not wait for a run in progress.
+run as a `stuck` inbox file, and do not wait for a run in progress.
 
 PostToolUse runs only after a tool call that succeeded, so a rejected push
 adds nothing. Without workflows, on a detached HEAD or for any other command
@@ -61,7 +61,7 @@ def context(name: str) -> str:
         f"gh run list --branch {name} --limit 1 --json status,conclusion,url\n\n"
         "- `conclusion: failure` → create an inbox file, add the run's `url` to it and tell the user "
         "in one sentence:\n"
-        f'  `{script_command(root, "scripts/next_number.py")} --type utknelo --slug "ci {name}" '
+        f'  `{script_command(root, "scripts/next_number.py")} --type stuck --slug "ci {name}" '
         f'--title "CI failed on {name}" --source "git push"`\n'
         "- `status: in_progress` or `queued` → one sentence to the user; do not wait or poll.\n"
         "- `success` → one sentence.\n"

@@ -1,47 +1,47 @@
-# Plan testów
+# Test plan
 
-Umowa o testach projektu, około jednej strony. Zmienia się tylko przez kamień
-planu (`loc-planning`), nigdy przy okazji. `loc-qa` zgłasza luki, ale go nie
-edytuje. Bez historii rund i bez pokrycia wymagań.
+The project's test contract, about one page. It changes only through a plan
+milestone (`loc-planning`), never on the side. `loc-qa` reports gaps but does not
+edit it. No history of rounds and no requirement coverage.
 
-## (a) Warstwy i komendy
+## (a) Layers and commands
 
-<!-- Jedna linia na warstwę: nazwa, komenda, bramka albo raport, szybka czy pełna.
-Warstwa „bramka” musi przejść, żeby plan był zatwierdzony; „raport” tylko informuje.
-Warstwy wyłącznie w CI oznacz „tylko CI” — nie wchodzą do werdyktu.
-Przykład:
-| Warstwa | Komenda | Rodzaj | Kiedy |
+<!-- One line per layer: name, command, gate or report, fast or full.
+A "gate" layer must pass for the plan to be approved; a "report" only informs.
+Mark layers that run only in CI as "CI only": they are not part of the verdict.
+Example:
+| Layer | Command | Kind | When |
 |---|---|---|---|
-| jednostkowe | `python -m pytest tests/unit -q` | bramka | szybkie, po każdym kamieniu |
-| integracyjne | `python -m pytest tests/integration -q` | bramka | pełne, w `loc-qa` |
-| zachowanie modelu | `python evals/run.py` | raport | na żądanie |
+| unit | `python -m pytest tests/unit -q` | gate | fast, after every milestone |
+| integration | `python -m pytest tests/integration -q` | gate | full, in `loc-qa` |
+| model behaviour | `python evals/run.py` | report | on demand |
 -->
 
-## (b) Co się zmieniło → co rozszerzyć
+## (b) What changed → what to extend
 
-<!-- Tylko testy. Dokumenty należą do `## Project-specific workflow` w `CLAUDE.md`.
-Przykład:
-| Zmiana w produkcie | Co rozszerzyć |
+<!-- Tests only. Documents belong in `## Project-specific workflow` in `CLAUDE.md`.
+Example:
+| Change in the product | What to extend |
 |---|---|
-| nowy endpoint API | test kontraktu w `tests/api/` + wpis w `qa-api` |
-| nowa opcja konfiguracji | test domyślnej i niepoprawnej wartości |
+| new API endpoint | contract test in `tests/api/` + an entry in `qa-api` |
+| new configuration option | test of the default and of an invalid value |
 -->
 
-## (c) Stałe macierze
+## (c) Fixed matrices
 
-<!-- Kombinacje, które każda zmiana w danym obszarze musi przejść, np. systemy × wersje. -->
+<!-- Combinations every change in an area must pass, e.g. systems × versions. -->
 
-## (d) Granice
+## (d) Limits
 
-<!-- Czego świadomie nie sprawdzimy automatycznie i dlaczego. -->
+<!-- What we deliberately do not check automatically, and why. -->
 
-## (e) Jak tu wygląda test
+## (e) What a test looks like here
 
-<!-- 3–7 linii konwencji:
-- framework i styl asercji;
-- gdzie kłaść testy (katalog, nazwy plików);
-- fikstury: w gicie tylko pisane ręcznie; dane nagrane tylko w katalogu ignorowanym;
-- testy z losowymi danymi (np. hypothesis): stałe ziarno albo tryb deterministyczny, żeby bramka nie padała losowo;
-- znacznik znanego defektu (np. `@pytest.mark.xfail(strict=True, reason="loc/inbox/NNN-…")`);
-- katalog danych nagranych.
+<!-- 3–7 lines of conventions:
+- framework and assertion style;
+- where tests go (directory, file names);
+- fixtures: only hand-written ones in git; recorded data only in an ignored directory;
+- tests with random data (e.g. hypothesis): a fixed seed or a deterministic mode, so the gate does not fail at random;
+- marker of a known defect (e.g. `@pytest.mark.xfail(strict=True, reason="loc/inbox/NNN-…")`);
+- directory of recorded data.
 -->

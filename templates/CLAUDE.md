@@ -13,5 +13,8 @@
 ## Limits
 <!-- What is not allowed: e.g. no cloud services, sensitive data. -->
 
+## User language
+<!-- The language the user reads best, e.g. Polish. Question files are written in it; everything else in `loc/` is English. Empty: English. -->
+
 ## Project-specific workflow
 <!-- Deviations from the plugin's workflow, e.g. which documents a plan must update after a change. -->

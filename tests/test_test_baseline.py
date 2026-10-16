@@ -12,12 +12,12 @@ ROOT = Path(__file__).resolve().parent.parent
 # Scratch projects stay inside the repository (CLAUDE.md rule 1), in an ignored directory.
 SCRATCH = ROOT / "tmp" / "scratch" / "tests"
 
-TEST_PLAN = """# Plan testów
+TEST_PLAN = """# Test plan
 
 ## (a) Warstwy i komendy
 | jednostkowe | `python -m unittest` | bramka | szybkie |
 
-## (e) Jak tu wygląda test
+## (e) What a test looks like here
 <!-- przykład: `ignored_dir/` -->
 - `unittest`, testy w `tests/` oraz `test_*.py` w katalogu głównym.
 """

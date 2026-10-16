@@ -27,23 +27,23 @@ def state(gates: dict) -> dict:
     }
 
 
-PLAN_WITH_CRITERIA = """**Status:** wykonane 2026-10-16
+PLAN_WITH_CRITERIA = """**Status:** done 2026-10-16
 
-## Kamienie milowe
+## Milestones
 
 ### M1 — powitanie
-**Kryteria:**
+**Criteria:**
 - K1: `greet("Ann", "pl")` zwraca `"Cześć, Ann"` → `test_app.py::GreetTest::test_polish`
-**Dowód:** `python -m unittest` → `OK`
+**Proof:** `python -m unittest` → `OK`
 """
 
-PLAN_WITH_BEHAVIOUR = """## Kamienie milowe
+PLAN_WITH_BEHAVIOUR = """## Milestones
 
 ### M1 — powitanie
-**Kryteria:**
+**Criteria:**
 - K1: `greet("Ann", "pl")` zwraca `"Cześć, Ann"` → `test_app.py::GreetTest::test_polish`
-- K2 (zachowanie): nieznany język daje angielskie powitanie → `test_app.py::GreetTest::test_unknown`
-**Dowód:** `python -m unittest` → `OK`
+- K2 (behaviour): nieznany język daje angielskie powitanie → `test_app.py::GreetTest::test_unknown`
+**Proof:** `python -m unittest` → `OK`
 """
 
 
@@ -112,9 +112,9 @@ class CheckStateTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
     def test_journal_without_qa_is_valid_for_a_plan_without_criteria(self):
-        code, out = self.run_check(self.finished("done", {}), "**Status:** wykonane 2026-10-16\n\n"
-                                   "## Kamienie milowe\n\n### M1 — opis\n**Bez testów:** tylko dokumenty\n"
-                                   "**Dowód:** `grep x` → `1`\n")
+        code, out = self.run_check(self.finished("done", {}), "**Status:** done 2026-10-16\n\n"
+                                   "## Milestones\n\n### M1 — opis\n**No tests:** tylko dokumenty\n"
+                                   "**Proof:** `grep x` → `1`\n")
         self.assertEqual(code, 0, out)
 
     def test_done_milestone_needs_a_passed_code_review(self):
@@ -134,7 +134,7 @@ class CheckStateTest(unittest.TestCase):
         del data["gates"]["M1/red"]
         code, out = self.run_check(data, PLAN_WITH_CRITERIA)
         self.assertEqual(code, 1)
-        self.assertIn("gates.M1/red: M1 has **Kryteria:**", "\n".join(out["problems"]))
+        self.assertIn("gates.M1/red: M1 has **Criteria:**", "\n".join(out["problems"]))
         data["deviations"] = [{"milestone": "M1", "rule": 3, "note": "tests already existed and failed"}]
         code, out = self.run_check(data, PLAN_WITH_CRITERIA)
         self.assertEqual(code, 0, out)
@@ -145,14 +145,14 @@ class CheckStateTest(unittest.TestCase):
         code, out = self.run_check(data, PLAN_WITH_CRITERIA)
         self.assertEqual(code, 1)
         self.assertIn("gates.final-review", "\n".join(out["problems"]))
-        data["gates"]["final-review"] = {"rounds": 3, "passed": False, "stuck": "loc/inbox/008-utknelo-x.md"}
-        code, out = self.run_check(data, PLAN_WITH_CRITERIA, files=("loc/inbox/008-utknelo-x.md",))
+        data["gates"]["final-review"] = {"rounds": 3, "passed": False, "stuck": "loc/inbox/008-stuck-x.md"}
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA, files=("loc/inbox/008-stuck-x.md",))
         self.assertEqual(code, 0, out)
 
     def test_done_needs_the_plan_closed(self):
         data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
-        for status, expected in (("otwarte", 1), ("otwarte — QA nie przeszło", 0), ("wykonane 2026-10-16", 0)):
-            plan = PLAN_WITH_CRITERIA.replace("wykonane 2026-10-16", status, 1)
+        for status, expected in (("open", 1), ("open — QA failed", 0), ("done 2026-10-16", 0)):
+            plan = PLAN_WITH_CRITERIA.replace("done 2026-10-16", status, 1)
             code, out = self.run_check(data, plan)
             self.assertEqual(code, expected, (status, out))
 
@@ -187,75 +187,75 @@ class CheckStateTest(unittest.TestCase):
         code, out = self.run_check(data, PLAN_WITH_BEHAVIOUR)
         self.assertEqual(code, 0, out)
 
-    def test_deferred_names_an_existing_odlozone_file(self):
-        deferred = "loc/inbox/008-odlozone-powitania-drobne-uwagi.md"
+    def test_deferred_names_an_existing_deferred_file(self):
+        deferred = "loc/inbox/008-deferred-powitania-drobne-uwagi.md"
         code, out = self.run_check({**state({}), "deferred": deferred}, files=(deferred,))
         self.assertEqual(code, 0, out)
         code, out = self.run_check({**state({}), "deferred": None})
         self.assertEqual(code, 0, out)
 
-    def test_deferred_file_must_exist_and_be_odlozone(self):
-        code, out = self.run_check({**state({}), "deferred": "loc/inbox/008-odlozone-brak.md"})
+    def test_deferred_file_must_exist_and_be_deferred(self):
+        code, out = self.run_check({**state({}), "deferred": "loc/inbox/008-deferred-brak.md"})
         self.assertEqual(code, 1)
         self.assertIn("does not exist", "\n".join(out["problems"]))
-        other = "loc/inbox/008-utknelo-powitania.md"
+        other = "loc/inbox/008-stuck-powitania.md"
         code, out = self.run_check({**state({}), "deferred": other}, files=(other,))
         self.assertEqual(code, 1)
-        self.assertIn("NNN-odlozone", "\n".join(out["problems"]))
+        self.assertIn("NNN-deferred", "\n".join(out["problems"]))
 
     def with_notes(self, *lines: str) -> str:
-        return PLAN_WITH_CRITERIA + "\n## Uwagi z przeglądów\n" + "\n".join(lines) + "\n\n## Rozstrzygnięcie\n"
+        return PLAN_WITH_CRITERIA + "\n## Review notes\n" + "\n".join(lines) + "\n\n## Resolution\n"
 
     def test_review_notes_in_the_plan_are_valid(self):
         plan = self.with_notes(
-            "- sugestia (M1 code-review): `app.py:3` — komentarz nad złą stałą",
+            "- suggestion (M1 code-review): `app.py:3` — komentarz nad złą stałą",
             "",
-            "- nierealna (final-review): `app.py:5` — encja `&#51;` w raporcie. "
-            "Kto to wytwarza: raport pisze model bez encji")
+            "- unrealistic (final-review): `app.py:5` — encja `&#51;` w raporcie. "
+            "Who produces it: raport pisze model bez encji")
         code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
         self.assertEqual(code, 0, out)
 
     def test_unrealistic_note_needs_who_produces_the_input(self):
         gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
-        for note in ("- nierealna (final-review): `app.py:5` — encja `&#51;` w raporcie",
-                     "- nierealna (final-review): `app.py:5` — encja. Kto to wytwarza: nikt"):
+        for note in ("- unrealistic (final-review): `app.py:5` — encja `&#51;` w raporcie",
+                     "- unrealistic (final-review): `app.py:5` — encja. Who produces it: nikt"):
             code, out = self.run_check(self.finished("done", gates), self.with_notes(note))
             self.assertEqual(code, 1, note)
-            self.assertIn("Kto to wytwarza", "\n".join(out["problems"]))
+            self.assertIn("Who produces it", "\n".join(out["problems"]))
 
     def test_enough_note_is_valid(self):
         plan = self.with_notes(
-            "- dość (M1 code-review): `app.py:7` — „Rano, około siódmej” daje 08:00 przybliżoną. "
-            "Powód: pora dnia ta sama, cel to schematy")
+            "- enough (M1 code-review): `app.py:7` — „Rano, około siódmej” daje 08:00 przybliżoną. "
+            "Reason: pora dnia ta sama, cel to schematy")
         code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
         self.assertEqual(code, 0, out)
 
     def test_notes_judged_at_planning_are_valid(self):
         plan = self.with_notes(
-            "- dość (planowanie): 012 #3 `parse.py:41` — „koło piątej” daje 17:00 przybliżoną. "
-            "Powód: pora dnia ta sama, godzina oznaczona jako przybliżona\n"
-            "- sugestia (planowanie): 012 #6 `app.py:98` — stała powtarza listę z text.py\n"
-            "- dość (planowanie): 014 #3 — model dopisał nad listą własny nagłówek. "
-            "Powód: kosmetyka, treść listy poprawna [plan Cel]")
+            "- enough (planning): 012 #3 `parse.py:41` — „koło piątej” daje 17:00 przybliżoną. "
+            "Reason: pora dnia ta sama, godzina oznaczona jako przybliżona\n"
+            "- suggestion (planning): 012 #6 `app.py:98` — stała powtarza listę z text.py\n"
+            "- enough (planning): 014 #3 — model dopisał nad listą własny nagłówek. "
+            "Reason: kosmetyka, treść listy poprawna [plan Goal]")
         code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
         self.assertEqual(code, 0, out)
 
     def test_enough_note_needs_a_reason(self):
         gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
-        for note in ("- dość (M1 code-review): `app.py:7` — godzina przybliżona",
-                     "- dość (final-review): `app.py:7` — godzina. Powód: nieistotne"):
+        for note in ("- enough (M1 code-review): `app.py:7` — godzina przybliżona",
+                     "- enough (final-review): `app.py:7` — godzina. Reason: nieistotne"):
             code, out = self.run_check(self.finished("done", gates), self.with_notes(note))
             self.assertEqual(code, 1, note)
-            self.assertIn("Powód", "\n".join(out["problems"]))
+            self.assertIn("Reason", "\n".join(out["problems"]))
 
     def test_review_notes_accept_only_suggestion_and_unrealistic(self):
         gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
-        for note in ("- blokująca (M1 code-review): `app.py:3` — zły wynik",
-                     "- sugestia (review): `app.py:3` — komentarz",
+        for note in ("- blocking (M1 code-review): `app.py:3` — zły wynik",
+                     "- suggestion (review): `app.py:3` — komentarz",
                      "Luźny tekst bez kategorii"):
             code, out = self.run_check(self.finished("done", gates), self.with_notes(note))
             self.assertEqual(code, 1, note)
-            self.assertIn("Uwagi z przeglądów", "\n".join(out["problems"]))
+            self.assertIn("Review notes", "\n".join(out["problems"]))
 
 
 if __name__ == "__main__":

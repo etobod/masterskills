@@ -42,13 +42,13 @@ class PluginCommandsTest(unittest.TestCase):
 
     def test_allows_the_skills_commands(self):
         for command in (
-            f"{PY_SH} scripts/next_number.py --type pytanie --slug \"a b\" --title \"T\" --source \"x\"",
+            f"{PY_SH} scripts/next_number.py --type question --slug \"a b\" --title \"T\" --source \"x\"",
             f"{PY_SH} scripts/mutate.py backup app.py",
             f"{PY_SH} scripts/mutate.py restore",
             f"{PY_SH} scripts/test_baseline.py --plan 007",
             'date "+%Y-%m-%d %H:%M"',
-            "mv loc/inbox/001-pytanie-a.md loc/inbox/done/",
-            "mv loc/inbox/001-pytanie-a.md loc/inbox/done/001-pytanie-a.md",
+            "mv loc/inbox/001-question-a.md loc/inbox/done/",
+            "mv loc/inbox/001-question-a.md loc/inbox/done/001-question-a.md",
             "gh run list --branch main --limit 1 --json status,conclusion,url",
             "gh run list --branch feature/ci-check --limit 1 --json status,conclusion,url",
         ):
@@ -57,7 +57,7 @@ class PluginCommandsTest(unittest.TestCase):
 
     def test_leaves_everything_else_to_the_permission_rules(self):
         for command in (
-            "mv inbox/001-pytanie-a.md inbox/done/",
+            "mv inbox/001-question-a.md inbox/done/",
             "mv loc/inbox/001-a.md loc/inbox/done/ ; rm x",
             f"{PY_SH} scripts/next_number.py && rm x",
             f"{PY_SH} scripts/next_number.py > out.txt",
@@ -100,7 +100,7 @@ class PluginCommandsTest(unittest.TestCase):
 
     def test_allows_listing_and_searching_inside_the_plugin(self):
         self.assertEqual(self.search("Glob", {"pattern": "templates/loc/*", "path": str(ROOT)}), "allow")
-        self.assertEqual(self.search("Grep", {"pattern": "Kryteria", "path": str(ROOT / "skills"),
+        self.assertEqual(self.search("Grep", {"pattern": "Criteria", "path": str(ROOT / "skills"),
                                               "glob": "*.md"}), "allow")
 
     def test_leaves_searches_that_leave_the_plugin_to_the_permission_rules(self):
@@ -152,7 +152,7 @@ class AfterPushTest(unittest.TestCase):
     def test_push_in_a_project_with_workflows_asks_for_one_ci_check(self):
         text = self.context(self.project(True), "git push origin main")
         self.assertIn("gh run list --branch main --limit 1 --json status,conclusion,url", text)
-        self.assertIn("--type utknelo", text)
+        self.assertIn("--type stuck", text)
 
     def test_push_without_workflows_adds_nothing(self):
         self.assertEqual(self.context(self.project(False), "git push"), "")
@@ -224,10 +224,10 @@ class SessionStartTest(unittest.TestCase):
     def test_lists_open_loc_inbox_files_and_commands(self):
         project = scratch_dir(self)
         (project / "loc" / "inbox" / "done").mkdir(parents=True)
-        (project / "loc" / "inbox" / "001-pytanie-a.md").write_text("# 001 — Pytanie A\n\n**Typ:** pytanie\n",
+        (project / "loc" / "inbox" / "001-question-a.md").write_text("# 001 — Pytanie A\n\n**Type:** question\n",
                                                                      encoding="utf-8")
         text = self.context(project)
-        self.assertIn("loc/inbox/001-pytanie-a.md", text)
+        self.assertIn("loc/inbox/001-question-a.md", text)
         self.assertIn("mv loc/inbox/<file> loc/inbox/done/", text)
 
     def test_inbox_command_follows_the_python_of_opencode(self):

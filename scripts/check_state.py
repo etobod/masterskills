@@ -17,35 +17,35 @@
       "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "qa", "final-review"
         "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ...",
                    "test_author": true},
-        "M1/proof": {"rounds": 3, "passed": false, "stuck": "loc/inbox/004-utknelo-....md"}
+        "M1/proof": {"rounds": 3, "passed": false, "stuck": "loc/inbox/004-stuck-....md"}
       },
       "deviations": [{"milestone": "M1", "rule": 1-4, "note": "...",
-                      "question": "loc/inbox/NNN-pytanie-....md"}],   # question: rule 4 only
+                      "question": "loc/inbox/NNN-question-....md"}],   # question: rule 4 only
       "next_action": "exactly what to do next",
       "updated": "YYYY-MM-DD HH:MM",
-      "deferred": "loc/inbox/NNN-odlozone-....md" | null   # optional
+      "deferred": "loc/inbox/NNN-deferred-....md" | null   # optional
     }
 
 Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
-`utknelo` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
+`stuck` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
 A passed `M<n>/red` gate (the new tests failed before the code) keeps the
 failing test output in `output`; when the plan's milestone has a
-`(zachowanie)` criterion it also says whether the `test-author` agent wrote
+`(behaviour)` criterion it also says whether the `test-author` agent wrote
 those tests (`test_author: true`), and `false` needs a deviation for that
-milestone explaining why. A plan with `**Kryteria:**` reaches `journal`
+milestone explaining why. A plan with `**Criteria:**` reaches `journal`
 or `done` only after a `qa` gate that passed or went stuck. A `done` milestone
-needs a passed `M<n>/code-review` gate and, when it has `**Kryteria:**`, a passed
+needs a passed `M<n>/code-review` gate and, when it has `**Criteria:**`, a passed
 `M<n>/red` gate (or a deviation for it). `journal` and `done` need a `final-review`
 gate that passed or went stuck; `done` needs the plan's `**Status:**` closed
-(`wykonane <date>` or `otwarte — QA nie przeszło`). `deferred`, when
-set (runs started before 1.6), names the plan's `odlozone` file of milestone
+(`done <date>` or `open — QA failed`). `deferred`, when
+set (runs started before 1.6), names the plan's `deferred` file of milestone
 Suggestions, which must exist in `loc/inbox/` or `loc/inbox/done/`.
 
-The plan's `## Uwagi z przeglądów` section, when present, holds review findings
-that are not fixed, one per line: `- sugestia (<gate>): <finding>` or
-`- nierealna (<gate>): <finding> Kto to wytwarza: <answer, 3+ words>` or
-`- dość (<gate>): <finding> Powód: <the judge's reason, 3+ words>`, where
-<gate> is `M<n> code-review`, `final-review` or `planowanie` (judged by `loc-planning`).
+The plan's `## Review notes` section, when present, holds review findings
+that are not fixed, one per line: `- suggestion (<gate>): <finding>` or
+`- unrealistic (<gate>): <finding> Who produces it: <answer, 3+ words>` or
+`- enough (<gate>): <finding> Reason: <the judge's reason, 3+ words>`, where
+<gate> is `M<n> code-review`, `final-review` or `planning` (judged by `loc-planning`).
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -67,19 +67,19 @@ STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
-STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-utknelo-[^/]+\.md$")
-NOTES = "Uwagi z przeglądów"
-NOTE = re.compile(r"^- (sugestia|nierealna|dość) \((M\d+ code-review|final-review|planowanie)\): (.+)$")
-PRODUCER = re.compile(r"Kto to wytwarza:\s*(.+)$")
-REASON = re.compile(r"Powód:\s*(.+)$")
-DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-odlozone-[^/]+\.md$")
-QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-pytanie-[^/]+\.md$")
+STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-stuck-[^/]+\.md$")
+NOTES = "Review notes"
+NOTE = re.compile(r"^- (suggestion|unrealistic|enough) \((M\d+ code-review|final-review|planning)\): (.+)$")
+PRODUCER = re.compile(r"Who produces it:\s*(.+)$")
+REASON = re.compile(r"Reason:\s*(.+)$")
+DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-deferred-[^/]+\.md$")
+QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-question-[^/]+\.md$")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
-BEHAVIOUR = re.compile(r"^- K\d+ \(zachowanie\):")
-CRITERIA = re.compile(r"^\*\*Kryteria:\*\*")
+BEHAVIOUR = re.compile(r"^- K\d+ \(behaviour\):")
+CRITERIA = re.compile(r"^\*\*Criteria:\*\*")
 STATUS = re.compile(r"^\*\*Status:\*\*\s*(.*?)\s*$", re.MULTILINE)
 COMMIT = re.compile(r"^([0-9a-f]{7,64}|none|skipped: \S.*)$")
-CLOSED = re.compile(r"^(wykonane\b|otwarte — QA nie przeszło)")
+CLOSED = re.compile(r"^(done\b|open — QA failed)")
 
 
 def is_int(value) -> bool:
@@ -136,7 +136,7 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
             problems.append(f"gates.{name}: {rounds} rounds, the limit is {MAX_ROUNDS}")
         if rounds == MAX_ROUNDS and passed is False:
             if not (isinstance(stuck, str) and STUCK.match(stuck)):
-                problems.append(f"gates.{name}: {MAX_ROUNDS} failed rounds without a utknelo file")
+                problems.append(f"gates.{name}: {MAX_ROUNDS} failed rounds without a stuck file")
             elif not any((project / p).is_file() for p in (stuck, stuck.replace("loc/inbox/", "loc/inbox/done/", 1))):
                 problems.append(f"gates.{name}.stuck: {stuck} does not exist")
         elif stuck is not None:
@@ -157,7 +157,7 @@ def plan_text(project: Path, plan) -> str:
 
 
 def has_criteria(project: Path, plan) -> bool:
-    return re.search(r"^\*\*Kryteria:\*\*", plan_text(project, plan), re.MULTILINE) is not None
+    return re.search(r"^\*\*Criteria:\*\*", plan_text(project, plan), re.MULTILINE) is not None
 
 
 def milestones_with(project: Path, plan, pattern) -> set:
@@ -166,15 +166,15 @@ def milestones_with(project: Path, plan, pattern) -> set:
     for line in plan_text(project, plan).splitlines():
         if line.startswith("## "):
             section = line[3:].strip()
-        elif section == "Kamienie milowe" and line.startswith("### "):
+        elif section == "Milestones" and line.startswith("### "):
             number += 1
-        elif number and section == "Kamienie milowe" and pattern.match(line):
+        elif number and section == "Milestones" and pattern.match(line):
             found.add(f"M{number}")
     return found
 
 
 def behaviour_milestones(project: Path, plan) -> set:
-    """Milestones (M1, M2...) of the plan with a `(zachowanie)` criterion."""
+    """Milestones (M1, M2...) of the plan with a `(behaviour)` criterion."""
     return milestones_with(project, plan, BEHAVIOUR)
 
 
@@ -198,7 +198,7 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
             problems.append(f"gates.{name}/code-review: {name} is done without a passed code review")
         red = gates.get(f"{name}/red")
         if name in tested and name not in deviated and not (isinstance(red, dict) and red.get("passed") is True):
-            problems.append(f"gates.{name}/red: {name} has **Kryteria:** but no passed red gate "
+            problems.append(f"gates.{name}/red: {name} has **Criteria:** but no passed red gate "
                             "(tests first); a deviation for it must say why")
     if data.get("phase") not in ("journal", "done"):
         return
@@ -206,8 +206,8 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
         problems.append("gates.final-review: journal and done need a final review that passed or went stuck")
     status = STATUS.search(plan_text(project, plan))
     if data.get("phase") == "done" and not (status and CLOSED.match(status.group(1))):
-        problems.append("plan: phase done but the plan's **Status:** is not 'wykonane <date>' "
-                        "or 'otwarte — QA nie przeszło' (close the plan, step 4 of the end)")
+        problems.append("plan: phase done but the plan's **Status:** is not 'done <date>' "
+                        "or 'open — QA failed' (close the plan, step 4 of the end)")
 
 
 def check_test_author(data: dict, project: Path, problems: list) -> None:
@@ -222,9 +222,9 @@ def check_test_author(data: dict, project: Path, problems: list) -> None:
         author = gate.get("test_author")
         if author is False and milestone not in deviated:
             problems.append(f"gates.{milestone}/red.test_author: false needs a deviation for {milestone} "
-                            "saying why test-author did not write the (zachowanie) tests")
+                            "saying why test-author did not write the (behaviour) tests")
         elif author is not True and author is not False:
-            problems.append(f"gates.{milestone}/red.test_author: {milestone} has a (zachowanie) criterion; "
+            problems.append(f"gates.{milestone}/red.test_author: {milestone} has a (behaviour) criterion; "
                             "expected true (test-author wrote its tests) or false with a deviation")
 
 
@@ -238,7 +238,7 @@ def check_deferred(data: dict, project: Path, problems: list) -> None:
     if deferred is None:
         return
     if not (isinstance(deferred, str) and DEFERRED.match(deferred)):
-        problems.append("deferred: expected null or loc/inbox/NNN-odlozone-<topic>.md")
+        problems.append("deferred: expected null or loc/inbox/NNN-deferred-<topic>.md")
     elif not exists_in_inbox(project, deferred):
         problems.append(f"deferred: {deferred} does not exist")
 
@@ -254,17 +254,17 @@ def check_notes(data: dict, project: Path, problems: list) -> None:
         match = NOTE.match(line)
         if not match:
             problems.append(f"plan line {number}: in ## {NOTES} expected "
-                            "'- sugestia (<gate>): ...', '- nierealna (<gate>): ... Kto to wytwarza: ...' "
-                            "or '- dość (<gate>): ... Powód: ...'")
-        elif match.group(1) == "nierealna":
+                            "'- suggestion (<gate>): ...', '- unrealistic (<gate>): ... Who produces it: ...' "
+                            "or '- enough (<gate>): ... Reason: ...'")
+        elif match.group(1) == "unrealistic":
             producer = PRODUCER.search(match.group(3))
             if not producer or len(producer.group(1).split()) < 3:
-                problems.append(f"plan line {number}: a nierealna finding needs 'Kto to wytwarza:' "
+                problems.append(f"plan line {number}: an unrealistic finding needs 'Who produces it:' "
                                 "and who or what produces that input (3+ words)")
-        elif match.group(1) == "dość":
+        elif match.group(1) == "enough":
             reason = REASON.search(match.group(3))
             if not reason or len(reason.group(1).split()) < 3:
-                problems.append(f"plan line {number}: a dość finding needs 'Powód:' "
+                problems.append(f"plan line {number}: an enough finding needs 'Reason:' "
                                 "and the judge's reason (3+ words)")
 
 
@@ -273,7 +273,7 @@ def check_qa(data: dict, project: Path, problems: list) -> None:
         return
     gate = (data.get("gates") or {}).get("qa")
     if not (isinstance(gate, dict) and (gate.get("passed") is True or gate.get("stuck"))):
-        problems.append("gates.qa: a plan with **Kryteria:** needs a qa gate that passed or went stuck "
+        problems.append("gates.qa: a plan with **Criteria:** needs a qa gate that passed or went stuck "
                         "before journal")
 
 
@@ -295,7 +295,7 @@ def check_deviations(data: dict, ids: list, problems: list) -> None:
         if not (isinstance(item.get("note"), str) and item["note"].strip()):
             problems.append(f"{where}.note: expected text")
         if rule == 4 and not (isinstance(item.get("question"), str) and QUESTION.match(item["question"])):
-            problems.append(f"{where}: rule 4 (architecture) needs a pytanie file in 'question'")
+            problems.append(f"{where}: rule 4 (architecture) needs a question file in 'question'")
 
 
 def check(path: Path, data) -> list:
