@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.19.0 — 2026-10-16
+
+- `loc-orchestrate` commits each finished plan with the new `commit_plan.py`. The commit holds only the files the plan changed since its first snapshot, `loc/` left out, so the user's own uncommitted work stays as it was. The message must be Conventional Commits and must not mention AI. Nothing is pushed. A project whose `CLAUDE.md` says the user commits is skipped with a reason. `check_state.py` requires the result (`commit` in the state file) in the `done` phase.
+- `review_diff.py --from HEAD` works in a repository with no commits: the whole project is the change. Before, a standalone `loc-review` stopped with `fatal: bad revision 'HEAD'`.
+- Upgrading: a run resumed from an older state needs the commit step before `done`.
+
 ## 1.18.0 — 2026-10-16
 
 Gaps a weaker model showed, now checked by scripts instead of only described in skills:

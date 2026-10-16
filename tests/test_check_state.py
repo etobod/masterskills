@@ -93,6 +93,8 @@ class CheckStateTest(unittest.TestCase):
                       "M1/code-review": passed, "final-review": passed, **gates})
         data.update(plan="loc/inbox/done/007-plan-powitania.md", phase=phase)
         data["milestones"][0].update(status="done", end="def5678")
+        if phase == "done":
+            data["commit"] = "0123abc"
         return data
 
     def test_qa_phase_is_valid(self):
@@ -153,6 +155,19 @@ class CheckStateTest(unittest.TestCase):
             plan = PLAN_WITH_CRITERIA.replace("wykonane 2026-10-16", status, 1)
             code, out = self.run_check(data, plan)
             self.assertEqual(code, expected, (status, out))
+
+    def test_done_needs_the_commit(self):
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
+        for commit, expected in ((None, 1), ("", 1), ("skipped: ", 1), ("0123abc", 0), ("none", 0),
+                                 ("skipped: CLAUDE.md: the user commits", 0)):
+            if commit is None:
+                data.pop("commit", None)
+            else:
+                data["commit"] = commit
+            code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+            self.assertEqual(code, expected, (commit, out))
+            if expected:
+                self.assertIn("commit: phase done", "\n".join(out["problems"]))
 
     def test_behaviour_criterion_needs_the_test_author(self):
         red = {"rounds": 1, "passed": True, "stuck": None, "output": "AssertionError: 'Hello, Ann' != 'Hi'"}

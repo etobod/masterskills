@@ -60,7 +60,7 @@ from pathlib import Path
 
 KEYS = {"plan", "mode", "milestone", "phase", "milestones", "gates", "deviations",
         "next_action", "updated"}
-OPTIONAL = {"deferred"}
+OPTIONAL = {"deferred", "commit"}
 MODES = {"inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
@@ -78,6 +78,7 @@ HASH = re.compile(r"^[0-9a-f]{7,40}$")
 BEHAVIOUR = re.compile(r"^- K\d+ \(zachowanie\):")
 CRITERIA = re.compile(r"^\*\*Kryteria:\*\*")
 STATUS = re.compile(r"^\*\*Status:\*\*\s*(.*?)\s*$", re.MULTILINE)
+COMMIT = re.compile(r"^([0-9a-f]{7,64}|none|skipped: \S.*)$")
 CLOSED = re.compile(r"^(wykonane\b|otwarte — QA nie przeszło)")
 
 
@@ -326,6 +327,9 @@ def check(path: Path, data) -> list:
                  if isinstance(m, dict) and m.get("status") not in ("done", "stuck")]
         if open_:
             problems.append(f"phase done but milestones still open: {open_}")
+        if not COMMIT.match(str(data.get("commit"))):
+            problems.append("commit: phase done needs the commit_plan.py result "
+                            "(a hash, 'none' or 'skipped: <reason>')")
 
     # loc/state/NNN.json -> the project root is two levels up.
     project = path.resolve().parent.parent.parent

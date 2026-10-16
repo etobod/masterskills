@@ -86,5 +86,19 @@ class NextNumberTest(unittest.TestCase):
         self.assertTrue((project / result["path"]).is_file())
 
 
+class ReviewDiffTest(unittest.TestCase):
+    def test_review_without_commits(self):
+        project = scratch_dir(self)
+        subprocess.run(["git", "init", "-q"], cwd=project, check=True)
+        (project / "app.js").write_text("const x = 1;\n", encoding="utf-8")
+        (project / "loc").mkdir()
+        (project / "loc" / "notes.md").write_text("x\n", encoding="utf-8")
+        out = run("review_diff.py", "--project", ".", "--from", "HEAD", "--out", "loc/review/x.diff", cwd=project)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        result = json.loads(out.stdout)
+        self.assertEqual(result["files"], ["app.js"])
+        self.assertIn("+const x = 1;", (project / "loc" / "review" / "x.diff").read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

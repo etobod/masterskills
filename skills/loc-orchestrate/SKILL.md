@@ -39,13 +39,13 @@ Update the state file before and after every step.
 ## 3. Deviations from the plan
 
 - **Rules 1–3** (a bug, a missing critical piece such as validation, a blocker such as a missing dependency): fix it, record a deviation, carry on.
-- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): create a `pytanie` file with options, costs and a recommendation (`next_number.py --type pytanie`), record the deviation with it, and continue on the recommendation. Stop only if that choice would be expensive to undo.
+- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): create a `pytanie` file with options, costs and a recommendation (`next_number.py --type pytanie`), record the deviation with it, and continue on the recommendation.
 
 ## 4. When to stop
 
-Only in these cases, each in a few lines:
+Only in these cases:
 
-- **before the start**: the plan does not pass `check_plan`, is not a plan, or a `PRD:` `pytanie` is open;
+- **before the start**: step 1.4, or the file is not a plan;
 - **expensive to undo**: data loss, a migration, anything outside the project, a rule 4 choice that cannot be reverted cheaply;
 - **permissions**: a tool or access you do not have;
 - **the end**.
@@ -55,8 +55,9 @@ A failed gate ends in `utknelo`, not in a stop.
 ## 5. At the end
 
 1. **QA gate** (`qa`), only when the plan has `**Kryteria:**` (else report `**Bez testów:**`): `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never tests; next round. Third failure: **stuck**.
-2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode). It uses the state file's `final-review` gate.
+2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode, gate `final-review`).
 3. **Close what the plan resolved**: milestone `utknelo` files whose points are all fixed now get `## Rozstrzygnięcie` and move to `loc/inbox/done/` (`references/stuck.md`).
 4. **Close the plan.** Under `## Rozstrzygnięcie`: `wykonane <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-utknelo-…`), deviations and new `pytanie` files. `**Status:**` → `wykonane <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `otwarte — QA nie przeszło`, not moved. Update `plan` in the state file, set `phase: journal`, validate.
-5. **Journal.** One command, your text (Polish, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Szczegóły: <plan path>"`. Then `phase: done`, validate.
-6. **Report** in the user's language, briefly: milestones with their proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, QA verdict, final review result. Then **"Sędzia: dość"**: every `dość` line, numbered in plan order, grouped by its PRD point; "popraw 2" goes to `loc-planning`.
+5. **Journal.** One command, your text (Polish, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Szczegóły: <plan path>"`.
+6. **Commit** the plan's files, never push: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/commit_plan.py --state loc/state/<NNN>.json --message "<type(scope): summary>"`, or `--skip "<reason>"` when the project's `CLAUDE.md` says the user commits. Rejected: report it, never bypass. Then `phase: done`, validate.
+7. **Report** in the user's language, briefly: the commit, milestones with proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, QA verdict, final review result. Then **"Sędzia: dość"**: every `dość` line, numbered in plan order, grouped by its PRD point; "popraw 2" goes to `loc-planning`.
