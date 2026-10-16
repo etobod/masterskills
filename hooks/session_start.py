@@ -41,7 +41,8 @@ def inbox_section(summary: dict) -> str:
     lines = [f"## Inbox — {len(summary['inbox'])} open"]
     for item in summary["inbox"]:
         kind = item["type"] or "?"
-        lines.append(f"- `{item['path']}` ({kind}) {item['title']}".rstrip())
+        empty = " — still the empty template: fill it or delete it" if item.get("template") else ""
+        lines.append(f"- `{item['path']}` ({kind}) {item['title']}".rstrip() + empty)
     if not summary["inbox"]:
         lines.append("Nothing open.")
     if summary["state"]:

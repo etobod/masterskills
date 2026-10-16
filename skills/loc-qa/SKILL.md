@@ -60,8 +60,10 @@ For every criterion ``- K<n>: … → `<test>` `` in the plan:
 A milestone that changed code without `**Criteria:**` → **INFO**. A gap in TEST-PLAN itself (section (b) says what to extend and nothing was) → a `deferred` file, never an edit:
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<few words>" --title "<title>" --source "loc-qa <NNN>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<few words>" --title "<title>" --source "loc-qa <NNN>" --what "<the work or the manual check, with the milestone>" --why "<reason>" --when "<when to return>"
 ```
+
+The three texts go in this command, never as a later edit: a file left as the template is an empty promise.
 
 ## 4a. Tests run the real code
 

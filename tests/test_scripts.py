@@ -130,6 +130,26 @@ class NextNumberTest(unittest.TestCase):
                   "--source", "test", cwd=project)
         self.assertNotEqual(old.returncode, 0)
 
+    def test_deferred_sections_from_options(self):
+        project = scratch_dir(self)
+        out = run("next_number.py", "--project", ".", "--type", "deferred", "--slug", "ui check",
+                  "--title", "UI check", "--source", "loc-qa 008",
+                  "--what", "Open the page: the overlay toggles", "--why", "user (deferrable)",
+                  "--when", "next time the page is opened", cwd=project)
+        text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
+        self.assertIn("## What was deferred\nOpen the page: the overlay toggles\n", text)
+        self.assertIn("## Why not now\nuser (deferrable)\n", text)
+        self.assertIn("## When to return\nnext time the page is opened\n", text)
+        self.assertNotIn("<the work to do", text)
+        self.assertIn("## Resolution\n<empty until handled", text)
+
+    def test_section_option_needs_the_section(self):
+        project = scratch_dir(self)
+        out = run("next_number.py", "--project", ".", "--type", "question", "--slug", "x", "--title", "X",
+                  "--what", "something", cwd=project)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertFalse((project / "loc" / "inbox").exists() and any((project / "loc" / "inbox").iterdir()))
+
 
 class ReviewDiffTest(unittest.TestCase):
     def test_review_without_commits(self):

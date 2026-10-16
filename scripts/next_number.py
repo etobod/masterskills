@@ -7,7 +7,9 @@ repeated numbers once files move to `loc/inbox/done/`.
 
 With `--type`, `--slug` and `--title` the file `loc/inbox/NNN-<type>-<slug>.md` is
 created from `templates/loc/inbox/<type>.md`, with the number, title, source and the
-current time filled in. An existing file is never overwritten.
+current time filled in. An existing file is never overwritten. `--what`, `--why` and
+`--when` fill the sections of a `deferred` file in the same step, so it is never
+left as the empty template; for a type without that section they are an error.
 
 Prints JSON to stdout:
     {"number": "006", "now": "2026-01-15 14:30"}
@@ -27,6 +29,15 @@ PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates" / "loc" / "inbox"
 TYPES = ["brainstorm", "plan", "question", "deferred", "review", "stuck"]
 NUMBER = re.compile(r"^(\d{3,})-")
+SECTIONS = {"what": "What was deferred", "why": "Why not now", "when": "When to return"}
+
+
+def fill(text: str, heading: str, value: str):
+    """Replace the placeholder line under `## heading`; None when the template has no such section."""
+    pattern = re.compile(rf"^(## {re.escape(heading)}\n)<[^\n]*>$", re.M)
+    if not pattern.search(text):
+        return None
+    return pattern.sub(lambda m: m.group(1) + value.strip(), text, count=1)
 
 
 def next_number(project: Path) -> str:
@@ -58,6 +69,8 @@ def main() -> int:
     parser.add_argument("--slug", help="short description for the file name")
     parser.add_argument("--title", help="title for the file header")
     parser.add_argument("--source", default="conversation", help="where it came from (Source)")
+    for option, heading in SECTIONS.items():
+        parser.add_argument(f"--{option}", help=f"text of the '{heading}' section")
     args = parser.parse_args()
 
     project = args.project.resolve()
@@ -80,6 +93,12 @@ def main() -> int:
         for key, value in (("{NNN}", number), ("{TITLE}", args.title),
                            ("{DATE}", now), ("{SOURCE}", args.source)):
             text = text.replace(key, value)
+        for option, heading in SECTIONS.items():
+            value = getattr(args, option)
+            if value:
+                text = fill(text, heading, value)
+                if text is None:
+                    parser.error(f"--{option}: a {args.type} file has no '## {heading}' section")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(text.encode("utf-8"))
         result.update(path=rel, created=True)

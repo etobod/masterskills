@@ -248,6 +248,23 @@ class SessionStartTest(unittest.TestCase):
         (project / "loc" / "VERSION").write_text("2\n", encoding="utf-8")
         self.assertNotIn("migrate", self.context(project))
 
+    def test_empty_template_is_marked(self):
+        project = scratch_dir(self)
+        inbox = project / "loc" / "inbox"
+        inbox.mkdir(parents=True)
+        template = (ROOT / "templates" / "loc" / "inbox" / "deferred.md").read_text(encoding="utf-8")
+        (inbox / "009-deferred-empty.md").write_text(template.replace("{NNN}", "009").replace("{TITLE}", "Empty"),
+                                                     encoding="utf-8")
+        filled = template.replace("<the work to do, precise enough to take it up without this conversation>",
+                                  "Open the page and toggle the overlay.")
+        (inbox / "010-deferred-filled.md").write_text(filled.replace("{NNN}", "010").replace("{TITLE}", "Filled"),
+                                                      encoding="utf-8")
+        text = self.context(project)
+        empty = next(line for line in text.splitlines() if "009-deferred-empty" in line)
+        full = next(line for line in text.splitlines() if "010-deferred-filled" in line)
+        self.assertIn("still the empty template", empty)
+        self.assertNotIn("template", full)
+
     def test_session_start_tells_the_user_about_migration(self):
         """The model may skip the request in its context; the user sees systemMessage in the terminal."""
         project = scratch_dir(self)

@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.5.0 — 2026-10-17
+
+- `next_number.py --what --why --when` fill the sections of a `deferred` file in the command that creates it; `loc-qa` and `loc-orchestrate` use them, so a deferred manual check is never left as the empty template.
+- The inbox list at session start marks a file that still holds its template's first placeholder: "still the empty template: fill it or delete it" (`inbox_summary.py` field `template`).
+
 ## 2.4.0 — 2026-10-16
 
 - `loc-init` leaves a launcher on Windows for the tool that ran it, and never touches an existing one. Claude Code: `claude.bat` resumes the session in which `loc-init` ran (`--session "${CLAUDE_SESSION_ID}"`). OpenCode: `open-code.bat` runs `opencode-install.bat` from the repository the plugin was built from (recorded by `opencode/build.py` in `masterskills/SOURCE`), then starts OpenCode.

@@ -7,7 +7,9 @@ project without `loc/inbox/` gives an empty list, not an error.
 
 Prints JSON to stdout:
     {"project": ..., "has_inbox": bool,
-     "inbox": [{"path", "number", "type", "title"}], "state": [path, ...]}
+     "inbox": [{"path", "number", "type", "title", "template"}], "state": [path, ...]}
+
+`template` is true when the file still holds its template's first placeholder.
 """
 
 import argparse
@@ -19,6 +21,17 @@ from pathlib import Path
 
 NAME = re.compile(r"^(\d{3,})-([a-z]+)-")
 TITLE = re.compile(r"^#\s+\d+\s*[—-]+\s*(.+?)\s*$")
+PLACEHOLDER = re.compile(r"^<[^\n]*>$", re.M)
+TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "loc" / "inbox"
+
+
+def is_template(path: Path, kind: str) -> bool:
+    """The file still holds the first placeholder of its type's template: nobody filled it in."""
+    try:
+        first = PLACEHOLDER.search((TEMPLATES / f"{kind}.md").read_text(encoding="utf-8"))
+        return bool(first) and first.group(0) in path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
 
 
 def read_title(path: Path) -> str:
@@ -52,6 +65,7 @@ def summarize(project: Path) -> dict:
                 "number": match.group(1) if match else None,
                 "type": match.group(2) if match else None,
                 "title": read_title(path),
+                "template": bool(match) and is_template(path, match.group(2)),
             })
 
     state_dir = project / "loc" / "state"
