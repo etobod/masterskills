@@ -2,7 +2,7 @@
 
 Po co jest projekt i dokąd zmierza. Tylko rzeczy aktualne.
 
-- `## Cel` i `## Rdzeń idei` są stałe: nigdy nie przechodzą do planu. Sędzia
+- `## Cel`, `## Rdzeń idei` i `## Scenariusze` są stałe: nigdy nie przechodzą do planu. Sędzia
   przeglądów waży według nich, co poprawka realnie daje projektowi. Każdą ich
   zmianę `loc-planning` proponuje w rozmowie, a zapisuje dopiero po zgodzie
   użytkownika.
@@ -18,6 +18,14 @@ Po co jest projekt i dokąd zmierza. Tylko rzeczy aktualne.
 opis kodu i nie powtórzenie `Invariants` z `CLAUDE.md`. Przykład:
 - **Dane są fundamentem.** Każde słowo użytkownika jest przechowane w oryginale
   i da się je przetworzyć ponownie po zmianach, bez ponownego wpisywania.
+-->
+
+## Scenariusze
+<!-- 3–7 sposobów użycia, które projekt musi obsługiwać: kto, co robi, czego
+oczekuje. Sędzia sprawdza, czy znalezisko psuje któryś z nich. To nie lista
+funkcji: nowe funkcje to `## Kierunki` i kryteria planów. Przykład:
+1. Użytkownik dyktuje notatkę w biegu i wieczorem widzi ją w dzienniku
+   z właściwą porą dnia.
 -->
 
 ## Kierunki

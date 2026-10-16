@@ -39,6 +39,6 @@ The script prints JSON.
   - each `skipped` file with its reason: the user fixes it by hand.
   `.claude/settings.json` turns off Claude's auto memory (lessons go to `loc/PATTERNS.md`) and AI attribution in commits and pull requests. If both `created` and `updated` are empty, say the project is already complete and nothing changed. Then point out the next step:
   - fill the empty `CLAUDE.md` sections (`Commands` first: skills run those commands and never guess them);
-  - write in `loc/PRD.md` what the project is for (`Cel`), the few points it stands on (`Rdzeń idei`) and its ideas (`Kierunki`); the review judge weighs findings against the first two.
+  - write in `loc/PRD.md` what the project is for (`Cel`), the few points it stands on (`Rdzeń idei`), how it is used (`Scenariusze`) and its ideas (`Kierunki`); the review judge weighs findings against the first three.
 - **`ok: false`.** Show `message` as it is, in the user's language, and stop. With `no-git` the directory is not the root of a git repository: plans snapshot milestones with git, reviews read the diff and work ends in a commit, so none of that works without it. Nothing was created. Do not run `git init` unless the user asks.
 

@@ -38,7 +38,7 @@ TEMPLATES = PLUGIN_ROOT / "templates"
 DIRS = ["loc/inbox", "loc/inbox/done"]
 DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"]
 LOC_ENTRY = re.compile(r"^/?loc(/(\*\*?)?)?\s*$")
-PRD_FRAME = ["Cel", "Rdzeń idei"]  # Kierunki is work to plan, not the project's frame
+PRD_FRAME = ["Cel", "Rdzeń idei", "Scenariusze"]  # Kierunki is work to plan, not the project's frame
 POLISH = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
 PLACEHOLDER = re.compile(r"<!--.*?-->|^#*\s*<[^>\n]*>\s*$", re.S | re.M)
 
@@ -173,16 +173,20 @@ def section_bodies(path: Path) -> dict:
             for p in parts if p.startswith("## ")}
 
 
-def empty_sections(path: Path, names: list) -> list:
-    """The sections among `names` whose body is only template comments or placeholders."""
+def empty_sections(path: Path, names: list, missing_is_empty: bool = False) -> list:
+    """The sections among `names` whose body is only template comments or placeholders.
+    With `missing_is_empty`, a section without its heading counts too."""
+    if not path.is_file():
+        return []
     bodies = section_bodies(path)
-    return [name for name in names if name in bodies and not bodies[name]]
+    return [name for name in names if not bodies.get(name) and (name in bodies or missing_is_empty)]
 
 
 def empty_report(project: Path) -> dict:
     return {
         "CLAUDE.md": empty_sections(project / "CLAUDE.md", [name for name, _ in claude_sections()]),
-        "loc/PRD.md": empty_sections(project / "loc" / "PRD.md", PRD_FRAME),
+        # A PRD older than one of its frame sections lacks the heading: it is still to be filled.
+        "loc/PRD.md": empty_sections(project / "loc" / "PRD.md", PRD_FRAME, missing_is_empty=True),
     }
 
 

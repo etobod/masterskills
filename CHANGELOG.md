@@ -2,6 +2,14 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.20.0 — 2026-10-16
+
+- `loc/PRD.md` has a new section `## Scenariusze`: 3–7 ways the project is used (who, what they do, what they expect to see). Like `Cel` and `Rdzeń idei`, it changes only with the user's consent. The `judge` reads it: a finding that breaks a scenario is `fix`, and an `enough` line may rest on `[Scenariusz <n>]`. Without scenarios the judge works as before.
+- `loc-init` with a brainstorm fills `Scenariusze` from it. `init_project.py` reports a PRD frame section whose heading is missing (an older PRD) as empty.
+- `loc-planning` starts with `init_project.py --check`. Empty PRD sections are proposed through a `PRD:` question, which holds `loc-orchestrate` until the user answers. Empty `CLAUDE.md` sections never stop planning: what the plan can establish goes into a milestone, the rest into the report. Sections that contradict each other become a question.
+- Word budgets: `judge` 550, `loc-planning` `SKILL.md` 900.
+- Upgrading: an existing PRD has no `## Scenariusze`. The next `loc-planning` proposes them and asks.
+
 ## 1.19.1 — 2026-10-16
 
 - `loc-init` with a brainstorm ends with `init_project.py --check`, which writes nothing and lists the sections still empty and the `CLAUDE.md` sections written in Polish. A model that left the PRD's `Cel` empty, or wrote `Invariants` in Polish, now sees it. `Cel` is never left empty: the brainstorm's `## Temat` says what the project is.

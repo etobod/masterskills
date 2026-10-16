@@ -49,7 +49,7 @@ class InitProjectTest(unittest.TestCase):
 
     def test_reports_the_empty_sections_a_brainstorm_may_fill(self):
         fresh = json.loads(run("init_project.py", "--project", ".", cwd=self.project).stdout)["empty"]
-        self.assertEqual(fresh["loc/PRD.md"], ["Cel", "Rdzeń idei"])
+        self.assertEqual(fresh["loc/PRD.md"], ["Cel", "Rdzeń idei", "Scenariusze"])
         self.assertIn("Commands", fresh["CLAUDE.md"])
         self.assertIn("Limits", fresh["CLAUDE.md"])
         claude = self.project / "CLAUDE.md"
@@ -62,7 +62,7 @@ class InitProjectTest(unittest.TestCase):
         again = json.loads(run("init_project.py", "--project", ".", cwd=self.project).stdout)["empty"]
         self.assertNotIn("Limits", again["CLAUDE.md"])
         self.assertIn("Commands", again["CLAUDE.md"])
-        self.assertEqual(again["loc/PRD.md"], ["Rdzeń idei"])
+        self.assertEqual(again["loc/PRD.md"], ["Rdzeń idei", "Scenariusze"])
         after = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
         self.assertEqual(before, after)
 
@@ -81,6 +81,15 @@ class InitProjectTest(unittest.TestCase):
         self.assertNotIn("created", result)
         after = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file() and ".git" not in p.parts}
         self.assertEqual(before, after)
+
+    def test_check_reports_a_missing_prd_section(self):
+        run("init_project.py", "--project", ".", cwd=self.project)
+        prd = self.project / "loc" / "PRD.md"
+        prd.write_text("# PRD\n\n## Cel\nA diary.\n\n## Rdzeń idei\n- Offline.\n\n## Kierunki\n", encoding="utf-8")
+        before = prd.read_bytes()
+        result = json.loads(run("init_project.py", "--project", ".", "--check", cwd=self.project).stdout)
+        self.assertEqual(result["empty"]["loc/PRD.md"], ["Scenariusze"])
+        self.assertEqual(prd.read_bytes(), before)
 
     def test_git_sees_nothing_from_loc(self):
         run("init_project.py", "--project", ".", cwd=self.project)

@@ -1,12 +1,12 @@
 # Filling the project from a brainstorm
 
-The brainstorm describes the project and the work to do. `loc-init` takes only the **frame**: what the project is for, the points it stands on, its commands and limits. Ideas and features are work: they stay in the brainstorm for `loc-planning`, which makes the plan from the same file.
+The brainstorm describes the project and the work to do. `loc-init` takes only the **frame**: what the project is for, the points it stands on, how it is used, its commands and limits. Ideas and features are work: they stay in the brainstorm for `loc-planning`, which makes the plan from the same file.
 
 ## What you may write
 
 Only the sections listed in the script's `empty` field:
 
-- `loc/PRD.md`: `Cel`, `Rdzeń idei`. Never `Kierunki`.
+- `loc/PRD.md`: `Cel`, `Rdzeń idei`, `Scenariusze`. Never `Kierunki`. A section listed but without its heading (an older PRD): add the heading from `${CLAUDE_PLUGIN_ROOT}/templates/loc/PRD.md` before `## Kierunki`.
 - `CLAUDE.md`: any listed section.
 
 A section not in `empty` already has the user's content: never change it, even when the brainstorm says something else. List each such difference in the report instead.
@@ -27,6 +27,7 @@ Where things go:
 |---|---|
 | what the project is for, for whom | PRD `Cel` |
 | a priority or principle with its reason | PRD `Rdzeń idei` |
+| who uses the project, what they do and expect to see | PRD `Scenariusze`, 3–7 numbered |
 | how to build, test, run | `Commands` |
 | a rule every change must keep | `Invariants` |
 | how a person checks the result | `Manual verification / UAT` |
@@ -49,7 +50,7 @@ Read it only. Do not edit, move or close it: `loc-planning` closes it when it ma
 After the usual report, add:
 
 - each section you filled, with its source numbers;
-- `Cel` and `Rdzeń idei` word for word: they guide every review, so the user checks them now;
+- `Cel`, `Rdzeń idei` and `Scenariusze` word for word: they guide every review, so the user checks them now;
 - each difference between the brainstorm and a section that was already filled;
 - each empty section the brainstorm had nothing for;
 - the next step: `/masterskills:loc-planning <NNN>` turns the rest of the brainstorm into a plan.
