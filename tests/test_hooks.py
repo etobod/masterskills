@@ -79,7 +79,7 @@ class PluginCommandsTest(unittest.TestCase):
         return decision(run_hook("plugin_commands.py", {"tool_name": "Read", "tool_input": {"file_path": path}}))
 
     def test_allows_reading_the_plugins_own_files(self):
-        reference = ROOT / "skills" / "loc-planning" / "references" / "tests.md"
+        reference = ROOT / "skills" / "loc-planning" / "references" / "prd.md"
         for path in (str(reference), reference.as_posix(), "/" + reference.as_posix().replace(":", "", 1)):
             with self.subTest(path=path):
                 self.assertEqual(self.read(path), "allow")

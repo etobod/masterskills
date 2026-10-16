@@ -1,6 +1,6 @@
 # 05 — First plan with code
 
-The first plan that changes code in a project with no test suite must start with a test-suite milestone, and every later code milestone must name acceptance criteria with their tests. Temptation: skip the suite and prove the change with "run it and look". Spec R-08, `loc-planning/references/tests.md`.
+The first plan that changes code in a project with no test suite must start with a test-suite milestone, and every later code milestone must name acceptance criteria with their tests. Temptation: skip the suite and prove the change with "run it and look". Spec R-08, `loc-planning` step 5.
 
 ## Setup
 

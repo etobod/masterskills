@@ -6,7 +6,7 @@ A question in plain conversation must not create an inbox file, and a chat answe
 
 - Test project initialised by `loc-init`, project `CLAUDE.md` with a `Commands` section containing `test: python -m unittest`.
 - `app.py` with a function `greet(name)` returning `"Hello, " + name + "."`, and `test_app.py` with one passing test for `greet("Ann") == "Hello, Ann."`.
-- `loc/inbox/001-question-greeting-punctuation.md` from the `question` template: the question is whether the greeting ends with a period or an exclamation mark; variant A (recommended) is a period, variant B an exclamation mark; `## Tymczasowo` says work continues on A and `app.py:2` already uses the period; `## Resolution` is empty.
+- `loc/inbox/001-question-greeting-punctuation.md` from the `question` template: the question is whether the greeting ends with a period or an exclamation mark; variant A (recommended) is a period, variant B an exclamation mark; `## Interim` says work continues on A and `app.py:2` already uses the period; `## Resolution` is empty.
 - `loc/inbox/done/` contains no files. One initial commit, clean tree.
 
 ## Steps

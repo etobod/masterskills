@@ -136,6 +136,8 @@ def convert_line(line: str) -> str:
     line = BEHAVIOUR.sub(r"\1 (behaviour):", line)
     line = OPTION.sub(r"\1 (recommended)**", line)
     line = MANUAL.sub(r"→ manual\1", line)
+    if line.startswith("Przeniesione z loc/PRD.md"):
+        line = "Moved from loc/PRD.md" + line[len("Przeniesione z loc/PRD.md"):]
     return line.replace("→ przekazane do ", "→ moved to ")
 
 

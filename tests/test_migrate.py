@@ -268,6 +268,11 @@ Kolor tekstu.
 - dość (planowanie): 003 #1 `app.py:3` — pusta nazwa daje niepełne powitanie. Powód: nikt nie podaje pustej nazwy w tym projekcie [Cel 1]
 - nierealna (M1 code-review): `app.py:5` — kod języka z dużej litery. Kto to wytwarza: nikt, wołający podaje stałe
 
+## Fragment PRD
+Przeniesione z loc/PRD.md 2026-10-16.
+### Powitania
+Witamy po polsku.
+
 ## Rozstrzygnięcie
 <puste do czasu obsłużenia: wynik wykonania, data, commit>
 """
@@ -354,7 +359,7 @@ class MigrateTest(unittest.TestCase):
                        "## Milestones", "### M1 — test suite", "**No tests:**", "- K2 (behaviour):",
                        "→ manual", "**Performer:** user (blocking)", "## Plan gate", "## Review notes",
                        "- enough (planning): 003 #1", "Reason: nikt", "- unrealistic (M1 code-review):",
-                       "Who produces it: nikt", "loc/inbox/007-question-kropka.md", "<empty until handled>"):
+                       "Who produces it: nikt", "## PRD fragment\nMoved from loc/PRD.md 2026-10-16.", "loc/inbox/007-question-kropka.md", "<empty until handled>"):
             self.assertIn(marker, plan)
 
         stuck = self.read("loc/inbox/005-stuck-powitania.md")

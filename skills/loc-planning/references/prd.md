@@ -6,7 +6,7 @@ Take the date with `date "+%Y-%m-%d"`. `loc/` is not in git: nothing removed fro
 
 ## A `Directions` fragment becomes a plan
 
-1. Copy the fragment, heading and text unchanged, into the plan under a `## PRD fragment` section placed before `## Resolution`, with a first line `Przeniesione z loc/PRD.md <date>.`
+1. Copy the fragment, heading and text unchanged, into the plan under a `## PRD fragment` section placed before `## Resolution`, with a first line `Moved from loc/PRD.md <date>.`
 2. Remove the fragment from the PRD.
 
 **Old markers.** A PRD written before this rule may still hold fragments marked `→ moved to loc/inbox/NNN-plan-….md`. Whenever you plan, move each such fragment the same way into the plan the marker names (in `loc/inbox/` or `loc/inbox/done/`), and remove it from the PRD. If that plan no longer exists, move it into the plan you are writing.

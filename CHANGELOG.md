@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.1.0 — 2026-10-16
+
+- `loc-planning`: the judge is now a required, numbered step (3) in `SKILL.md`, before the plan is written. A model that read it in `references/findings.md` could decide that "the plan gate will check" and skip it. `findings.md`, `closing.md` and `tests.md` are merged into `SKILL.md`, since nearly every plan needs them; only `prd.md` stays a reference.
+- `check_plan.py`: a plan whose `**Source:**` names a `review` accounts for every finding of it (`003 #2`, numbered in `## Findings` order). Blocking and Non-blocking ones go in a milestone (the judge's `fix`) or an `enough` line in `## Review notes`; Suggestion and Unrealistic ones only in `## Review notes`, never in a milestone; one already fixed may be noted under the review's `## Resolution`. The message names the `judge` agent.
+- Word budgets: `loc-planning` `SKILL.md` 2400, `loc-orchestrate` `SKILL.md` 1200.
+- The last Polish words without diacritics are gone from skills and scenarios (`tymczasowo wariant A`, `Przeniesione z loc/PRD.md`, `popraw N` → `fix N`); a test now catches them. `migrate.py` also translates `Przeniesione z loc/PRD.md`.
+
 ## 2.0.0 — 2026-10-16
 
 - **Breaking: `loc/` is in English.** Headings, fields, statuses, inbox types and markers are English (`question`, `deferred`, `review`, `stuck`; `## Goal`, `**Proof:**`, `**Status:** open`…), and so is the text the skills write. Only the text of a `question` file is in the `User language` of `CLAUDE.md`, so a design question can be answered in the user's own language. Scripts, hooks, templates, skills, agents and scenarios use the new names; `loc/state/mutacja*` is now `mutation*` and `qa-historia.log` is `qa-history.log`.

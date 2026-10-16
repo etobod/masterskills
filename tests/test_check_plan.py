@@ -303,5 +303,107 @@ class CheckPlanTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
 
+REVIEW = """# 003 — Review of the greeting
+
+**Type:** review
+**Status:** open
+**Created:** 2026-10-16 10:00
+**Source:** HEAD
+
+## Scope
+app.py
+
+## Findings
+- **[Blocking]** `app.py:3` — one chain for both axes → two FFTs
+- **[Non-blocking]** `app.py:28` — the error display is never updated → compute RMS
+- **[Suggestion]** `app.py:90` — `trail.shift()` is O(n) → ring buffer
+- **[Non-blocking]** `app.py:40` — the button does nothing → draw the path
+
+## Resolution
+{resolution}
+"""
+
+REVIEWED_PLAN = """# 004 — Fix the review
+
+**Type:** plan
+**Status:** open
+**Source:** {source}
+
+## Goal
+The review findings are fixed.
+
+## Out of scope
+- Input findings without a fix verdict: ## Review notes.
+
+## Not defended against
+- none
+
+## Code context
+- `app.py:3`
+
+## Milestones
+
+### M1 — two chains
+Fixes 003 #1.{extra}
+**No tests:** docs only
+**Proof:** `grep x` → `1`
+
+## Risks and decisions
+- none
+
+## Review notes
+{notes}
+"""
+
+ALL_NOTES = ("- enough (planning): 003 #2 `app.py:28` — no display. Reason: cosmetic [Goal 1]\n"
+             "- suggestion (planning): 003 #3 `app.py:90` — O(n) shift\n")
+
+
+class ReviewSourceTest(unittest.TestCase):
+    """A plan made from a review accounts for every finding of that review."""
+
+    def run_plan(self, notes: str, extra: str = "", resolution: str = "<empty until handled>",
+                 folder: str = "loc/inbox") -> tuple:
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        directory = Path(tempfile.mkdtemp(dir=SCRATCH))
+        self.addCleanup(shutil.rmtree, directory, True)
+        review = directory / folder / "003-review-greeting.md"
+        review.parent.mkdir(parents=True)
+        review.write_text(REVIEW.format(resolution=resolution), encoding="utf-8")
+        path = directory / "loc" / "inbox" / "004-plan-fix.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        source = f"{folder}/003-review-greeting.md"
+        path.write_text(REVIEWED_PLAN.format(source=source, notes=notes, extra=extra), encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
+        result = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_plan.py"), str(path)],
+                                capture_output=True, text=True, encoding="utf-8", cwd=directory, env=env)
+        out = json.loads(result.stdout)
+        return result.returncode, "\n".join(issue["problem"] for issue in out["issues"])
+
+    def test_unjudged_finding_fails(self):
+        code, problems = self.run_plan(ALL_NOTES)
+        self.assertEqual(code, 1)
+        self.assertIn("003 #4", problems)
+        self.assertIn("judge", problems)
+        self.assertNotIn("003 #2", problems)
+
+    def test_every_finding_accounted_passes(self):
+        code, problems = self.run_plan(ALL_NOTES, resolution="- 003 #4 already fixed in `app.py:40`")
+        self.assertEqual(code, 0, problems)
+        code, problems = self.run_plan(ALL_NOTES, extra=" Also 003 #4.")
+        self.assertEqual(code, 0, problems)
+
+    def test_suggestion_in_milestone_fails(self):
+        code, problems = self.run_plan(ALL_NOTES, extra=" Also 003 #4 and 003 #3.")
+        self.assertEqual(code, 1)
+        self.assertIn("003 #3", problems)
+        self.assertIn("Suggestion", problems)
+
+    def test_review_in_done_is_found(self):
+        code, problems = self.run_plan(ALL_NOTES, folder="loc/inbox/done")
+        self.assertEqual(code, 1)
+        self.assertIn("003 #4", problems)
+
+
 if __name__ == "__main__":
     unittest.main()

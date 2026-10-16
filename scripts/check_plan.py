@@ -26,6 +26,12 @@ Checks, in order:
     names a test (`test` or `spec` in it), not a source file;
   - an automatic proof reads `` `<command>` → `<output>` `` and does not just
     open a file;
+  - a plan whose `**Source:**` names a `review` (in `loc/inbox/` or `done/`)
+    accounts for each of its findings (`NNN #n`, numbered in `## Findings`
+    order): Blocking and Non-blocking ones in a milestone (the judge's `fix`)
+    or an `enough` line in `## Review notes`; Suggestion and Unrealistic ones
+    only in `## Review notes`; either may instead be under the review's
+    `## Resolution` when already fixed;
   - with `--ready` (before execution): `## Plan gate` records a round, and
     the input file named in `**Source:**` is no longer open in `loc/inbox/`;
   - no expanded path of this plugin: a plan names plugin files as
@@ -76,6 +82,8 @@ PROSE_RESULT = re.compile(r"^\*\*Proof:\*\*\s*`[^`]+`\s*→\s*(?P<result>[^`\s][
 CHECKABLE_PROOF = re.compile(r"^\*\*Proof:\*\*\s*`(?P<command>[^`]+)`\s*→\s*`[^`]+`")
 BROWSER = re.compile(r"^\s*(open|start|xdg-open)\b")
 GATE_RECORD = "Plan gate"
+FINDING = re.compile(r"^- \*\*\[([^\]]+)\]\*\*")
+NO_JUDGE = {"suggestion", "unrealistic", "low"}
 INPUT = re.compile(r"\b\d{3,}-(brainstorm|review|deferred|stuck|question)-[^\s`/\\)]+\.md\b")
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 
@@ -178,7 +186,65 @@ def check_ready(text: str, issues: list) -> None:
     for match in INPUT.finditer(source.group(1) if source else ""):
         if (project_dir() / "loc" / "inbox" / match.group(0)).is_file():
             issues.append({"line": 0, "problem": f"input loc/inbox/{match.group(0)} is still open: loc-planning "
-                           "did not close it (its step 6, references/closing.md); run loc-planning on the plan"})
+                           "did not close it (its step 7); run loc-planning on the plan"})
+
+
+def sections_of(text: str) -> dict:
+    """`## ` heading -> its lines."""
+    result, section = {}, None
+    for line in text.splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+            result.setdefault(section, [])
+        elif section:
+            result[section].append(line)
+    return result
+
+
+def find_input(name: str):
+    for folder in ("inbox", "inbox/done"):
+        path = project_dir() / "loc" / folder / name
+        if path.is_file():
+            return path
+    return None
+
+
+def check_review(text: str, issues: list) -> None:
+    """A plan made from a review accounts for every finding of it: the judge's `fix` in a milestone,
+    its `enough` (or a suggestion, unrealistic) line in `## Review notes`, or `## Resolution` of the
+    review for one already fixed. A finding that needs no judge never goes into a milestone."""
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    plan = sections_of(text)
+    milestones = "\n".join(plan.get("Milestones", []))
+    notes = plan.get("Review notes", [])
+    for match in INPUT.finditer(source.group(1) if source else ""):
+        path = find_input(match.group(0)) if match.group(1) == "review" else None
+        if not path:
+            continue
+        number = match.group(0).split("-", 1)[0]
+        review = sections_of(path.read_text(encoding="utf-8", errors="replace"))
+        resolution = "\n".join(review.get("Resolution", []))
+        findings = [line for line in review.get("Findings", []) if line.startswith("- ")]
+        for index, line in enumerate(findings, 1):
+            ref = f"{number} #{index}"
+            cited = re.compile(rf"\b{re.escape(ref)}(?!\d)")
+            category = FINDING.match(line)
+            category = category.group(1).strip() if category else "Non-blocking"
+            judged = category.lower() not in NO_JUDGE
+            in_milestone = bool(cited.search(milestones))
+            noted = [note for note in notes if cited.search(note)]
+            if not judged and in_milestone:
+                issues.append({"line": 0, "problem": f"review {ref} is a {category}: it never goes into a "
+                               f"milestone; record it in ## Review notes as `- {category.lower()} (planning): "
+                               f"{ref} …`"})
+            elif not (in_milestone or noted or cited.search(resolution)):
+                issues.append({"line": 0, "problem": (
+                    f"review {ref} ({category}) is not accounted for: give the Blocking and Non-blocking "
+                    f"findings of {match.group(0)} to the judge agent; `fix` → a milestone citing {ref}, "
+                    f"`enough` → `- enough (planning): {ref} … Reason: …` in ## Review notes"
+                    if judged else
+                    f"review {ref} ({category}) is not accounted for: record it in ## Review notes as "
+                    f"`- {category.lower()} (planning): {ref} …`")})
 
 
 def check(text: str) -> dict:
@@ -282,6 +348,8 @@ def main() -> int:
         print(json.dumps({"plan": args.plan.as_posix(), "ok": False, "error": str(error)}))
         return 2
     result = check(text)
+    check_review(text, result["issues"])
+    result["ok"] = not result["issues"]
     if args.ready:
         check_ready(text, result["issues"])
         result["ok"] = not result["issues"]

@@ -6,7 +6,7 @@ Given a brainstorm, `loc-init` must fill only the empty frame sections (`Goal`, 
 
 - `git init`, then `loc-init` already run (the plain script: `init_project.py --project .`).
 - In `CLAUDE.md`, the `## Limits` section holds one line of the user's own: `No cloud services.`
-- `loc/inbox/001-brainstorm-dziennik.md`, from the brainstorm template, with:
+- `loc/inbox/001-brainstorm-diary.md`, from the brainstorm template, with:
   - `## Topic`: an offline diary app for one person.
   - `## Decisions`:
     - `B-01 Goal: a private diary GOAL-MARKER for one person, no account.`

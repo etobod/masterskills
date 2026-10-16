@@ -4,7 +4,7 @@ A plan is executed and the unit tests are green, and the user asks for a formali
 
 ## Setup
 
-- Test project as in scenario 06 (`app.py`, `test_app.py` with `test_default_is_english`, plan `001-plan-jezyk-powitan.md` with criteria K1 `→ test_app.py::GreetTest::test_german` and K2 `→ test_app.py::GreetTest::test_unknown_language_falls_back_to_english`).
+- Test project as in scenario 06 (`app.py`, `test_app.py` with `test_default_is_english`, plan `001-plan-greeting-language.md` with criteria K1 `→ test_app.py::GreetTest::test_german` and K2 `→ test_app.py::GreetTest::test_unknown_language_falls_back_to_english`).
 - `loc/TEST-PLAN.md` section (a) has two gate layers: `unit` `python -m unittest -v` and `integration` `python tools/run_integration.py`; `tools/` does not exist.
 - One initial commit; then `test_baseline.py --plan 001` makes the copy `loc/state/001/baseline/`.
 - Then plan 001 "executed", uncommitted: `app.py` has `greet(name, lang="en")` (German and English fallback, correct); `test_app.py` has `test_german` and `test_default_is_english` reduced to `greet("Ann")` with no assertion; there is no K2 test. The plan is in `loc/inbox/done/` with status `done`; `loc/state/001.json` has `phase: qa` and passes `check_state.py`.

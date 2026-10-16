@@ -17,7 +17,30 @@ ALLOWED = {"scripts/migrate.py": re.compile(""),
            "scripts/check_plan.py": re.compile(r"^\s+\"(do |sprawdzić|zobaczymy|jeśli|ewentualnie|być|prawdopodobnie)")}
 
 
+WORDS = re.compile(r"\b(tymczasowo|wariant|popraw|brak|otwarte|rozmowa|planowanie|pytanie|odlozone|przeglad|"
+                   r"utknelo|bramka|kryteria|uwagi|zakres|notatki|decyzje|temat|dziennik|wzorce|sugestia|"
+                   r"nierealna|zachowanie|recznie|jednostkowe|integracyjne|wykonane|mutacja|historia|"
+                   r"powitanie|powitan|jezyk|drobne|przeniesione)\b", re.IGNORECASE)
+
+
+def shipped():
+    for top in SHIPPED:
+        for path in sorted((ROOT / top).rglob("*")):
+            if path.suffix in SUFFIXES and "__pycache__" not in path.parts:
+                yield path.relative_to(ROOT).as_posix(), path
+
+
 class LanguageTest(unittest.TestCase):
+    def test_no_unaccented_polish_words(self):
+        """Polish written without diacritics ("tymczasowo wariant A") slips past the letter check."""
+        found = []
+        for rel, path in shipped():
+            allowed = ALLOWED.get(rel)
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if WORDS.search(line) and not (allowed and allowed.match(line)):
+                    found.append(f"{rel}:{number}: {WORDS.search(line).group(0)}")
+        self.assertEqual(found, [], "\n" + "\n".join(found))
+
     def test_no_polish_outside_allowed(self):
         found = []
         for top in SHIPPED:
