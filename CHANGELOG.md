@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.5.1 — 2026-10-17
+
+- The `## Resolution` placeholder of a `deferred` file says what to do with the result of a manual check: each point passed or failed in the user's words; a failed point becomes a new `deferred` file or a plan, not a fix in the conversation unless the user asks; its fix starts with a test that fails on it. Only new `deferred` files get it.
+
 ## 2.5.0 — 2026-10-17
 
 - `next_number.py --what --why --when` fill the sections of a `deferred` file in the command that creates it; `loc-qa` and `loc-orchestrate` use them, so a deferred manual check is never left as the empty template.
