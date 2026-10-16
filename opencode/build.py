@@ -14,6 +14,11 @@ The Claude Code plugin is the source; this script only translates it:
 - `masterskills/`: scripts, hooks, rules and templates, with `VERSION` and
   `MANIFEST` (every file this build wrote, so the next one removes only those).
 
+A script command, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/<name>.py`,
+becomes `<python> -B "<absolute path>"`: OpenCode on Windows runs commands in
+PowerShell, which has no `sh`. `<python>` is the first of python3, python, py
+that runs Python 3 at build time, as `py.sh` would choose.
+
 `${CLAUDE_PLUGIN_ROOT}` in Markdown becomes an absolute path, since OpenCode has
 no such variable, and the `masterskills:` prefix of skill and agent names goes.
 
@@ -27,10 +32,12 @@ Exit code 0 on success, 1 on an error.
 """
 
 import argparse
+import functools
 import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -40,6 +47,20 @@ SKIPPED = re.compile(r"(__pycache__|\.pyc$)")
 TEXT = {".md", ".json"}
 RULES = "masterskills/rules/core.md"
 NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+SCRIPT = re.compile(r'sh "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/py\.sh" (\S+\.py)')
+PYTHONS = ("python3", "python", "py")
+
+
+@functools.lru_cache(maxsize=None)
+def find_python() -> str:
+    for candidate in PYTHONS:
+        if not shutil.which(candidate):
+            continue
+        probe = subprocess.run([candidate, "-c", "import sys; sys.exit(sys.version_info[0] != 3)"],
+                               capture_output=True)
+        if probe.returncode == 0:
+            return candidate
+    return "python"
 
 
 def front_matter(text: str) -> tuple:
@@ -59,6 +80,7 @@ def front_matter(text: str) -> tuple:
 
 def translate(text: str, out: Path) -> str:
     base = out.resolve().as_posix()
+    text = SCRIPT.sub(lambda m: f'{find_python()} -B "{base}/masterskills/{m.group(1)}"', text)
     text = text.replace("${CLAUDE_PLUGIN_ROOT}/skills/", f"{base}/skills/")
     text = text.replace("${CLAUDE_PLUGIN_ROOT}", f"{base}/masterskills")
     return re.sub(r"\bmasterskills:(?=[a-z])", "", text)

@@ -48,13 +48,20 @@ def inbox_section(summary: dict) -> str:
     return "\n".join(lines)
 
 
+def script_command(root: str, script: str) -> str:
+    """How the model runs one of the plugin's scripts. The OpenCode plugin names its
+    Python in MASTERSKILLS_PYTHON: its shell may be PowerShell, which has no `sh`."""
+    python = os.environ.get("MASTERSKILLS_PYTHON")
+    return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
+
+
 def inbox_commands() -> str:
     # The root as Claude Code gave it, so plugin_commands.py recognises the command.
     root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
     return (
         "\nInbox commands: run each alone in the Bash tool, from the project directory "
         "(no `cd`, `&&` or PowerShell), so they need no approval.\n"
-        f'- New file from its template, time from the clock: `sh "{root}/scripts/py.sh" scripts/next_number.py '
+        f'- New file from its template, time from the clock: `{script_command(root, "scripts/next_number.py")} '
         '--type <pytanie|odlozone|...> --slug "<few words>" --title "<title>" --source "<where it came from>"`\n'
         "- Close a file: `mv loc/inbox/<file> loc/inbox/done/`"
     )

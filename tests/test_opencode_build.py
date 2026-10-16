@@ -49,7 +49,7 @@ class OpenCodeBuildTest(unittest.TestCase):
             self.assertNotIn("CLAUDE_PLUGIN_ROOT", text, path)
             self.assertNotRegex(text, r"masterskills:[a-z]", path)
         orchestrate = (out / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn(f"{out.resolve().as_posix()}/masterskills/scripts/py.sh", orchestrate)
+        self.assertIn(f"{out.resolve().as_posix()}/masterskills/scripts/check_plan.py", orchestrate)
 
     def test_skill_front_matter_is_what_opencode_reads(self):
         out = self.scratch()
@@ -89,8 +89,19 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertNotIn("@@", plugin)
         self.assertIn(f'"{out.resolve().as_posix()}/masterskills"', plugin)
         self.assertNotIn("permission.ask", plugin)
+        self.assertIn("MASTERSKILLS_PYTHON", plugin)
         hooks = json.loads((out / "masterskills" / "hooks" / "hooks.json").read_text(encoding="utf-8"))
         self.assertIn("PreToolUse", hooks["hooks"])
+
+    def test_script_commands_run_without_sh(self):
+        # OpenCode on Windows runs commands in PowerShell, which has no `sh`.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        for top in ("skills", "commands", "agents"):
+            for path in (out / top).rglob("*.md"):
+                self.assertNotIn("py.sh", path.read_text(encoding="utf-8"), path)
+        review = (out / "skills" / "loc-review" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertRegex(review, r'\S -B "' + re.escape(out.resolve().as_posix()) + r'/masterskills/scripts/review_diff\.py"')
 
     def test_install_keeps_the_users_files_and_replaces_its_own(self):
         home = self.scratch()

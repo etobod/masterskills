@@ -45,6 +45,13 @@ def has_workflows(project: Path) -> bool:
     return any(workflows.glob("*.yml")) or any(workflows.glob("*.yaml"))
 
 
+def script_command(root: str, script: str) -> str:
+    """How the model runs one of the plugin's scripts. The OpenCode plugin names its
+    Python in MASTERSKILLS_PYTHON: its shell may be PowerShell, which has no `sh`."""
+    python = os.environ.get("MASTERSKILLS_PYTHON")
+    return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
+
+
 def context(name: str) -> str:
     root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
     return (
@@ -54,7 +61,7 @@ def context(name: str) -> str:
         f"gh run list --branch {name} --limit 1 --json status,conclusion,url\n\n"
         "- `conclusion: failure` → create an inbox file, add the run's `url` to it and tell the user "
         "in one sentence:\n"
-        f'  `sh "{root}/scripts/py.sh" scripts/next_number.py --type utknelo --slug "ci {name}" '
+        f'  `{script_command(root, "scripts/next_number.py")} --type utknelo --slug "ci {name}" '
         f'--title "CI failed on {name}" --source "git push"`\n'
         "- `status: in_progress` or `queued` → one sentence to the user; do not wait or poll.\n"
         "- `success` → one sentence.\n"

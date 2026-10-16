@@ -74,7 +74,13 @@ function hook(name: string, data: object, directory: string): any {
   const run = spawnSync(py, ["-B", `${ROOT}/hooks/${name}.py`], {
     input: JSON.stringify(data),
     encoding: "utf-8",
-    env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, CLAUDE_PROJECT_DIR: directory, PYTHONIOENCODING: "utf-8" },
+    env: {
+      ...process.env,
+      CLAUDE_PLUGIN_ROOT: ROOT,
+      CLAUDE_PROJECT_DIR: directory,
+      MASTERSKILLS_PYTHON: py,
+      PYTHONIOENCODING: "utf-8",
+    },
     timeout: 10000,
   })
   try {

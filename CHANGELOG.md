@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 1.20.1 — 2026-10-16
+
+- OpenCode: script commands no longer need `sh`. On Windows OpenCode runs commands in PowerShell, so every `sh ".../py.sh" scripts/<name>.py` in a skill failed on the first try. The build now writes `<python> -B "<absolute path>/scripts/<name>.py"`, with the Python found at install time; the absolute path also stops a model from looking for the script under the skill's directory. The inbox and CI commands from the hooks follow the same form. Claude Code is unchanged.
+
 ## 1.20.0 — 2026-10-16
 
 - `loc/PRD.md` has a new section `## Scenariusze`: 3–7 ways the project is used (who, what they do, what they expect to see). Like `Cel` and `Rdzeń idei`, it changes only with the user's consent. The `judge` reads it: a finding that breaks a scenario is `fix`, and an `enough` line may rest on `[Scenariusz <n>]`. Without scenarios the judge works as before.

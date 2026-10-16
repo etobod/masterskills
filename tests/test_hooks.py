@@ -230,6 +230,17 @@ class SessionStartTest(unittest.TestCase):
         self.assertIn("loc/inbox/001-pytanie-a.md", text)
         self.assertIn("mv loc/inbox/<file> loc/inbox/done/", text)
 
+    def test_inbox_command_follows_the_python_of_opencode(self):
+        project = scratch_dir(self)
+        (project / "loc" / "inbox" / "done").mkdir(parents=True)
+        env = {"CLAUDE_PROJECT_DIR": str(project), "CLAUDE_PLUGIN_ROOT": "C:/oc/masterskills"}
+        out = run_hook("session_start.py", {"cwd": str(project)}, {**env, "MASTERSKILLS_PYTHON": "python"})
+        self.assertIn('`python -B "C:/oc/masterskills/scripts/next_number.py" --type',
+                      out["hookSpecificOutput"]["additionalContext"])
+        out = run_hook("session_start.py", {"cwd": str(project)}, {**env, "MASTERSKILLS_PYTHON": ""})
+        self.assertIn('`sh "C:/oc/masterskills/scripts/py.sh" scripts/next_number.py --type',
+                      out["hookSpecificOutput"]["additionalContext"])
+
     def test_project_without_loc(self):
         self.assertIn("no `loc/inbox/` yet", self.context(scratch_dir(self)))
 
