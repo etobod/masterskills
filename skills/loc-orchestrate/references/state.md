@@ -1,12 +1,6 @@
 # The state file `loc/state/<NNN>.json`
 
-`<NNN>` is the plan's number. The file is the memory of the run: after `/clear`, compaction or a new session, the next step is read from it, never guessed or asked. Write it in English, with the Write or Edit tool (a script or heredoc asks for permission). Update it **before** each step starts and **after** each step ends, then validate:
-
-```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_state.py loc/state/<NNN>.json
-```
-
-Exit `0` or fix the file and run it again. Take the time from `date "+%Y-%m-%d %H:%M"`.
+`<NNN>` is the plan's number. The file is the memory of the run: after `/clear`, compaction or a new session, the next step is read from it, never guessed or asked. Write it in English, with the Write or Edit tool (a script or heredoc asks for permission). Update it **before** each step starts and **after** each step ends. A hook checks it after every write (the plan's `## Review notes` included): when it reports problems, fix the file before the next step. Take the time from `date "+%Y-%m-%d %H:%M"`.
 
 ## Start value
 
@@ -48,7 +42,7 @@ One entry in `milestones` per `### ` heading under `## Milestones`, in order:
 
 ## Resuming
 
-The file exists when the skill starts: validate it, read `next_action`, and continue from there. Say in one line where you resume. Do not repeat a step whose result is already recorded, and do not reset round counters.
+The file exists when the skill starts: validate it (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_state.py loc/state/<NNN>.json`, exit `0` or fix it), read `next_action`, and continue from there. Say in one line where you resume. Do not repeat a step whose result is already recorded, and do not reset round counters.
 
 ## At the end
 

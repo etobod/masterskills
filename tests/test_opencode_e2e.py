@@ -89,6 +89,13 @@ class OpenCodeHooksTest(unittest.TestCase):
         answer = self.run_tool("write", {"filePath": (self.project / "inside.txt").as_posix(), "content": "x"})
         self.assertTrue((self.project / "inside.txt").exists(), answer)
 
+    def test_state_file_is_checked_after_a_write(self):
+        state = (self.project / "loc" / "state" / "007.json").as_posix()
+        answer = self.run_tool("write", {"filePath": state, "content": "{\"plan\": 1}}"})
+        self.assertIn("not valid JSON", answer)
+        answer = self.run_tool("write", {"filePath": (self.project / "notes.json").as_posix(), "content": "{"})
+        self.assertNotIn("not valid JSON", answer)
+
     def test_commit_with_ai_attribution_is_refused(self):
         answer = self.run_tool("bash", {"command": f'git commit --allow-empty -m x -m "{ATTRIBUTION}"',
                                         "description": "commit"})

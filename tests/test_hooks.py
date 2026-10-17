@@ -164,6 +164,51 @@ class AfterPushTest(unittest.TestCase):
                 self.assertEqual(self.context(project, command), "")
 
 
+VALID_STATE = {
+    "plan": "loc/inbox/007-plan-x.md", "mode": "subagent", "milestone": 1, "phase": "implement",
+    "milestones": [{"id": "M1", "status": "in_progress", "start": "abc1234", "end": None}],
+    "gates": {}, "deviations": [], "next_action": "Implement M1.", "updated": "2026-10-17 12:00",
+}
+
+
+class StateCheckTest(unittest.TestCase):
+    def context(self, rel: str, text: str, tool: str = "Write") -> str:
+        project = scratch_dir(self)
+        path = project / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        out = run_hook("state_check.py", {"tool_name": tool, "tool_input": {"file_path": str(path)},
+                                          "cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
+        return out.get("hookSpecificOutput", {}).get("additionalContext", "")
+
+    def test_broken_json_is_reported(self):
+        text = self.context("loc/state/007.json", json.dumps(VALID_STATE) + ',\n  "deviations": []\n}')
+        self.assertIn("loc/state/007.json", text)
+        self.assertIn("not valid JSON", text)
+        self.assertIn("Fix the file", text)
+
+    def test_valid_state_adds_nothing(self):
+        self.assertEqual(self.context("loc/state/007.json", json.dumps(VALID_STATE), "Edit"), "")
+
+    def test_problems_are_listed(self):
+        text = self.context("loc/state/007.json", json.dumps({**VALID_STATE, "phase": "coding"}))
+        self.assertIn("phase: expected one of", text)
+        self.assertIn("Fix the file", text)
+
+    def test_other_files_add_nothing(self):
+        for rel in ("loc/state/notes.md", "src/007.json", "loc/state/007/state.json"):
+            with self.subTest(rel=rel):
+                self.assertEqual(self.context(rel, "{"), "")
+
+    def test_hook_is_registered(self):
+        hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))["hooks"]
+        groups = [g for g in hooks["PostToolUse"] if any("state_check.py" in h["command"] for h in g["hooks"])]
+        self.assertEqual([g["matcher"] for g in groups], ["Write|Edit"])
+        state = (ROOT / "skills" / "loc-orchestrate" / "references" / "state.md").read_text(encoding="utf-8")
+        self.assertNotIn("then validate", state)
+        self.assertIn("A hook checks it after every write", state)
+
+
 class WriteGuardTest(unittest.TestCase):
     def setUp(self):
         self.project = str(scratch_dir(self))

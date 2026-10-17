@@ -6,7 +6,7 @@
 
     {
       "plan": "loc/inbox/018-plan-csv-export.md",   # or loc/inbox/done/..., NNN = file name
-      "mode": "inline" | "subagent",
+      "mode": "inline" | "subagent",              # inline: 2 milestones at most, or a rule-3 deviation
       "milestone": 1,                            # current one, 1-based
       "phase": "start" | "implement" | "proof" | "code-review"
                | "qa" | "final-review" | "journal" | "done",
@@ -65,6 +65,7 @@ MODES = {"inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
+INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
 STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-stuck-[^/]+\.md$")
@@ -319,6 +320,10 @@ def check(path: Path, data) -> list:
         problems.append(f"phase: expected one of {sorted(PHASES)}")
 
     ids = check_milestones(data, problems)
+    switched = any(isinstance(item, dict) and item.get("rule") == 3 for item in data.get("deviations") or [])
+    if data.get("mode") == "inline" and len(ids) > INLINE_MAX and not switched:
+        problems.append(f"mode: inline is for {INLINE_MAX} milestones at most, this plan has {len(ids)}: "
+                        "use subagent, or record why you switched as a deviation (rule 3)")
     current = data.get("milestone")
     if not is_int(current) or not 1 <= current <= max(len(ids), 1):
         problems.append(f"milestone: expected 1..{len(ids)}")

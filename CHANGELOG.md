@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.6.0 — 2026-10-17
+
+- New PostToolUse hook `state_check.py`: after every `Write`/`Edit` of `loc/state/<NNN>.json` it runs the `check_state.py` checks and gives the model the problems, or nothing when the file is valid. `loc-orchestrate` no longer runs the validation command after each state update (only once when resuming a run), which saves a tool call per update.
+- OpenCode: the plugin bridge runs PostToolUse hooks after `write`, `edit` and `apply_patch` too, not only after `bash`.
+- `check_state.py`: `mode: inline` is for 2 milestones at most; a larger plan run inline needs a rule-3 deviation saying why. A run already in progress that breaks this gets the message at its next state write.
+
 ## 2.5.3 — 2026-10-17
 
 - `opencode-install.bat` first upgrades OpenCode itself (`winget upgrade --id SST.opencode -e`, no prompts). Every `open-code.bat` made by `loc-init` calls it, so starting OpenCode from a project also keeps OpenCode current. No `winget`, no newer version or a failed upgrade does not stop the plugin install.

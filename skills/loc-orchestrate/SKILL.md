@@ -18,7 +18,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 2. If `loc/state/<NNN>.json` exists, **resume** from its `next_action` (`references/state.md`).
 3. Read the plan, the project's `CLAUDE.md` (`Commands`, `Invariants`, `Limits`) and `loc/PATTERNS.md`.
 4. Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py --ready <plan>`. If it exits non-zero, the plan's status says the gate failed, or `loc/inbox/` has an open `PRD:` `question`, **stop**: say why, point to `/masterskills:loc-planning`.
-5. Choose the mode: **inline** for one or two small milestones; **subagent** otherwise. Create the state file (`references/state.md`) and validate it.
+5. Choose the mode: **inline** for one or two small milestones; **subagent** otherwise. Create the state file (`references/state.md`).
 6. Copy the tests: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/test_baseline.py --plan <NNN>`.
 
 ## 2. Each milestone
@@ -59,7 +59,7 @@ A failed gate ends in `stuck`, not in a stop.
 1. **QA gate** (`qa`), only when the plan has `**Criteria:**` (else report `**No tests:**`): `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never tests; next round. Third failure: **stuck**.
 2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode, gate `final-review`).
 3. **Close what the plan resolved**: milestone `stuck` files whose points are all fixed now get `## Resolution` and move to `loc/inbox/done/` (`references/stuck.md`).
-4. **Close the plan.** Under `## Resolution`: `done <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-stuck-…`), deviations and new `question` files. `**Status:**` → `done <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `open — QA failed`, not moved. Update `plan` in the state file, set `phase: journal`, validate.
+4. **Close the plan.** Under `## Resolution`: `done <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-stuck-…`), deviations and new `question` files. `**Status:**` → `done <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `open — QA failed`, not moved. Update `plan` in the state file, set `phase: journal`.
 5. **Journal.** First, anything that failed during the plan and worked another way must be in `loc/PATTERNS.md` (rule 10): add what is missing. Then one command, your text (English, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Details: <plan path>"`.
 6. **Commit** the plan's files, never push: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/commit_plan.py --state loc/state/<NNN>.json --message "<type(scope): summary>"`, or `--skip "<reason>"` when the project's `CLAUDE.md` says the user commits. Rejected: report it, never bypass. Then `phase: done`, validate.
 7. **Report** in the user's language, briefly: the commit, milestones with proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, QA verdict, final review result. Then **"Judge: enough"**: every `enough` line, numbered in plan order, grouped by its PRD point; "fix 2" goes to `loc-planning`.

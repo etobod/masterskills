@@ -65,6 +65,18 @@ class CheckStateTest(unittest.TestCase):
                                 capture_output=True, text=True, encoding="utf-8")
         return result.returncode, json.loads(result.stdout)
 
+    def test_inline_is_for_two_milestones_at_most(self):
+        def milestones(n):
+            return [{"id": f"M{i}", "status": "pending", "start": None, "end": None} for i in range(1, n + 1)]
+        three = {**state({}), "milestones": milestones(3)}
+        code, out = self.run_check(three)
+        self.assertEqual(code, 1)
+        self.assertTrue(any(p.startswith("mode: inline") for p in out["problems"]), out)
+        switched = {**three, "deviations": [{"milestone": "M1", "rule": 3, "note": "Switched to inline: M2 and M3 are one-line fixes."}]}
+        self.assertEqual(self.run_check(switched)[0], 0, self.run_check(switched)[1])
+        self.assertEqual(self.run_check({**state({}), "milestones": milestones(2)})[0], 0)
+        self.assertEqual(self.run_check({**three, "mode": "subagent"})[0], 0)
+
     def test_red_gate_with_output_is_valid(self):
         red = {"rounds": 1, "passed": True, "stuck": None,
                "output": "AssertionError: 'Hello, Ann' != 'Cześć, Ann'"}

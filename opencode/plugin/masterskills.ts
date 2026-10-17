@@ -105,13 +105,16 @@ export const Masterskills = async ({ directory }: { directory: string }) => {
       }
     },
 
-    // The PostToolUse hooks (the CI check after `git push`): their text is appended to the tool's output.
+    // The PostToolUse hooks (the state file check after a write, the CI check after `git push`):
+    // their text is appended to the tool's output. Claude Code runs them only after a call that succeeded.
     "tool.execute.after": async (input: any, output: any) => {
-      if (input.tool !== "bash" || (typeof output.metadata?.exit === "number" && output.metadata.exit !== 0)) return
-      const data = { hook_event_name: "PostToolUse", tool_name: "Bash", tool_input: { command: input.args?.command ?? "" }, cwd: directory }
-      for (const name of hooksFor("PostToolUse", "Bash")) {
-        const context = hook(name, data, directory)?.hookSpecificOutput?.additionalContext
-        if (context) output.output = `${output.output ?? ""}\n\n${context}`
+      if (input.tool === "bash" && typeof output.metadata?.exit === "number" && output.metadata.exit !== 0) return
+      for (const call of claudeCall(input.tool, input.args ?? {})) {
+        for (const name of hooksFor("PostToolUse", call.name)) {
+          const data = { hook_event_name: "PostToolUse", tool_name: call.name, tool_input: call.input, cwd: directory }
+          const context = hook(name, data, directory)?.hookSpecificOutput?.additionalContext
+          if (context) output.output = `${output.output ?? ""}\n\n${context}`
+        }
       }
     },
 
