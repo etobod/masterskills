@@ -8,6 +8,8 @@ The Claude Code plugin is the source; this script only translates it:
   lists skills only in `/skills`, not as commands of their own); a skill with
   `context: fork` runs in its `agent` as a subtask;
 - `agents/<name>.md`: `mode: subagent`, and `tools:` turned into `permission:`;
+  `opencode/agents/` adds agents for what Claude Code has built in (`code-review`),
+  and a `Skill(skill: "code-review", ...)` call becomes a call of that agent;
 - `plugins/masterskills.ts`: runs the Python hooks from OpenCode's plugin hooks
   (write and commit guards, core rules and inbox in the system prompt, the CI
   check after a push);
@@ -48,6 +50,7 @@ TEXT = {".md", ".json"}
 RULES = "masterskills/rules/core.md"
 NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 SCRIPT = re.compile(r'sh "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/py\.sh" (\S+\.py)')
+CODE_REVIEW = re.compile(r'Skill\(skill: "code-review", args: ("[^"]*")\)')
 PYTHONS = ("python3", "python", "py")
 
 
@@ -85,6 +88,8 @@ def translate(text: str, out: Path) -> str:
     text = text.replace("${CLAUDE_PLUGIN_ROOT}", f"{base}/masterskills")
     # Only Claude Code has a session id to resume; OpenCode's launcher needs none.
     text = text.replace(' --session "${CLAUDE_SESSION_ID}"', "")
+    # Claude Code's code-review skill is built in; OpenCode gets the agent in opencode/agents/.
+    text = CODE_REVIEW.sub(lambda m: f'task(subagent_type: "code-review", prompt: {m.group(1)})', text)
     return re.sub(r"\bmasterskills:(?=[a-z])", "", text)
 
 
@@ -126,7 +131,7 @@ def files(out: Path) -> dict:
             source.read_text(encoding="utf-8"), out)
         if source.name == "SKILL.md":
             result[f"commands/{source.parent.name}.md"] = command(source)
-    for source in sorted((ROOT / "agents").glob("*.md")):
+    for source in sorted((ROOT / "agents").glob("*.md")) + sorted((ROOT / "opencode" / "agents").glob("*.md")):
         result[f"agents/{source.name}"] = agent(source, out)
     for top in PAYLOAD:
         for source in sorted((ROOT / top).rglob("*")):

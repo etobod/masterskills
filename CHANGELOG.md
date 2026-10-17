@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.5.2 — 2026-10-17
+
+- OpenCode: the milestone and final review gates had no `code-review`, which is a skill built into Claude Code, so a model substituted `rubber-duck`, which does not look for bugs. The OpenCode build now installs a `code-review` agent (`opencode/agents/code-review.md`: correctness findings with `file:line` and `high`/`medium`/`low`, read-only) and turns each `Skill(skill: "code-review", args: "…")` into `task(subagent_type: "code-review", prompt: "…")`. `measure.py` counts `opencode/agents/*.md` against the agent budget. Claude Code is unchanged.
+
 ## 2.5.1 — 2026-10-17
 
 - The `## Resolution` placeholder of a `deferred` file says what to do with the result of a manual check: each point passed or failed in the user's words; a failed point becomes a new `deferred` file or a plan, not a fix in the conversation unless the user asks; its fix starts with a test that fails on it. Only new `deferred` files get it.

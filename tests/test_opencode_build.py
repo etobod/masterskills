@@ -82,6 +82,28 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertIn("edit: allow", qa)
         self.assertIn("bash: allow", qa)
 
+    def test_code_review_is_an_agent(self):
+        # Claude Code's code-review skill is built in; OpenCode gets an agent instead.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        for path in out.rglob("*.md"):
+            self.assertNotIn('Skill(skill: "code-review"', path.read_text(encoding="utf-8"), path)
+        for rel, args in (("skills/loc-orchestrate/SKILL.md", '"<changed files> medium"'),
+                          ("skills/loc-orchestrate/references/gates.md", '"<files review_diff listed> medium'),
+                          ("skills/loc-review/SKILL.md", '"<changed files> <level>"')):
+            text = (out / rel).read_text(encoding="utf-8")
+            self.assertIn('task(subagent_type: "code-review", prompt: ' + args, text, rel)
+        agent = front((out / "agents" / "code-review.md").read_text(encoding="utf-8"))
+        self.assertIn("mode: subagent", agent)
+        self.assertIn("edit: deny", agent)
+        self.assertIn("bash: deny", agent)
+
+    def test_opencode_agents_are_measured(self):
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from measure import measure
+        items = {item["path"]: item for item in measure(ROOT)["items"]}
+        self.assertEqual(items["opencode/agents/code-review.md"]["kind"], "agent")
+
     def test_the_hooks_plugin_points_at_the_install(self):
         out = self.scratch()
         self.run_build("--out", str(out))

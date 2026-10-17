@@ -8,6 +8,7 @@ file of the plugin and compares them with their limit:
     skills/*/SKILL.md             800 words per skill core
     skills/*/references/*.md      800 words per reference
     agents/*.md                   500 words per agent definition
+    opencode/agents/*.md          500 words per OpenCode-only agent
 
 Exceptions approved by the user are listed in OVERRIDES.
 
@@ -41,6 +42,7 @@ PATTERNS = [
     ("skill", "skills/*/SKILL.md"),
     ("reference", "skills/*/references/*.md"),
     ("agent", "agents/*.md"),
+    ("agent", "opencode/agents/*.md"),
 ]
 
 
