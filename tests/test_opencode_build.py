@@ -98,6 +98,13 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertIn("edit: deny", agent)
         self.assertIn("bash: deny", agent)
 
+    def test_installer_upgrades_opencode_first(self):
+        lines = (ROOT / "opencode-install.bat").read_text(encoding="utf-8").splitlines()
+        upgrade = next(i for i, line in enumerate(lines) if "winget upgrade --id SST.opencode -e" in line)
+        self.assertLess(upgrade, next(i for i, line in enumerate(lines) if "git pull" in line))
+        self.assertIn("where winget", lines[upgrade])
+        self.assertNotIn("errorlevel", lines[upgrade + 1])
+
     def test_opencode_agents_are_measured(self):
         sys.path.insert(0, str(ROOT / "scripts"))
         from measure import measure

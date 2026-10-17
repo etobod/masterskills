@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.5.3 — 2026-10-17
+
+- `opencode-install.bat` first upgrades OpenCode itself (`winget upgrade --id SST.opencode -e`, no prompts). Every `open-code.bat` made by `loc-init` calls it, so starting OpenCode from a project also keeps OpenCode current. No `winget`, no newer version or a failed upgrade does not stop the plugin install.
+
 ## 2.5.2 — 2026-10-17
 
 - OpenCode: the milestone and final review gates had no `code-review`, which is a skill built into Claude Code, so a model substituted `rubber-duck`, which does not look for bugs. The OpenCode build now installs a `code-review` agent (`opencode/agents/code-review.md`: correctness findings with `file:line` and `high`/`medium`/`low`, read-only) and turns each `Skill(skill: "code-review", args: "…")` into `task(subagent_type: "code-review", prompt: "…")`. `measure.py` counts `opencode/agents/*.md` against the agent budget. Claude Code is unchanged.
