@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.10.0 — 2026-10-18
+
+- One queue for all open plans: every plan name carries its group, `NNN-plan-<group>-<difficulty>-<topic>.md`. A lower group runs first; plans of one group change different files. A series is no longer a separate idea: several plans from one input are plans in the queue.
+- New `scripts/plan_queue.py` prints the queue (plans without a group, written before this release, come first). `--make-room G --keep NNN` raises by one the group of every open plan from G up, except the new plan and the one being executed, renames the files and fixes every reference to them under `loc/`.
+- `loc-planning` picks the group: the highest in the queue when the plan changes no file its plans change, else the next one; an urgent plan takes group 1 and, when it must go before a group 1 plan, makes room. `loc-orchestrate` without an argument takes the first plan in the queue.
+- `check_plan.py` requires the group in the planning gate; with `--ready` old names still run.
+
 ## 2.9.0 — 2026-10-18
 
 - New core rule 13, tests with the user: a short overview, then one step per message (`Step 1/N`, what to install or open, the exact text to type, "paste the reply"); the model checks files itself. It applies in every project, also outside a skill.

@@ -59,7 +59,7 @@ def plan(milestones: str) -> str:
 
 class CheckPlanTest(unittest.TestCase):
     def run_check(self, text: str, suite: bool = True, ready: bool = False, files: tuple = (),
-                  claude: str = None, name: str = "007-plan-easy-powitania.md") -> tuple:
+                  claude: str = None, name: str = "007-plan-1-easy-powitania.md") -> tuple:
         """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md` and a test
         command in `CLAUDE.md`) or not; `files` are created in the project first, `claude` is its
         `CLAUDE.md`, `ready` adds `--ready`."""
@@ -431,9 +431,9 @@ class PlanNameTest(unittest.TestCase):
     GOOD = plan("### M1 — powitanie\n**No tests:** documents only\n**Proof:** `python -m unittest` → `OK`\n")
 
     def test_name_has_the_difficulty(self):
-        for name, ok in (("007-plan-powitania.md", False), ("007-plan-easy-powitania.md", True),
-                         ("007-plan-2-hard-powitania.md", True), ("007-plan-medium-x.md", True),
-                         ("007-plan-easy.md", False), ("007-plan-1-powitania.md", False)):
+        for name, ok in (("007-plan-powitania.md", False), ("007-plan-easy-powitania.md", False),
+                         ("007-plan-2-hard-powitania.md", True), ("007-plan-1-medium-x.md", True),
+                         ("007-plan-1-easy.md", False), ("007-plan-1-powitania.md", False)):
             with self.subTest(name=name):
                 code, out = self.run_check(self.GOOD, name=name)
                 self.assertEqual("file name" in self.problems(out), not ok, out)
@@ -444,8 +444,7 @@ class PlanNameTest(unittest.TestCase):
 
     def test_planning_names_the_difficulty(self):
         text = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn('--slug "<difficulty>-<topic>"', text)
-        self.assertIn("`<group>-<difficulty>-<topic>`", text)
+        self.assertIn('--slug "<group>-<difficulty>-<topic>"', text)
 
 
 class ReviewSourceTest(unittest.TestCase):
@@ -459,7 +458,7 @@ class ReviewSourceTest(unittest.TestCase):
         review = directory / folder / "003-review-greeting.md"
         review.parent.mkdir(parents=True)
         review.write_text(REVIEW.format(resolution=resolution), encoding="utf-8")
-        path = directory / "loc" / "inbox" / "004-plan-easy-fix.md"
+        path = directory / "loc" / "inbox" / "004-plan-1-easy-fix.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         source = f"{folder}/003-review-greeting.md"
         path.write_text(REVIEWED_PLAN.format(source=source, notes=notes, extra=extra), encoding="utf-8")
@@ -510,7 +509,7 @@ class MilestoneLimitTest(unittest.TestCase):
 
     def over(self, difficulty: str, count: int, suite: bool = False, ready: bool = False) -> bool:
         body = (self.SUITE + self.milestones(count, 2)) if suite else self.milestones(count)
-        code, out = self.run_check(plan(body), name=f"007-plan-{difficulty}-x.md", ready=ready)
+        code, out = self.run_check(plan(body), name=f"007-plan-1-{difficulty}-x.md", ready=ready)
         return "milestones, the limit" in self.problems(out)
 
     def test_limit_follows_the_difficulty(self):

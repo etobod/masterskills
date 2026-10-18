@@ -210,3 +210,56 @@ class LauncherTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PlanQueueTest(unittest.TestCase):
+    def setUp(self):
+        self.project = scratch_dir(self)
+        self.inbox = self.project / "loc" / "inbox"
+        (self.inbox / "done").mkdir(parents=True)
+        (self.project / "loc" / "state").mkdir()
+
+    def write(self, rel: str, text: str = "x\n") -> Path:
+        path = self.project / rel
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def queue(self, *args: str) -> dict:
+        result = run("plan_queue.py", "--project", ".", *args, cwd=self.project)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        return json.loads(result.stdout)
+
+    def test_lists_open_plans_in_group_order(self):
+        for name in ("071-plan-2-hard-b.md", "070-plan-2-easy-a.md", "072-plan-1-medium-c.md",
+                     "060-plan-old-topic.md", "073-brainstorm-x.md", "done/050-plan-1-easy-z.md"):
+            self.write(f"loc/inbox/{name}")
+        names = [Path(p["path"]).name for p in self.queue()["queue"]]
+        self.assertEqual(names, ["060-plan-old-topic.md", "072-plan-1-medium-c.md",
+                                 "070-plan-2-easy-a.md", "071-plan-2-hard-b.md"])
+
+    def test_make_room_shifts_groups_and_references(self):
+        self.write("loc/inbox/070-plan-1-easy-a.md")
+        self.write("loc/inbox/071-plan-2-hard-b.md", "**Source:** loc/inbox/done/069-brainstorm-x.md\n")
+        self.write("loc/inbox/072-plan-1-medium-run.md")
+        self.write("loc/inbox/075-plan-1-easy-urgent.md")
+        self.write("loc/inbox/done/069-brainstorm-x.md", "→ plan loc/inbox/071-plan-2-hard-b.md (2026-10-18)\n")
+        self.write("loc/inbox/074-deferred-y.md", "**Source:** loc/inbox/070-plan-1-easy-a.md\n")
+        self.write("loc/state/072.json", json.dumps({"plan": "loc/inbox/072-plan-1-medium-run.md", "phase": "build"}))
+        self.write("loc/state/070.json", json.dumps({"plan": "loc/inbox/070-plan-1-easy-a.md", "phase": "done"}))
+        self.write("loc/MEMORY.md", "Details: loc/inbox/071-plan-2-hard-b.md\n")
+        self.queue("--make-room", "1", "--keep", "075")
+        names = sorted(p.name for p in self.inbox.glob("*-plan-*.md"))
+        self.assertEqual(names, ["070-plan-2-easy-a.md", "071-plan-3-hard-b.md",
+                                 "072-plan-1-medium-run.md", "075-plan-1-easy-urgent.md"])
+        read = lambda rel: (self.project / rel).read_text(encoding="utf-8")
+        self.assertIn("loc/inbox/071-plan-3-hard-b.md", read("loc/inbox/done/069-brainstorm-x.md"))
+        self.assertIn("loc/inbox/070-plan-2-easy-a.md", read("loc/inbox/074-deferred-y.md"))
+        self.assertIn("loc/inbox/070-plan-2-easy-a.md", read("loc/state/070.json"))
+        self.assertIn("loc/inbox/071-plan-3-hard-b.md", read("loc/MEMORY.md"))
+        self.assertIn("072-plan-1-medium-run.md", read("loc/state/072.json"))
+
+    def test_skills_use_the_queue(self):
+        planning = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
+        orchestrate = (ROOT / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("plan_queue.py --make-room", planning)
+        self.assertIn("plan_queue.py", orchestrate)

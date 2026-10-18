@@ -6,7 +6,7 @@ argument-hint: "<inbox number or file | PRD fragment | task text>"
 
 # loc-planning
 
-Turns an input into `loc/inbox/NNN-plan-<difficulty>-<topic>.md`: a plan someone can execute without deciding anything.
+Turns an input into `loc/inbox/NNN-plan-<group>-<difficulty>-<topic>.md`: a plan someone can execute without deciding anything.
 
 **Do not execute the plan, do not change code.** Do the steps in order; none is optional.
 
@@ -57,12 +57,14 @@ Anything the user must decide goes to its own `question` file **before** the pla
 ## 5. Write the plan
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --slug "<difficulty>-<topic>" --title "<title>" --source "<input file or PRD heading or conversation>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --slug "<group>-<difficulty>-<topic>" --title "<title>" --source "<input file or PRD heading or conversation>"
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
-`<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 6, `medium` 4, `hard` 3, not counting an M1 that sets up the test suite. Never merge milestones to fit. When the work is over the limit, or the user asks for several plans from one input, it becomes a series: the slug is `<group>-<difficulty>-<topic>`, and every plan of a lower group runs before any plan of a higher one; plans sharing a group are independent and run in any order. Create the series in group order, so the numbers follow it.
+`<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 6, `medium` 4, `hard` 3, not counting an M1 that sets up the test suite. Never merge milestones to fit: work over the limit becomes several plans.
+
+`<group>` is the plan's place in the queue of open plans (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py`): a lower group runs first, and plans of one group change different files. Take the highest group in the queue when the plan changes no file its plans change, else that group + 1; an empty queue gives `1`. Urgent (the user says so): group `1`; when it shares files with a group `1` plan and must go first, run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py --make-room 1 --keep <NNN>` after creating it. Several plans from one input: one that depends on another goes in a higher group; create them in queue order.
 
 The file comes from the template with all sections. Fill them in English:
 
@@ -72,8 +74,6 @@ The file comes from the template with all sections. Fill them in English:
 - **Code context**: the files and `file:line` the plan relies on, as read now.
 - **Milestones**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Proof:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Manual check:**` for what only a person can see (below). Code and its tests go in the same milestone (below). A milestone's product is never a decision, an audit or a question.
 - **Risks and decisions**: references to brainstorm decisions (`B-01`…) and `question` files, and what each risk would cost.
-
-Small change, one or two milestones.
 
 ### Tests in the plan
 

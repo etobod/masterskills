@@ -36,7 +36,8 @@ Checks, in order:
     `## Resolution` when already fixed;
   - with `--ready` (before execution): `## Plan gate` records a round, and
     the input file named in `**Source:**` is no longer open in `loc/inbox/`;
-  - the file name gives the difficulty, `NNN-plan-[<group>-]<easy|medium|hard>-<topic>.md`
+  - the file name gives the queue group and the difficulty,
+    `NNN-plan-<group>-<easy|medium|hard>-<topic>.md` (`scripts/plan_queue.py`),
     and the plan has at most 6 (`easy`), 4 (`medium`) or 3 (`hard`) milestones, not
     counting an M1 that sets up the test suite (neither with `--ready`: plans written
     before the rule still run);
@@ -400,14 +401,14 @@ def check(text: str) -> dict:
             "suite_milestone": first_sets_up_suite}
 
 
-NAME = re.compile(r"^\d{3,}-plan-(\d+-)?(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")
+NAME = re.compile(r"^\d{3,}-plan-(\d+)-(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")
 
 
 LIMITS = {"easy": 6, "medium": 4, "hard": 3}
 
 
 def check_name(name: str, result: dict) -> None:
-    """The name gives the difficulty, and the plan keeps to its milestone limit
+    """The name gives the group and the difficulty, and the plan keeps to its milestone limit
     (the M1 that sets up the test suite is not counted)."""
     issues = result["issues"]
     match = NAME.match(name)
@@ -416,10 +417,10 @@ def check_name(name: str, result: dict) -> None:
         count = result["milestones"] - (1 if result.get("suite_milestone") else 0)
         if count > limit:
             issues.append({"line": 0, "problem": f"{match.group(2)} plan with {count} milestones, the limit is "
-                           f"{limit}: split it into a series (loc-planning step 5)"})
+                           f"{limit}: split it into several plans (loc-planning step 5)"})
     else:
-        issues.append({"line": 0, "problem": f"file name {name}: expected NNN-plan-<easy|medium|hard>-<topic>.md, "
-                       "or NNN-plan-<group>-<difficulty>-<topic>.md in a series (loc-planning step 5); rename it with mv"})
+        issues.append({"line": 0, "problem": f"file name {name}: expected NNN-plan-<group>-<easy|medium|hard>-<topic>.md "
+                       "(loc-planning step 5); rename it with mv"})
 
 
 def main() -> int:
