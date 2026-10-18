@@ -36,6 +36,8 @@ Checks, in order:
     `## Resolution` when already fixed;
   - with `--ready` (before execution): `## Plan gate` records a round, and
     the input file named in `**Source:**` is no longer open in `loc/inbox/`;
+  - the file name gives the difficulty, `NNN-plan-[<group>-]<easy|medium|hard>-<topic>.md`
+    (not with `--ready`: plans written before the rule still run);
   - no expanded path of this plugin: a plan names plugin files as
     `${CLAUDE_PLUGIN_ROOT}/...`, so it still works on another machine.
 
@@ -395,6 +397,15 @@ def check(text: str) -> dict:
     return {"ok": not issues, "milestones": milestones, "proofs": proofs, "issues": issues}
 
 
+NAME = re.compile(r"^\d{3,}-plan-(\d+-)?(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")
+
+
+def check_name(name: str, issues: list) -> None:
+    if not NAME.match(name):
+        issues.append({"line": 0, "problem": f"file name {name}: expected NNN-plan-<easy|medium|hard>-<topic>.md, "
+                       "or NNN-plan-<group>-<difficulty>-<topic>.md in a series (loc-planning step 5); rename it with mv"})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("plan", type=Path, help="plan file, e.g. loc/inbox/007-plan-csv-export.md")
@@ -408,6 +419,8 @@ def main() -> int:
         return 2
     result = check(text)
     check_review(text, result["issues"])
+    if not args.ready:
+        check_name(args.plan.name, result["issues"])
     result["ok"] = not result["issues"]
     if args.ready:
         check_ready(text, result["issues"])

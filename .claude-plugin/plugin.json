@@ -1,6 +1,6 @@
 {
   "name": "masterskills",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Universal, project-independent project workflow: brainstorm, plan, orchestrate, review and journal, with always-loaded rules, hooks and helper scripts.",
   "author": {
     "name": "etobod"

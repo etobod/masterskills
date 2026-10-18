@@ -59,7 +59,7 @@ def plan(milestones: str) -> str:
 
 class CheckPlanTest(unittest.TestCase):
     def run_check(self, text: str, suite: bool = True, ready: bool = False, files: tuple = (),
-                  claude: str = None) -> tuple:
+                  claude: str = None, name: str = "007-plan-easy-powitania.md") -> tuple:
         """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md` and a test
         command in `CLAUDE.md`) or not; `files` are created in the project first, `claude` is its
         `CLAUDE.md`, `ready` adds `--ready`."""
@@ -76,7 +76,7 @@ class CheckPlanTest(unittest.TestCase):
             (directory / rel).write_text("# 001\n", encoding="utf-8")
         if claude is not None:
             (directory / "CLAUDE.md").write_text(claude, encoding="utf-8")
-        path = directory / "007-plan-powitania.md"
+        path = directory / name
         path.write_text(text, encoding="utf-8")
         env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
         command = [sys.executable, str(ROOT / "scripts" / "check_plan.py"), str(path)] + (["--ready"] if ready else [])
@@ -425,6 +425,29 @@ ALL_NOTES = ("- enough (planning): 003 #2 `app.py:28` — no display. Reason: co
              "- suggestion (planning): 003 #3 `app.py:90` — O(n) shift\n")
 
 
+class PlanNameTest(unittest.TestCase):
+    run_check = CheckPlanTest.run_check
+    problems = CheckPlanTest.problems
+    GOOD = plan("### M1 — powitanie\n**No tests:** documents only\n**Proof:** `python -m unittest` → `OK`\n")
+
+    def test_name_has_the_difficulty(self):
+        for name, ok in (("007-plan-powitania.md", False), ("007-plan-easy-powitania.md", True),
+                         ("007-plan-2-hard-powitania.md", True), ("007-plan-medium-x.md", True),
+                         ("007-plan-easy.md", False), ("007-plan-1-powitania.md", False)):
+            with self.subTest(name=name):
+                code, out = self.run_check(self.GOOD, name=name)
+                self.assertEqual("file name" in self.problems(out), not ok, out)
+
+    def test_ready_accepts_old_names(self):
+        code, out = self.run_check(self.GOOD, name="007-plan-powitania.md", ready=True)
+        self.assertNotIn("file name", self.problems(out))
+
+    def test_planning_names_the_difficulty(self):
+        text = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn('--slug "<difficulty>-<topic>"', text)
+        self.assertIn("`<group>-<difficulty>-<topic>`", text)
+
+
 class ReviewSourceTest(unittest.TestCase):
     """A plan made from a review accounts for every finding of that review."""
 
@@ -436,7 +459,7 @@ class ReviewSourceTest(unittest.TestCase):
         review = directory / folder / "003-review-greeting.md"
         review.parent.mkdir(parents=True)
         review.write_text(REVIEW.format(resolution=resolution), encoding="utf-8")
-        path = directory / "loc" / "inbox" / "004-plan-fix.md"
+        path = directory / "loc" / "inbox" / "004-plan-easy-fix.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         source = f"{folder}/003-review-greeting.md"
         path.write_text(REVIEWED_PLAN.format(source=source, notes=notes, extra=extra), encoding="utf-8")

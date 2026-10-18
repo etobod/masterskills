@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.7.0 — 2026-10-18
+
+- Plan names carry the difficulty: `NNN-plan-<easy|medium|hard>-<topic>.md`, so the user sees at a glance which model can run a plan. `loc-planning` gives the criteria (`easy`: one or two milestones, no new file, interface or data model; `hard`: a new component, a changed interface or data model, or a risky change to widely used code; otherwise `medium`).
+- A series (several plans from one input, when the user asks for it) adds an execution group: `NNN-plan-<group>-<difficulty>-<topic>.md`. Lower groups run first; plans sharing a group are independent.
+- `check_plan.py` rejects a plan name without the difficulty in the planning gate. With `--ready` (the start of `loc-orchestrate`) the name is not checked, so plans written before this release still run.
+
 ## 2.6.0 — 2026-10-17
 
 - New PostToolUse hook `state_check.py`: after every `Write`/`Edit` of `loc/state/<NNN>.json` it runs the `check_state.py` checks and gives the model the problems, or nothing when the file is valid. `loc-orchestrate` no longer runs the validation command after each state update (only once when resuming a run), which saves a tool call per update.

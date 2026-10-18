@@ -410,8 +410,10 @@ class MigrateTest(unittest.TestCase):
             "loc/inbox/004-deferred-normalizacja.md", "loc/inbox/005-stuck-powitania.md",
             "loc/inbox/006-plan-powitania.md"])
 
+        # A plan written before the difficulty rule keeps its name; only that is reported.
         checked = run("check_plan.py", str(self.project / "loc/inbox/006-plan-powitania.md"))
-        self.assertEqual(checked.returncode, 0, checked.stdout)
+        issues = [i["problem"] for i in json.loads(checked.stdout)["issues"]]
+        self.assertEqual([i for i in issues if not i.startswith("file name")], [], checked.stdout)
         checked = run("check_state.py", str(self.project / "loc/state/006.json"))
         self.assertEqual(checked.returncode, 0, checked.stdout)
         checked = run("init_project.py", "--project", str(self.project), "--check")

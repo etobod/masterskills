@@ -6,7 +6,7 @@ argument-hint: "<inbox number or file | PRD fragment | task text>"
 
 # loc-planning
 
-Turns an input into `loc/inbox/NNN-plan-<topic>.md`: a plan someone can execute without deciding anything.
+Turns an input into `loc/inbox/NNN-plan-<difficulty>-<topic>.md`: a plan someone can execute without deciding anything.
 
 **Do not execute the plan, do not change code.** Do the steps in order; none is optional.
 
@@ -57,10 +57,12 @@ Anything the user must decide goes to its own `question` file **before** the pla
 ## 5. Write the plan
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --slug "<topic>" --title "<title>" --source "<input file or PRD heading or conversation>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --slug "<difficulty>-<topic>" --title "<title>" --source "<input file or PRD heading or conversation>"
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
+
+`<difficulty>` tells the user which model can run the plan: `easy` (one or two milestones, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. When the user asks for several plans from one input, it becomes a series: the slug is `<group>-<difficulty>-<topic>`, and every plan of a lower group runs before any plan of a higher one; plans sharing a group are independent and run in any order. Create the series in group order, so the numbers follow it.
 
 The file comes from the template with all sections. Fill them in English:
 
