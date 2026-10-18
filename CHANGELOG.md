@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.9.0 — 2026-10-18
+
+- New core rule 13, tests with the user: a short overview, then one step per message (`Step 1/N`, what to install or open, the exact text to type, "paste the reply"); the model checks files itself. It applies in every project, also outside a skill.
+- To fit the rules budget, rules 2, 3 and 11 are shorter; the sentence that a finding the judge did not mark `fix` is not deferred work left the core rules (`gates.md` and `loc-planning` already say it).
+
 ## 2.8.1 — 2026-10-18
 
 - When the model tells the user about a judge round (a milestone's code review, the final review), it lists every finding the judge saw: the `fix` ones, then each `enough` with the judge's reason in one sentence. Before, the message said only how many findings were judged `enough`.

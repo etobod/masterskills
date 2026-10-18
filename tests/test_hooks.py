@@ -340,3 +340,11 @@ class SessionStartTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UserTestRuleTest(unittest.TestCase):
+    def test_core_rules_lead_user_tests_step_by_step(self):
+        text = (ROOT / "rules" / "core.md").read_text(encoding="utf-8")
+        self.assertIn("**Tests with the user.**", text)
+        self.assertIn("`Step 1/N`", text)
+        self.assertIn("paste the reply", text)
