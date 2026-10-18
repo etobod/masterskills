@@ -1,6 +1,7 @@
 """Tests for scripts/migrate.py: a format 1 (Polish) `loc/` becomes format 2 (English)."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -342,8 +343,8 @@ class MigrateTest(unittest.TestCase):
 
     def test_format_1_to_2(self):
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (1, 3))
-        self.assertEqual(self.read("loc/VERSION").strip(), "3")
+        self.assertEqual((out["from"], out["to"]), (1, 4))
+        self.assertEqual(self.read("loc/VERSION").strip(), "4")
 
         inbox = sorted(p.name for p in (self.project / "loc" / "inbox").glob("*.md"))
         self.assertEqual(inbox, ["004-deferred-normalizacja.md", "005-stuck-powitania.md",
@@ -423,7 +424,7 @@ class MigrateTest(unittest.TestCase):
         self.migrate()
         before = self.snapshot()
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (3, 3))
+        self.assertEqual((out["from"], out["to"]), (4, 4))
         self.assertEqual(out["translate"], [])
         self.assertEqual(self.snapshot(), before)
 
@@ -468,7 +469,7 @@ class DecisionsMigrationTest(unittest.TestCase):
     def test_adds_decisions_before_directions(self):
         (self.project / "loc/inbox/done/004-plan-1-easy-export.md").write_text("# plan\n", encoding="utf-8")
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (2, 3))
+        self.assertEqual((out["from"], out["to"]), (2, 4))
         self.assertTrue(out["harvest"])
         self.assertIn("loc/PRD.md", out["changed"])
         self.assertEqual(out["translate"], [])
@@ -477,10 +478,10 @@ class DecisionsMigrationTest(unittest.TestCase):
         self.assertLess(prd.index("## Scenarios"), prd.index("## Decisions"))
         self.assertLess(prd.index("## Decisions"), prd.index("## Directions"))
         self.assertIn("D-01", prd)
-        self.assertEqual((self.project / "loc/VERSION").read_text(encoding="utf-8").strip(), "3")
+        self.assertEqual((self.project / "loc/VERSION").read_text(encoding="utf-8").strip(), "4")
         before = (self.project / "loc/PRD.md").read_bytes()
         again = self.migrate()
-        self.assertEqual((again["from"], again["to"]), (3, 3))
+        self.assertEqual((again["from"], again["to"]), (4, 4))
         self.assertEqual((self.project / "loc/PRD.md").read_bytes(), before)
 
     def test_no_harvest_without_done_plans_or_with_decisions(self):
@@ -493,13 +494,128 @@ class DecisionsMigrationTest(unittest.TestCase):
         (self.project / "loc/inbox/done/004-plan-1-easy-export.md").write_text("# plan\n", encoding="utf-8")
         out = self.migrate()
         self.assertFalse(out["harvest"])
-        self.assertEqual((self.project / "loc/PRD.md").read_bytes(), prd.encode("utf-8"))
+        self.assertEqual((self.project / "loc/PRD.md").read_text(encoding="utf-8").count("## Decisions"), 1)
 
     def test_template_has_decisions(self):
         prd = (ROOT / "templates" / "loc" / "PRD.md").read_text(encoding="utf-8")
         self.assertLess(prd.index("\n## Scenarios"), prd.index("\n## Decisions"))
         self.assertLess(prd.index("\n## Decisions"), prd.index("\n## Directions"))
         self.assertIn("replaces D-", prd)
+
+
+READY_PLAN = """# 070 — Ready
+
+**Type:** plan
+**Status:** open
+**Created:** 2026-10-10
+**Source:** conversation
+
+## Goal
+The greeting works.
+
+## Out of scope
+- export
+
+## Not defended against
+- none
+
+## Code context
+- `app.py:1`
+
+## Milestones
+
+### M1 — docs
+**No tests:** documents only
+**Performer:** auto
+**Proof:** `python -c "print(1)"` → `1`
+
+## Risks and decisions
+- none
+
+## Plan gate
+- round 1: scan clean, critic has no blocking notes
+
+## Resolution
+"""
+
+BROKEN_PLAN = """# 008 — Stage 1
+
+**Type:** plan
+**Status:** open
+**Created:** 2026-09-01
+**Source:** conversation
+
+## Goal
+Data foundation.
+
+## Milestones
+
+### M1 — store
+**Dowód:** run it by hand
+"""
+
+
+class PriorityMigrationTest(unittest.TestCase):
+    def setUp(self):
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        self.project = Path(tempfile.mkdtemp(dir=SCRATCH))
+        self.addCleanup(shutil.rmtree, self.project, True)
+        files = {
+            "loc/VERSION": "3\n",
+            "loc/PRD.md": PRD_2.replace("## Directions", "## Decisions\n- D-01: Dots. Reason: style.\n\n## Directions"),
+            "loc/inbox/008-plan-etap-1.md": BROKEN_PLAN,
+            "loc/inbox/070-plan-easy-ready.md": READY_PLAN,
+            "loc/inbox/060-plan-running.md": BROKEN_PLAN,
+            "loc/inbox/069-plan-1-medium-grouped.md": BROKEN_PLAN,
+            "loc/state/060.json": json.dumps({"plan": "loc/inbox/060-plan-running.md", "phase": "build"}),
+            "loc/MEMORY.md": "Details: loc/inbox/008-plan-etap-1.md\n",
+        }
+        for rel, text in files.items():
+            path = self.project / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(text.encode("utf-8"))
+
+    def migrate(self) -> dict:
+        result = run("migrate.py", "--project", str(self.project))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_ready_plan_passes_the_gate(self):
+        path = self.project / "loc/inbox/070-plan-easy-ready.md"
+        result = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_plan.py"), "--ready", str(path)],
+                                capture_output=True, text=True, encoding="utf-8",
+                                env={**os.environ, "CLAUDE_PROJECT_DIR": str(self.project)})
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_priorities_and_old_plans(self):
+        out = self.migrate()
+        self.assertEqual((out["from"], out["to"]), (3, 4))
+        prd = (self.project / "loc/PRD.md").read_text(encoding="utf-8")
+        self.assertLess(prd.index("## Decisions"), prd.index("## Priorities"))
+        self.assertLess(prd.index("## Priorities"), prd.index("## Directions"))
+
+        inbox = sorted(p.name for p in (self.project / "loc/inbox").glob("*.md"))
+        self.assertEqual(inbox, ["008-deferred-etap-1.md", "060-plan-running.md",
+                                 "069-plan-1-medium-grouped.md", "070-plan-easy-ready.md"])
+        self.assertEqual(out["deferred"], [["008-plan-etap-1.md", "008-deferred-etap-1.md"]])
+        self.assertTrue(out["regroup"])
+        deferred = (self.project / "loc/inbox/008-deferred-etap-1.md").read_text(encoding="utf-8")
+        self.assertIn("**Type:** deferred\n**Deferred:** ", deferred)
+        self.assertIn("needs re-planning", deferred)
+        kept = [line for line in deferred.splitlines() if not line.startswith(("**Type:**", "**Deferred:**"))]
+        self.assertEqual(kept, [line for line in BROKEN_PLAN.splitlines() if not line.startswith("**Type:**")])
+        self.assertIn("loc/inbox/008-deferred-etap-1.md", (self.project / "loc/MEMORY.md").read_text(encoding="utf-8"))
+        self.assertEqual((self.project / "loc/inbox/060-plan-running.md").read_text(encoding="utf-8"), BROKEN_PLAN)
+
+        before = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file()}
+        again = self.migrate()
+        self.assertEqual((again["from"], again["to"]), (4, 4))
+        self.assertEqual({p: p.read_bytes() for p in self.project.rglob("*") if p.is_file()}, before)
+
+    def test_template_has_priorities(self):
+        prd = (ROOT / "templates" / "loc" / "PRD.md").read_text(encoding="utf-8")
+        self.assertLess(prd.index("\n## Decisions"), prd.index("\n## Priorities"))
+        self.assertLess(prd.index("\n## Priorities"), prd.index("\n## Directions"))
 
 
 if __name__ == "__main__":

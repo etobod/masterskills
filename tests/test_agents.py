@@ -67,5 +67,34 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn("`architect`", skill)
 
 
+class PmTest(unittest.TestCase):
+    def test_pm_reads_only_and_orders_the_queue(self):
+        text = read("agents/pm.md")
+        head = front(text)
+        self.assertIn("name: pm", head)
+        self.assertRegex(head, r"(?m)^tools: Read, Grep, Glob$")
+        for marker in ("## Priorities", "## Goal", "plan_queue.py --set", "urgent", "running"):
+            self.assertIn(marker, text)
+
+    def test_opencode_builds_pm_as_read_only_subagent(self):
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        out = Path(tempfile.mkdtemp(dir=SCRATCH))
+        self.addCleanup(shutil.rmtree, out, True)
+        result = subprocess.run([sys.executable, "-B", str(ROOT / "opencode" / "build.py"), "--out", str(out)],
+                                capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        head = front((out / "agents" / "pm.md").read_text(encoding="utf-8"))
+        self.assertIn("mode: subagent", head)
+        self.assertIn("edit: deny", head)
+
+    def test_skills_call_the_pm(self):
+        planning = read("skills/loc-planning/SKILL.md")
+        self.assertIn("`pm`", planning)
+        self.assertIn("--set", planning)
+        init = read("skills/loc-init/SKILL.md")
+        for marker in ("`pm`", "regroup", "deferred", "--set"):
+            self.assertIn(marker, init)
+
+
 if __name__ == "__main__":
     unittest.main()

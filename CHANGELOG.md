@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.12.0 — 2026-10-19
+
+- New `pm` agent, read-only, with a clean context: after every new plan it orders the whole queue of open plans, so a plan is not first only because it was just written. It reads `## Goal`, `## Core idea`, `## Decisions` and the new `## Priorities` of `loc/PRD.md`, keeps a running plan first, never puts plans with shared files in one group, and gives group 1 before the waiting plans only when the user called a plan urgent. It returns a reason per plan and the command to apply.
+- `loc/PRD.md` has a `## Priorities` section written only by the user: what matters most now, which the `pm` follows over its own view.
+- `plan_queue.py --set NNN=G` (repeatable) gives plans their groups, renames the files and fixes every reference under `loc/`; a running plan is skipped. `loc-planning` creates a plan at the end of the queue and runs the `pm`'s command after the gate.
+- `loc/` format 4: `migrate.py` adds `## Priorities`. An open plan written before groups, not running, that fails the plan check on its own text becomes a deferred item (`NNN-deferred-<topic>.md`, `**Type:** deferred` and a `**Deferred:**` line with the reason; the rest of its text untouched), to be planned again. `loc-init` reports these and asks the `pm` to order the remaining plans.
+
 ## 2.11.0 — 2026-10-18
 
 - `loc/PRD.md` has a `## Decisions` section: lasting choices later plans follow, one line each, `- D-NN: <decision>. Reason: <why>. (<date>)`. Plans cite `D-NN` instead of restating it. A replaced decision leaves the PRD (into the plan's `## PRD fragment`) and its successor says `replaces D-NN: <why>`. `loc-planning` adds one after the user agrees; the rubber-duck treats a plan that silently contradicts a decision as blocking.

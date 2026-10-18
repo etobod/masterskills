@@ -44,7 +44,7 @@ class InitProjectTest(unittest.TestCase):
 
     def test_new_loc_gets_the_current_format_and_an_old_one_does_not(self):
         run("init_project.py", "--project", ".", cwd=self.project)
-        self.assertEqual((self.project / "loc" / "VERSION").read_text(encoding="utf-8").strip(), "3")
+        self.assertEqual((self.project / "loc" / "VERSION").read_text(encoding="utf-8").strip(), "4")
         old = scratch_dir(self)
         subprocess.run(["git", "init", "-q"], cwd=old, check=True)
         (old / "loc" / "inbox").mkdir(parents=True)
@@ -258,8 +258,26 @@ class PlanQueueTest(unittest.TestCase):
         self.assertIn("loc/inbox/071-plan-3-hard-b.md", read("loc/MEMORY.md"))
         self.assertIn("072-plan-1-medium-run.md", read("loc/state/072.json"))
 
+    def test_set_assigns_groups(self):
+        self.write("loc/inbox/070-plan-easy-a.md")
+        self.write("loc/inbox/068-plan-1-medium-b.md")
+        self.write("loc/inbox/060-plan-c.md")
+        self.write("loc/inbox/061-plan-run.md")
+        self.write("loc/state/061.json", json.dumps({"plan": "loc/inbox/061-plan-run.md", "phase": "build"}))
+        self.write("loc/MEMORY.md", "Details: loc/inbox/070-plan-easy-a.md, loc/inbox/060-plan-c.md\n")
+        out = self.queue("--set", "070=1", "--set", "068=2", "--set", "060=3", "--set", "061=4")
+        names = sorted(p.name for p in self.inbox.glob("*-plan-*.md"))
+        self.assertEqual(names, ["060-plan-3-c.md", "061-plan-run.md", "068-plan-2-medium-b.md",
+                                 "070-plan-1-easy-a.md"])
+        memory = (self.project / "loc/MEMORY.md").read_text(encoding="utf-8")
+        self.assertIn("loc/inbox/070-plan-1-easy-a.md", memory)
+        self.assertIn("loc/inbox/060-plan-3-c.md", memory)
+        self.assertEqual(out["skipped"], ["061"])
+        self.assertEqual([p["number"] for p in out["queue"]], ["061", "070", "068", "060"])
+        self.assertEqual(out["queue"][3]["group"], 3)
+
     def test_skills_use_the_queue(self):
         planning = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
         orchestrate = (ROOT / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("plan_queue.py --make-room", planning)
+        self.assertIn("plan_queue.py --set", planning)
         self.assertIn("plan_queue.py", orchestrate)

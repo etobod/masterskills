@@ -14,6 +14,10 @@ G or higher, except plan NNN and a plan with a state file not yet `done` (it is
 running). It renames the files with their new group and replaces each old file name
 in the `.md` and `.json` files under `loc/` (not `loc/tmp/`), so no reference is left
 pointing at a missing file. Prints {"queue": ..., "renamed": [[old, new], ...]}.
+
+`--set NNN=G` (repeatable) gives plan NNN group G, whatever group it had (also a
+plan written before groups), renaming files and references the same way. A running
+plan is never renamed: it is listed in "skipped".
 """
 
 import argparse
@@ -23,7 +27,7 @@ import re
 import sys
 from pathlib import Path
 
-PLAN = re.compile(r"^(?P<number>\d{3,})-plan-(?:(?P<group>\d+)-(?=(?:easy|medium|hard)-))?(?P<rest>.+\.md)$")
+PLAN = re.compile(r"^(?P<number>\d{3,})-plan-(?:(?P<group>\d+)-)?(?P<rest>.+\.md)$")
 
 
 def running(project: Path) -> set:
@@ -50,16 +54,23 @@ def queue(project: Path) -> list:
     return sorted(plans, key=lambda p: (p["group"] is not None, p["group"] or 0, p["number"]))
 
 
-def make_room(project: Path, first: int, keep: str) -> list:
+def regroup(project: Path, groups: dict) -> list:
+    """Rename each plan of `groups` (number -> new group) and every reference to it."""
     renamed = []
     for plan in queue(project):
-        if plan["group"] is None or plan["group"] < first or plan["running"] or plan["number"] == keep:
+        if plan["number"] not in groups or plan["group"] == groups[plan["number"]]:
             continue
         old = Path(plan["path"]).name
         rest = PLAN.match(old).group("rest")
-        new = f"{plan['number']}-plan-{plan['group'] + 1}-{rest}"
+        new = f"{plan['number']}-plan-{groups[plan['number']]}-{rest}"
         (project / "loc" / "inbox" / old).rename(project / "loc" / "inbox" / new)
         renamed.append([old, new])
+    replace_references(project, renamed)
+    return renamed
+
+
+def replace_references(project: Path, renamed: list) -> None:
+    """Point every reference under `loc/` (not `loc/tmp/`) at the new file names."""
     if renamed:
         loc = project / "loc"
         for path in [*loc.rglob("*.md"), *loc.rglob("*.json")]:
@@ -71,7 +82,12 @@ def make_room(project: Path, first: int, keep: str) -> list:
                 changed = changed.replace(old, new)
             if changed != text:
                 path.write_bytes(changed.encode("utf-8"))
-    return renamed
+
+
+def make_room(project: Path, first: int, keep: str) -> list:
+    return regroup(project, {plan["number"]: plan["group"] + 1 for plan in queue(project)
+                             if plan["group"] is not None and plan["group"] >= first
+                             and not plan["running"] and plan["number"] != keep})
 
 
 def main() -> int:
@@ -80,6 +96,7 @@ def main() -> int:
                         help="project root (default: $CLAUDE_PROJECT_DIR, then the current directory)")
     parser.add_argument("--make-room", type=int, metavar="G", help="raise by one every group from G up")
     parser.add_argument("--keep", metavar="NNN", help="the plan that takes group G and is not moved")
+    parser.add_argument("--set", action="append", default=[], metavar="NNN=G", help="give plan NNN group G")
     args = parser.parse_args()
     project = args.project.resolve()
     result = {}
@@ -87,6 +104,16 @@ def main() -> int:
         if not args.keep:
             parser.error("--make-room needs --keep NNN")
         result["renamed"] = make_room(project, args.make_room, args.keep)
+    if args.set:
+        groups = {}
+        for item in args.set:
+            match = re.fullmatch(r"(\d{3,})=(\d+)", item)
+            if not match:
+                parser.error(f"--set {item}: expected NNN=G, e.g. 070=2")
+            groups[match.group(1)] = int(match.group(2))
+        active = {plan["number"] for plan in queue(project) if plan["running"]}
+        result["skipped"] = sorted(number for number in groups if number in active)
+        result["renamed"] = regroup(project, {n: g for n, g in groups.items() if n not in active})
     print(json.dumps({"queue": queue(project), **result}, ensure_ascii=False))
     return 0
 

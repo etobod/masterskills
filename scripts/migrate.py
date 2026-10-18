@@ -19,8 +19,18 @@ Step 2 -> 3 (recorded decisions):
   - `harvest` is true when that section holds no decision while `loc/inbox/done/`
     holds plans: the model then asks the `architect` agent to propose them.
 
+Step 3 -> 4 (plan priorities):
+  - `loc/PRD.md` gets an empty `## Priorities` section, written only by the user;
+  - an open plan without a group in its name, not running, that fails
+    `check_plan.py --ready` on its own content becomes a deferred item:
+    `NNN-plan-x.md` -> `NNN-deferred-x.md`, `**Type:** deferred` and a
+    `**Deferred:**` line with the first problem; the rest of the text is kept.
+
+`regroup` is true while an open plan, not running, has no group: the model asks
+the `pm` agent to order the queue.
+
 Prints JSON: {"project", "from", "to", "renamed": [[old, new], ...], "changed": [...], "translate": [...],
-"harvest": bool}
+"harvest": bool, "deferred": [[old, new], ...], "regroup": bool}
 `from` is null when the project has no `loc/`.
 """
 
@@ -29,9 +39,10 @@ import json
 import os
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
-FORMAT = 3
+FORMAT = 4
 
 TYPES = {"pytanie": "question", "odlozone": "deferred", "przeglad": "review", "utknelo": "stuck"}
 OLD_NAME = re.compile(r"^(\d{3,})-(" + "|".join(TYPES) + r")-(.+)$")
@@ -226,14 +237,15 @@ DECISIONS = [
 ]
 
 
-def step_2_to_3(project: Path, report: dict) -> None:
+def add_section(project: Path, report: dict, lines: list) -> str:
+    """Put a section before `## Directions` of `loc/PRD.md` unless it is there; return the PRD text."""
     path = project / "loc" / "PRD.md"
     if not path.is_file():
-        return
+        return ""
     text = path.read_bytes().decode("utf-8", errors="surrogateescape")
-    if not re.search(r"(?m)^## Decisions\s*$", text):
+    if not re.search(rf"(?m)^{re.escape(lines[0])}\s*$", text):
         nl = "\r\n" if "\r\n" in text else "\n"
-        block = nl.join(DECISIONS) + nl + nl
+        block = nl.join(lines) + nl + nl
         match = re.search(r"(?m)^## Directions\s*$", text)
         if match:
             text = text[:match.start()] + block + text[match.start():]
@@ -241,20 +253,68 @@ def step_2_to_3(project: Path, report: dict) -> None:
             text = text.rstrip("\r\n") + nl + nl + block.rstrip("\r\n") + nl
         path.write_bytes(text.encode("utf-8", errors="surrogateescape"))
         report["changed"].append("loc/PRD.md")
+    return text
+
+
+def step_2_to_3(project: Path, report: dict) -> None:
+    text = add_section(project, report, DECISIONS)
+    if not text:
+        return
     section = re.search(r"(?ms)^## Decisions\s*$(.*?)(?=^## |\Z)", text).group(1)
     decided = re.search(r"(?m)^- D-\d+:", re.sub(r"(?s)<!--.*?-->", "", section))
     done = project / "loc" / "inbox" / "done"
     report["harvest"] = not decided and done.is_dir() and any(done.glob("*-plan-*.md"))
 
 
-STEPS = {1: step_1_to_2, 2: step_2_to_3}
+PRIORITIES = [
+    "## Priorities",
+    "<!-- Written only by the user: what matters most now. The `pm` agent orders the plans by it. Example:",
+    "- Reliable import first, new reports later.",
+    "-->",
+]
+
+
+def defer(path: Path, problem: str) -> str:
+    """Turn an old plan into a deferred item: new name, type and one line; the text stays."""
+    text = path.read_bytes().decode("utf-8", errors="surrogateescape")
+    nl = "\r\n" if "\r\n" in text else "\n"
+    line = f"**Deferred:** {date.today().isoformat()}: needs re-planning: {problem}"
+    if re.search(r"(?m)^\*\*Type:\*\*", text):
+        text = re.sub(r"(?m)^\*\*Type:\*\*[^\r\n]*", lambda _: "**Type:** deferred" + nl + line, text, count=1)
+    else:
+        head, _, rest = text.partition(nl)
+        text = head + nl + nl + "**Type:** deferred" + nl + line + nl + rest
+    new = path.name.replace("-plan-", "-deferred-", 1)
+    path.write_bytes(text.encode("utf-8", errors="surrogateescape"))
+    path.rename(path.with_name(new))
+    return new
+
+
+def step_3_to_4(project: Path, report: dict) -> None:
+    import check_plan
+    import plan_queue
+    add_section(project, report, PRIORITIES)
+    if not (project / "loc" / "inbox").is_dir():
+        return
+    check_plan.PROJECT = project
+    for plan in plan_queue.queue(project):
+        if plan["group"] is not None or plan["running"]:
+            continue
+        path = project / plan["path"]
+        problems = check_plan.own_issues(path)
+        if problems:
+            report["deferred"].append([path.name, defer(path, problems[0])])
+    plan_queue.replace_references(project, report["deferred"])
+
+
+STEPS = {1: step_1_to_2, 2: step_2_to_3, 3: step_3_to_4}
 
 
 def migrate(project: Path) -> dict:
     loc = project / "loc"
     start = read_format(loc)
     report = {"project": project.as_posix(), "from": start, "to": start, "renamed": [], "changed": [],
-              "translate": [], "harvest": False}
+              "translate": [], "harvest": False, "deferred": [], "regroup": False}
     if start is None:
         return report
     version = start
@@ -263,6 +323,9 @@ def migrate(project: Path) -> dict:
         version += 1
         (loc / "VERSION").write_text(f"{version}\n", encoding="utf-8")
     report["to"] = version
+    if (loc / "inbox").is_dir():
+        import plan_queue
+        report["regroup"] = any(plan["group"] is None and not plan["running"] for plan in plan_queue.queue(project))
     return report
 
 

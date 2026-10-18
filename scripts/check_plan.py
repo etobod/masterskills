@@ -214,8 +214,11 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
                            "test; give the test file and the test's name (`tests/app.test.js::polish greeting`)"})
 
 
+PROJECT = None  # set by a caller that checks plans of another project (migrate.py)
+
+
 def project_dir() -> Path:
-    return Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+    return PROJECT or Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
 
 
 def has_suite(project: Path) -> bool:
@@ -399,6 +402,16 @@ def check(text: str) -> dict:
 
     return {"ok": not issues, "milestones": milestones, "proofs": proofs, "issues": issues,
             "suite_milestone": first_sets_up_suite}
+
+
+def own_issues(path: Path) -> list:
+    """The `--ready` problems of the plan itself: a project without a test suite is not one."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    result = check(text)
+    check_review(text, result["issues"])
+    check_ready(text, result["issues"])
+    return [issue["problem"] for issue in result["issues"]
+            if not issue["problem"].startswith("the project has no test suite")]
 
 
 NAME = re.compile(r"^\d{3,}-plan-(\d+)-(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")

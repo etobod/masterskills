@@ -18,6 +18,8 @@ It brings an existing `loc/` to the current format and prints JSON. When `from` 
 
 When `harvest` is true, the project has finished plans but no recorded decisions: call the `architect` agent in Harvest mode with `loc/PRD.md` and `CLAUDE.md`, and turn its report into one `question` file (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type question --slug "decisions" --title "Decision: record the project's decisions" --source "loc-init"`) with the candidates and the reversed choices, ending with the line `After the answer: write the approved lines to loc/PRD.md ## Decisions.` Nothing enters the PRD before the user approves.
 
+`deferred` lists old plans that fail the plan check on their own text: they are now `deferred` items, to be planned again with `loc-planning`. When `regroup` is true, open plans have no group yet: call the `pm` agent to order the whole queue and run the `plan_queue.py --set` command it returns. Report both: each deferred plan with its reason, and the new queue order.
+
 ## Run
 
 ```sh

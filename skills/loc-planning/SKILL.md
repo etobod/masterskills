@@ -64,7 +64,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 `<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 6, `medium` 4, `hard` 3, not counting an M1 that sets up the test suite. Never merge milestones to fit: work over the limit becomes several plans.
 
-`<group>` is the plan's place in the queue of open plans (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py`): a lower group runs first, and plans of one group change different files. Take the highest group in the queue when the plan changes no file its plans change, else that group + 1; an empty queue gives `1`. Urgent (the user says so): group `1`; when it shares files with a group `1` plan and must go first, run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py --make-room 1 --keep <NNN>` after creating it. Several plans from one input: one that depends on another goes in a higher group; create them in queue order.
+`<group>`: the highest group in the queue of open plans (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py`) + 1, an empty queue gives `1`; the `pm` agent sets its real place in step 7. Several plans from one input: create them in dependency order.
 
 The file comes from the template with all sections. Fill them in English:
 
@@ -149,12 +149,15 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Planning
 
 Then `references/prd.md` when a PRD fragment is stale, or the plan changes `Goal`, `Core idea`, `Scenarios` or `Decisions`.
 
+**Queue.** The `pm` agent orders the whole queue anew: give it the new plan numbers, and "urgent" only when the user said so, never on your own judgement. Run the `plan_queue.py --set NNN=G …` command it returns exactly (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py --set …`); the plan's name changes with its group.
+
 ## 8. Report
 
 In the user's language, briefly:
 
 - the plan's path and its milestones, one line each;
 - the `Not defended against` list, for the user to accept before execution;
+- the queue order with the `pm` agent's reasons;
 - the gate result (rounds, "scan clean, critic has no blocking notes", or what remains and the `stuck` file);
 - new `question` files, each with its question in one line;
 - the judge's `enough` lines, numbered;

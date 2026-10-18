@@ -11,6 +11,8 @@ What the project is for and where it is heading. Only what is current.
   What was done is told by `loc/MEMORY.md`.
 - `## Decisions` are lasting choices later plans follow and cite (`D-01`)
   instead of restating them. `loc-planning` adds one after the user agrees.
+- `## Priorities` is written only by the user. The `pm` agent orders the
+  queue of plans by it.
 
 ## Goal
 <what this project is for and for whom; a few sentences or a short numbered list>
@@ -37,6 +39,11 @@ A replaced decision is removed; the one that replaces it says `replaces D-01: <w
 Example:
 - D-01: Notes are stored as NDJSON, one note per line. Reason: an append never
   rewrites the file. (2026-10-18)
+-->
+
+## Priorities
+<!-- Written only by the user: what matters most now. The `pm` agent orders the plans by it. Example:
+- Reliable import first, new reports later.
 -->
 
 ## Directions
