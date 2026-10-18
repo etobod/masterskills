@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.8.1 — 2026-10-18
+
+- When the model tells the user about a judge round (a milestone's code review, the final review), it lists every finding the judge saw: the `fix` ones, then each `enough` with the judge's reason in one sentence. Before, the message said only how many findings were judged `enough`.
+
 ## 2.8.0 — 2026-10-18
 
 - A plan keeps to a milestone limit set by its difficulty: `easy` 6, `medium` 4, `hard` 3. An M1 that sets up the test suite is not counted. `check_plan.py` enforces it in the planning gate (not with `--ready`, so older plans still run); over the limit, `loc-planning` splits the work into a series, also when the user did not ask for one.

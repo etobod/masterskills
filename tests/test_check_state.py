@@ -272,3 +272,9 @@ class CheckStateTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class JudgeReportTest(unittest.TestCase):
+    def test_round_message_lists_enough_findings(self):
+        text = (ROOT / "skills" / "loc-orchestrate" / "references" / "gates.md").read_text(encoding="utf-8")
+        self.assertIn("each `enough` with the judge's reason in one sentence", text)

@@ -13,7 +13,7 @@ When code-review gives no severity, judge it by these definitions; never lower o
 
 ## The judge
 
-Every round, after the findings are categorised, the `judge` agent gets the Blocking and Non-blocking ones (each with `file:line` and category), the plan path, `loc/PRD.md` and `CLAUDE.md`. For each it answers `fix` or `enough` with a reason. Fix the `fix` ones. Each `enough` becomes an `enough` line in the plan (below) and is not fixed. The gate **passes when a round leaves nothing to fix**. Never overrule an `enough` to fix it anyway, and never fix a finding the judge was not shown.
+Every round, after the findings are categorised, the `judge` agent gets the Blocking and Non-blocking ones (each with `file:line` and category), the plan path, `loc/PRD.md` and `CLAUDE.md`. For each it answers `fix` or `enough` with a reason. Fix the `fix` ones. Each `enough` becomes an `enough` line in the plan (below) and is not fixed. The gate **passes when a round leaves nothing to fix**. Never overrule an `enough` to fix it anyway, and never fix a finding the judge was not shown. When you tell the user about a round, list every finding the judge saw: the `fix` ones, then each `enough` with the judge's reason in one sentence.
 
 ## Rounds 2 and 3 of a code-review
 
