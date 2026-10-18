@@ -15,6 +15,8 @@ When code-review gives no severity, judge it by these definitions; never lower o
 
 Every round, after the findings are categorised, the `judge` agent gets the Blocking and Non-blocking ones (each with `file:line` and category), the plan path, `loc/PRD.md` and `CLAUDE.md`. For each it answers `fix` or `enough` with a reason. Fix the `fix` ones. Each `enough` becomes an `enough` line in the plan (below) and is not fixed. The gate **passes when a round leaves nothing to fix**. Never overrule an `enough` to fix it anyway, and never fix a finding the judge was not shown. When you tell the user about a round, list every finding the judge saw: the `fix` ones, then each `enough` with the judge's reason in one sentence.
 
+**A challenged decision.** A `challenges D-NN` verdict is not fixed: the decision holds until the user changes it. Record it as `- enough (<gate>): <finding> Reason: challenges D-NN: <the argument>`. Then call the `architect` agent in Challenge mode with the finding, its argument, the plan path, `loc/PRD.md` and `CLAUDE.md`, and turn its report into a `question` file (`next_number.py --type question`, title `Decision D-NN: <topic>`) with its options, the recommended one first. Work goes on under the decision as it stands.
+
 ## Rounds 2 and 3 of a code-review
 
 Review only the fixes. Before fixing, store the milestone's `end` snapshot in the gate as `"review_from"`, so a resumed run still has it. After fixing, `review_diff.py --from <review_from> --out loc/review/<NNN>-M<n>-r<round>.diff`, then:

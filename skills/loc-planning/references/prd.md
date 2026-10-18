@@ -29,4 +29,8 @@ First create a `question` file (`next_number.py --type question`, title starting
 - **No**: leave the PRD as it is and close the `question` with that answer. Do not propose the same again unless the user asks; the closed `PRD:` files in `loc/inbox/done/` record what was refused.
 - **No answer in this session**: the `question` stays open; whoever handles the answer later follows its last line.
 
+## `Decisions`
+
+A lasting choice later plans must follow (a format, a threshold, a rule for reading data) goes into `## Decisions` once the user agrees to it in the conversation about the plan: `- D-NN: <decision>. Reason: <why>. (<date>)`, numbered one above every `D-` in the section. Plans cite it (`D-03`) instead of restating it. A plan that changes one gives the new decision the next number with `replaces D-03: <why>`, and moves the old line word for word into its `## PRD fragment`. An answered `Decision` question from the `architect` is written the same way.
+
 Nothing else in the PRD changes: no status, no summary, no milestone list.

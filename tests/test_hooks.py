@@ -289,8 +289,8 @@ class SessionStartTest(unittest.TestCase):
     def test_session_start_asks_for_migration(self):
         project = scratch_dir(self)
         (project / "loc" / "inbox").mkdir(parents=True)
-        self.assertIn("/masterskills:loc-init to migrate loc/ to format 2", self.context(project))
-        (project / "loc" / "VERSION").write_text("2\n", encoding="utf-8")
+        self.assertIn("/masterskills:loc-init to migrate loc/ to format 3", self.context(project))
+        (project / "loc" / "VERSION").write_text("3\n", encoding="utf-8")
         self.assertNotIn("migrate", self.context(project))
 
     def test_empty_template_is_marked(self):
@@ -316,7 +316,7 @@ class SessionStartTest(unittest.TestCase):
         (project / "loc" / "inbox").mkdir(parents=True)
         out = run_hook("session_start.py", {"cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
         self.assertIn("/masterskills:loc-init", out.get("systemMessage", ""))
-        (project / "loc" / "VERSION").write_text("2\n", encoding="utf-8")
+        (project / "loc" / "VERSION").write_text("3\n", encoding="utf-8")
         out = run_hook("session_start.py", {"cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
         self.assertNotIn("systemMessage", out)
 

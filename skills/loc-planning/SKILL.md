@@ -29,7 +29,7 @@ No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask
 
 ## 3. The judge decides which findings become work
 
-**Required** when the input holds review findings: a `review`; a `stuck` section `## M<n> code-review` or `## final-review`; and every `deferred`, whatever it holds (review findings, observations from a manual check, or a `fix` deferred earlier: the PRD may have changed since). A `## plan gate` or `## qa` section of a `stuck` is planned as usual. Reviews of free-form input always find one more case; a plan that takes every leftover finding ends in the same stuck gates. The judge decides what is worth a plan, not the user and not you. Do not skip it because the plan's gate "will check": it checks only that you did this step. For a plan from a `review`, `check_plan.py` fails every finding that is neither in a milestone nor in `## Review notes`.
+**Required** when the input holds review findings: a `review`; a `stuck` section `## M<n> code-review` or `## final-review`; and every `deferred`, whatever it holds (review findings, observations from a manual check, or a `fix` deferred earlier: the PRD may have changed since). A `## plan gate` or `## qa` section of a `stuck` is planned as usual. Reviews of free-form input always find one more case; a plan that takes every leftover finding ends in the same stuck gates. The judge decides what is worth a plan, not the user and not you. For a plan from a `review`, `check_plan.py` fails every finding that is neither in a milestone nor in `## Review notes`.
 
 1. Number the findings: `<input NNN> #<n>`, in the order of the lines under the input's `## Findings` (`003 #1`, `003 #2`…). List each with `file:line` and category. Check each against the code as it is now; one already fixed gets one line under the input's `## Resolution` (`- 003 #4 already fixed: app.py:40`), never in the plan.
 2. **Suggestions** (no change in behaviour: duplicated constants, docstrings, double parsing, dead code, speed) and **Unrealistic** findings (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`) do not go to the judge and never into a milestone. Speed comes back only when the user reports that something is noticeably slow. An observation from a manual check has no category: it was seen in real use, so it is never a suggestion or unrealistic; it goes to the judge as Non-blocking, with the `file:line` it names, if any.
@@ -73,7 +73,7 @@ The file comes from the template with all sections. Fill them in English:
 - **Not defended against**: who produces inputs the code deliberately does not defend against, with the reason (e.g. an administrator who could disable the tool anyway). Never a foreseeable user mistake. `- none` when nothing. Reviews call such inputs Unrealistic.
 - **Code context**: the files and `file:line` the plan relies on, as read now.
 - **Milestones**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Proof:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Manual check:**` for what only a person can see (below). Code and its tests go in the same milestone (below). A milestone's product is never a decision, an audit or a question.
-- **Risks and decisions**: references to brainstorm decisions (`B-01`…) and `question` files, and what each risk would cost.
+- **Risks and decisions**: references to brainstorm decisions (`B-01`…), decisions of `loc/PRD.md` (`D-01`…, cited, never restated) and `question` files, and what each risk would cost. A lasting choice later plans must follow: `references/prd.md`.
 
 ### Tests in the plan
 
@@ -102,7 +102,7 @@ A criterion says **what the code must do**, never "a test exists" or "it works":
 
 `loc/TEST-PLAN.md` is the project's test contract and changes only through a milestone: when the plan adds something new to the product, one milestone extends section (b) (tests only).
 
-**The user checks after your tests, never instead of them.** A user who finds the tenth bug a test could have caught stops trusting the plan. So every milestone that changes code has criteria with tests and a command proof, also when a person must look at the result; the user gets only what no command can see: the look, the feel, a real device, per `Manual verification / UAT`. Even a canvas animation has testable logic (the math, the data, the empty input), and that is tested first.
+**The user checks after your tests, never instead of them.** So every milestone that changes code has criteria with tests and a command proof, also when a person must look at the result; the user gets only what no command can see: the look, the feel, a real device, per `Manual verification / UAT`. Even a canvas animation has testable logic (the math, the data, the empty input), and that is tested first.
 
 **Performer** (`**Performer:**`): `auto`, the proof command run by `loc-orchestrate` (default); `agent`, a check an agent performs and records; `user (blocking)` or `user (deferrable)`: after the proof and the code review pass, the user does the milestone's `**Manual check:**` and gives their word with a date. A user performer and a `**Manual check:**` line go together; a criterion may point to `manual` only next to criteria with tests:
 
@@ -124,7 +124,7 @@ Fixtures committed to git are written by hand. Data recorded from real runs goes
 Each round, recorded as one line in `## Plan gate`:
 
 1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge.
-2. The `rubber-duck` agent with **what was asked** (the input file, or the PRD fragment or text) and **what was produced** (the plan path); ask it also whether a milestone does several independent things. Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
+2. The `rubber-duck` agent with **what was asked** (the input file, or the PRD fragment or text) and **what was produced** (the plan path); ask it also whether a milestone does several independent things, and whether the plan contradicts a `D-NN` of `loc/PRD.md` without saying it replaces it (blocking). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
 
 The round passes when the script exits `0` and the critic reports nothing blocking. After a failed third round: set the plan's `**Status:**` to `open — gate failed`, create a `stuck` file with all three rounds and the remaining issues, and report. Do not start a fourth round.
 
@@ -147,7 +147,7 @@ A `question` with an empty `## Resolution` is not closed: it stays open and the 
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Planning --title "<title>" --text "<sentences> Details: loc/inbox/NNN-plan-<topic>.md"
 ```
 
-Then `references/prd.md` when a PRD fragment is stale, or the plan changes `Goal`, `Core idea` or `Scenarios`.
+Then `references/prd.md` when a PRD fragment is stale, or the plan changes `Goal`, `Core idea`, `Scenarios` or `Decisions`.
 
 ## 8. Report
 

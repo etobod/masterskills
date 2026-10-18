@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.11.0 — 2026-10-18
+
+- `loc/PRD.md` has a `## Decisions` section: lasting choices later plans follow, one line each, `- D-NN: <decision>. Reason: <why>. (<date>)`. Plans cite `D-NN` instead of restating it. A replaced decision leaves the PRD (into the plan's `## PRD fragment`) and its successor says `replaces D-NN: <why>`. `loc-planning` adds one after the user agrees; the rubber-duck treats a plan that silently contradicts a decision as blocking.
+- New `architect` agent, read-only, with a clean context. Harvest mode proposes decisions from finished plans and lists choices the plans reversed back and forth. Challenge mode weighs whether a decision still serves the project's goal: called when the judge answers `challenges D-NN`, after a stuck gate, or on the user's request. Its report becomes a `question` file; the user decides.
+- The judge reads `## Decisions`: a decision not followed is `fix`; a finding against a decision with an argument its `Reason` already weighed is `enough [D-NN]`; one with a new argument is `challenges D-NN`, recorded as `enough` while the decision holds.
+- `loc/` format 3: `migrate.py` adds the empty section to an existing PRD (run by `loc-init`, which the session start asks for). When the project has finished plans and no decisions, `loc-init` asks the architect to harvest them into one `question`; nothing enters the PRD before the user approves.
+
 ## 2.10.0 — 2026-10-18
 
 - One queue for all open plans: every plan name carries its group, `NNN-plan-<group>-<difficulty>-<topic>.md`. A lower group runs first; plans of one group change different files. A series is no longer a separate idea: several plans from one input are plans in the queue.

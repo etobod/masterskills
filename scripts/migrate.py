@@ -14,7 +14,13 @@ Step 1 -> 2 (Polish structure -> English structure):
     `PRD.md`, `PATTERNS.md`, `TEST-PLAN.md`, the head of `MEMORY.md` and the open
     inbox files except questions. `done/` and old journal entries stay as history.
 
-Prints JSON: {"project", "from", "to", "renamed": [[old, new], ...], "changed": [...], "translate": [...]}
+Step 2 -> 3 (recorded decisions):
+  - `loc/PRD.md` gets an empty `## Decisions` section before `## Directions`;
+  - `harvest` is true when that section holds no decision while `loc/inbox/done/`
+    holds plans: the model then asks the `architect` agent to propose them.
+
+Prints JSON: {"project", "from", "to", "renamed": [[old, new], ...], "changed": [...], "translate": [...],
+"harvest": bool}
 `from` is null when the project has no `loc/`.
 """
 
@@ -25,7 +31,7 @@ import re
 import sys
 from pathlib import Path
 
-FORMAT = 2
+FORMAT = 3
 
 TYPES = {"pytanie": "question", "odlozone": "deferred", "przeglad": "review", "utknelo": "stuck"}
 OLD_NAME = re.compile(r"^(\d{3,})-(" + "|".join(TYPES) + r")-(.+)$")
@@ -212,14 +218,43 @@ def step_1_to_2(project: Path, report: dict) -> None:
     report["translate"] = live
 
 
-STEPS = {1: step_1_to_2}
+DECISIONS = [
+    "## Decisions",
+    "<!-- Lasting decisions plans follow instead of restating them, one line each:",
+    "- D-01: <decision>. Reason: <why>. (<date>)",
+    "A replaced decision is removed; the one that replaces it says `replaces D-01: <why>`. -->",
+]
+
+
+def step_2_to_3(project: Path, report: dict) -> None:
+    path = project / "loc" / "PRD.md"
+    if not path.is_file():
+        return
+    text = path.read_bytes().decode("utf-8", errors="surrogateescape")
+    if not re.search(r"(?m)^## Decisions\s*$", text):
+        nl = "\r\n" if "\r\n" in text else "\n"
+        block = nl.join(DECISIONS) + nl + nl
+        match = re.search(r"(?m)^## Directions\s*$", text)
+        if match:
+            text = text[:match.start()] + block + text[match.start():]
+        else:
+            text = text.rstrip("\r\n") + nl + nl + block.rstrip("\r\n") + nl
+        path.write_bytes(text.encode("utf-8", errors="surrogateescape"))
+        report["changed"].append("loc/PRD.md")
+    section = re.search(r"(?ms)^## Decisions\s*$(.*?)(?=^## |\Z)", text).group(1)
+    decided = re.search(r"(?m)^- D-\d+:", re.sub(r"(?s)<!--.*?-->", "", section))
+    done = project / "loc" / "inbox" / "done"
+    report["harvest"] = not decided and done.is_dir() and any(done.glob("*-plan-*.md"))
+
+
+STEPS = {1: step_1_to_2, 2: step_2_to_3}
 
 
 def migrate(project: Path) -> dict:
     loc = project / "loc"
     start = read_format(loc)
     report = {"project": project.as_posix(), "from": start, "to": start, "renamed": [], "changed": [],
-              "translate": []}
+              "translate": [], "harvest": False}
     if start is None:
         return report
     version = start

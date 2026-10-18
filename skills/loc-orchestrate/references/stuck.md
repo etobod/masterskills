@@ -8,7 +8,7 @@ Do not start a fourth round, and **change no more code**: a fix after the last r
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type stuck --slug "<plan topic>" --title "<plan> — stuck gates" --source "<plan path>"
 ```
 
-Per gate, one section `## M<n> <gate>` (or `## qa`, `## final-review`) with: for each round the verbatim failure output (even when it repeats the last one), what you changed and the result; `### What remains`, each point with `file:line`; whether the rounds went in circles; and which version of the code the work continued with. `**Category:**` is the most serious finding left in the whole file (`blocking` or `non-blocking`; a failing proof, red or QA gate is `blocking`); raise it when a later section is worse. Record its path in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
+Per gate, one section `## M<n> <gate>` (or `## qa`, `## final-review`) with: for each round the verbatim failure output (even when it repeats the last one), what you changed and the result; `### What remains`, each point with `file:line`; whether the rounds went in circles; and which version of the code the work continued with. `**Category:**` is the most serious finding left in the whole file (`blocking` or `non-blocking`; a failing proof, red or QA gate is `blocking`); raise it when a later section is worse. Record its path in the gate's `stuck`, set the milestone to `stuck`. Call the `architect` agent in Challenge mode with this section, the plan path, `loc/PRD.md` and `CLAUDE.md`; when it recommends anything but keeping every decision, turn its report into a `question` file as in `gates.md`. Then go on with the next milestone.
 
 ## Closing what the plan resolved
 

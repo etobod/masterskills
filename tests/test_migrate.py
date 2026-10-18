@@ -342,8 +342,8 @@ class MigrateTest(unittest.TestCase):
 
     def test_format_1_to_2(self):
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (1, 2))
-        self.assertEqual(self.read("loc/VERSION").strip(), "2")
+        self.assertEqual((out["from"], out["to"]), (1, 3))
+        self.assertEqual(self.read("loc/VERSION").strip(), "3")
 
         inbox = sorted(p.name for p in (self.project / "loc" / "inbox").glob("*.md"))
         self.assertEqual(inbox, ["004-deferred-normalizacja.md", "005-stuck-powitania.md",
@@ -423,7 +423,7 @@ class MigrateTest(unittest.TestCase):
         self.migrate()
         before = self.snapshot()
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (2, 2))
+        self.assertEqual((out["from"], out["to"]), (3, 3))
         self.assertEqual(out["translate"], [])
         self.assertEqual(self.snapshot(), before)
 
@@ -432,6 +432,74 @@ class MigrateTest(unittest.TestCase):
         out = self.migrate()
         self.assertIsNone(out["from"])
         self.assertFalse((self.project / "loc").exists())
+
+
+PRD_2 = """# PRD — demo
+
+## Goal
+Greet people.
+
+## Core idea
+- **Kind.** Every greeting is polite.
+
+## Scenarios
+1. The user types a name and sees a greeting.
+
+## Directions
+### Export
+Export greetings.
+"""
+
+
+class DecisionsMigrationTest(unittest.TestCase):
+    def setUp(self):
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        self.project = Path(tempfile.mkdtemp(dir=SCRATCH))
+        self.addCleanup(shutil.rmtree, self.project, True)
+        (self.project / "loc" / "inbox" / "done").mkdir(parents=True)
+        (self.project / "loc" / "VERSION").write_text("2\n", encoding="utf-8")
+        (self.project / "loc" / "PRD.md").write_bytes(PRD_2.replace("\n", "\r\n").encode("utf-8"))
+
+    def migrate(self) -> dict:
+        result = run("migrate.py", "--project", str(self.project))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_adds_decisions_before_directions(self):
+        (self.project / "loc/inbox/done/004-plan-1-easy-export.md").write_text("# plan\n", encoding="utf-8")
+        out = self.migrate()
+        self.assertEqual((out["from"], out["to"]), (2, 3))
+        self.assertTrue(out["harvest"])
+        self.assertIn("loc/PRD.md", out["changed"])
+        self.assertEqual(out["translate"], [])
+        prd = (self.project / "loc/PRD.md").read_bytes().decode("utf-8")
+        self.assertNotIn("\n", prd.replace("\r\n", ""))  # the file's line endings are kept
+        self.assertLess(prd.index("## Scenarios"), prd.index("## Decisions"))
+        self.assertLess(prd.index("## Decisions"), prd.index("## Directions"))
+        self.assertIn("D-01", prd)
+        self.assertEqual((self.project / "loc/VERSION").read_text(encoding="utf-8").strip(), "3")
+        before = (self.project / "loc/PRD.md").read_bytes()
+        again = self.migrate()
+        self.assertEqual((again["from"], again["to"]), (3, 3))
+        self.assertEqual((self.project / "loc/PRD.md").read_bytes(), before)
+
+    def test_no_harvest_without_done_plans_or_with_decisions(self):
+        out = self.migrate()
+        self.assertFalse(out["harvest"])
+        (self.project / "loc/VERSION").write_text("2\n", encoding="utf-8")
+        prd = PRD_2.replace("## Directions",
+                            "## Decisions\n- D-01: Greetings end with a dot. Reason: style.\n\n## Directions")
+        (self.project / "loc/PRD.md").write_bytes(prd.encode("utf-8"))
+        (self.project / "loc/inbox/done/004-plan-1-easy-export.md").write_text("# plan\n", encoding="utf-8")
+        out = self.migrate()
+        self.assertFalse(out["harvest"])
+        self.assertEqual((self.project / "loc/PRD.md").read_bytes(), prd.encode("utf-8"))
+
+    def test_template_has_decisions(self):
+        prd = (ROOT / "templates" / "loc" / "PRD.md").read_text(encoding="utf-8")
+        self.assertLess(prd.index("\n## Scenarios"), prd.index("\n## Decisions"))
+        self.assertLess(prd.index("\n## Decisions"), prd.index("\n## Directions"))
+        self.assertIn("replaces D-", prd)
 
 
 if __name__ == "__main__":

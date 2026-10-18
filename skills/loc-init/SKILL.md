@@ -16,6 +16,8 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/migrate.py --project "<dir>"
 
 It brings an existing `loc/` to the current format and prints JSON. When `from` equals `to` (or is null), nothing changed: go on. Otherwise it already renamed the files and translated every heading, field and marker; you translate the prose of each file in `translate` into English. Keep headings, fields, file names, `file:line`, code and quotes of the user's words as they are; change nothing but the language. Leave `question` files and `loc/inbox/done/` as they are. In `MEMORY.md` translate only the text above the index. Report the migration (`from` → `to`, renamed files, translated files) before the rest.
 
+When `harvest` is true, the project has finished plans but no recorded decisions: call the `architect` agent in Harvest mode with `loc/PRD.md` and `CLAUDE.md`, and turn its report into one `question` file (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type question --slug "decisions" --title "Decision: record the project's decisions" --source "loc-init"`) with the candidates and the reversed choices, ending with the line `After the answer: write the approved lines to loc/PRD.md ## Decisions.` Nothing enters the PRD before the user approves.
+
 ## Run
 
 ```sh
@@ -30,7 +32,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 - a number `NNN` → `loc/inbox/NNN-brainstorm-*.md` (or in `loc/inbox/done/`);
 - a path to a `.md` file → that file.
 
-Run each script exactly once (a brainstorm adds the read-only `--check`). Do not create, rename or move any file yourself: the scripts decide what is missing and never overwrite anything. The only exceptions are translating after a migration (above) and filling sections from a brainstorm (below).
+Run each script exactly once (a brainstorm adds the read-only `--check`). Do not create, rename or move any file yourself: the scripts decide what is missing and never overwrite anything. The only exceptions are translating and the decisions `question` after a migration (above), and filling sections from a brainstorm (below).
 
 ## From a brainstorm
 
