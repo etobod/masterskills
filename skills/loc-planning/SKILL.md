@@ -62,7 +62,7 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --sl
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
-`<difficulty>` tells the user which model can run the plan: `easy` (one or two milestones, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. When the user asks for several plans from one input, it becomes a series: the slug is `<group>-<difficulty>-<topic>`, and every plan of a lower group runs before any plan of a higher one; plans sharing a group are independent and run in any order. Create the series in group order, so the numbers follow it.
+`<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 6, `medium` 4, `hard` 3, not counting an M1 that sets up the test suite. Never merge milestones to fit. When the work is over the limit, or the user asks for several plans from one input, it becomes a series: the slug is `<group>-<difficulty>-<topic>`, and every plan of a lower group runs before any plan of a higher one; plans sharing a group are independent and run in any order. Create the series in group order, so the numbers follow it.
 
 The file comes from the template with all sections. Fill them in English:
 
@@ -124,7 +124,7 @@ Fixtures committed to git are written by hand. Data recorded from real runs goes
 Each round, recorded as one line in `## Plan gate`:
 
 1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge.
-2. The `rubber-duck` agent with **what was asked** (the input file, or the PRD fragment or text) and **what was produced** (the plan path). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
+2. The `rubber-duck` agent with **what was asked** (the input file, or the PRD fragment or text) and **what was produced** (the plan path); ask it also whether a milestone does several independent things. Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
 
 The round passes when the script exits `0` and the critic reports nothing blocking. After a failed third round: set the plan's `**Status:**` to `open — gate failed`, create a `stuck` file with all three rounds and the remaining issues, and report. Do not start a fourth round.
 

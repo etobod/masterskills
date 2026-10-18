@@ -37,7 +37,9 @@ Checks, in order:
   - with `--ready` (before execution): `## Plan gate` records a round, and
     the input file named in `**Source:**` is no longer open in `loc/inbox/`;
   - the file name gives the difficulty, `NNN-plan-[<group>-]<easy|medium|hard>-<topic>.md`
-    (not with `--ready`: plans written before the rule still run);
+    and the plan has at most 6 (`easy`), 4 (`medium`) or 3 (`hard`) milestones, not
+    counting an M1 that sets up the test suite (neither with `--ready`: plans written
+    before the rule still run);
   - no expanded path of this plugin: a plan names plugin files as
     `${CLAUDE_PLUGIN_ROOT}/...`, so it still works on another machine.
 
@@ -394,14 +396,28 @@ def check(text: str) -> dict:
                        "in CLAUDE.md Commands, smoke test, loc/TEST-PLAN.md); do not create loc/TEST-PLAN.md "
                        "while planning, M1 creates it"})
 
-    return {"ok": not issues, "milestones": milestones, "proofs": proofs, "issues": issues}
+    return {"ok": not issues, "milestones": milestones, "proofs": proofs, "issues": issues,
+            "suite_milestone": first_sets_up_suite}
 
 
 NAME = re.compile(r"^\d{3,}-plan-(\d+-)?(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")
 
 
-def check_name(name: str, issues: list) -> None:
-    if not NAME.match(name):
+LIMITS = {"easy": 6, "medium": 4, "hard": 3}
+
+
+def check_name(name: str, result: dict) -> None:
+    """The name gives the difficulty, and the plan keeps to its milestone limit
+    (the M1 that sets up the test suite is not counted)."""
+    issues = result["issues"]
+    match = NAME.match(name)
+    if match:
+        limit = LIMITS[match.group(2)]
+        count = result["milestones"] - (1 if result.get("suite_milestone") else 0)
+        if count > limit:
+            issues.append({"line": 0, "problem": f"{match.group(2)} plan with {count} milestones, the limit is "
+                           f"{limit}: split it into a series (loc-planning step 5)"})
+    else:
         issues.append({"line": 0, "problem": f"file name {name}: expected NNN-plan-<easy|medium|hard>-<topic>.md, "
                        "or NNN-plan-<group>-<difficulty>-<topic>.md in a series (loc-planning step 5); rename it with mv"})
 
@@ -420,7 +436,7 @@ def main() -> int:
     result = check(text)
     check_review(text, result["issues"])
     if not args.ready:
-        check_name(args.plan.name, result["issues"])
+        check_name(args.plan.name, result)
     result["ok"] = not result["issues"]
     if args.ready:
         check_ready(text, result["issues"])

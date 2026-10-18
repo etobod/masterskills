@@ -496,3 +496,36 @@ class ReviewSourceTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MilestoneLimitTest(unittest.TestCase):
+    run_check = CheckPlanTest.run_check
+    problems = CheckPlanTest.problems
+    SUITE = ("### M1 — test suite\nFramework, command, smoke test, `loc/TEST-PLAN.md`.\n"
+             "**Proof:** `python -m unittest` → `OK`\n")
+
+    def milestones(self, count: int, first: int = 1) -> str:
+        return "".join(f"### M{n} — part {n}\n**No tests:** documents only\n**Proof:** `python -m unittest` → `OK`\n"
+                       for n in range(first, first + count))
+
+    def over(self, difficulty: str, count: int, suite: bool = False, ready: bool = False) -> bool:
+        body = (self.SUITE + self.milestones(count, 2)) if suite else self.milestones(count)
+        code, out = self.run_check(plan(body), name=f"007-plan-{difficulty}-x.md", ready=ready)
+        return "milestones, the limit" in self.problems(out)
+
+    def test_limit_follows_the_difficulty(self):
+        for difficulty, count, over in (("hard", 4, True), ("hard", 3, False), ("easy", 6, False),
+                                        ("easy", 7, True), ("medium", 5, True), ("medium", 4, False)):
+            with self.subTest(difficulty=difficulty, count=count):
+                self.assertEqual(self.over(difficulty, count), over)
+
+    def test_suite_milestone_is_not_counted(self):
+        self.assertFalse(self.over("hard", 3, suite=True))
+        self.assertTrue(self.over("hard", 4, suite=True))
+
+    def test_ready_skips_the_limit(self):
+        self.assertFalse(self.over("hard", 5, ready=True))
+
+    def test_planning_states_the_limits(self):
+        text = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("`easy` 6, `medium` 4, `hard` 3", text)

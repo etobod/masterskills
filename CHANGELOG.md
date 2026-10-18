@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.8.0 — 2026-10-18
+
+- A plan keeps to a milestone limit set by its difficulty: `easy` 6, `medium` 4, `hard` 3. An M1 that sets up the test suite is not counted. `check_plan.py` enforces it in the planning gate (not with `--ready`, so older plans still run); over the limit, `loc-planning` splits the work into a series, also when the user did not ask for one.
+- The difficulty describes the kind of change, not the number of milestones: `easy` means each milestone is a local change to existing code. The plan's critic is also asked whether a milestone does several independent things, so plans do not merge milestones to fit the limit.
+
 ## 2.7.0 — 2026-10-18
 
 - Plan names carry the difficulty: `NNN-plan-<easy|medium|hard>-<topic>.md`, so the user sees at a glance which model can run a plan. `loc-planning` gives the criteria (`easy`: one or two milestones, no new file, interface or data model; `hard`: a new component, a changed interface or data model, or a risky change to widely used code; otherwise `medium`).
