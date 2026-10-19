@@ -31,6 +31,6 @@ First create a `question` file (`next_number.py --type question`, title starting
 
 ## `Decisions`
 
-A lasting choice later plans must follow (a format, a threshold, a rule for reading data) goes into `## Decisions` once the user agrees to it in the conversation about the plan: `- D-NN: <decision>. Reason: <why>. (<date>)`, numbered one above every `D-` in the section. Plans cite it (`D-03`) instead of restating it. A plan that changes one gives the new decision the next number with `replaces D-03: <why>`, and moves the old line word for word into its `## PRD fragment`. An answered `Decision` question from the `architect` is written the same way.
+A lasting choice later plans must follow (a format, a threshold) is a line `- D-NN: <decision>. Reason: <why>. (<date>)`, numbered after the last `D-`. Plans cite it (`D-03`) instead of restating it. One the user approved here goes straight in. Any other proposed decision goes into one question file, never only into the report (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type question --slug "decisions" --title "Decision: <topic>" --source "<plan path>"`): each ready `D-NN` line with its practical effect, ending with the line `After the answer: write the approved lines to loc/PRD.md ## Decisions.` A plan that changes a decision gives the new one the next number with `replaces D-03: <why>`, and moves the old line verbatim into its `## PRD fragment`.
 
 Nothing else in the PRD changes: no status, no summary, no milestone list.

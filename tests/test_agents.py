@@ -61,6 +61,11 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn("## Decisions", prd)
         self.assertIn("replaces D-", prd)
 
+    def test_planning_asks_about_proposed_decisions(self):
+        decisions = read("skills/loc-planning/references/prd.md").split("## `Decisions`")[1]
+        self.assertIn('--type question --slug "decisions"', decisions)
+        self.assertIn("After the answer: write the approved lines to loc/PRD.md ## Decisions.", decisions)
+
     def test_init_harvests_after_migration(self):
         skill = read("skills/loc-init/SKILL.md")
         self.assertIn("harvest", skill)

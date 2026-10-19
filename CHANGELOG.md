@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.12.1 — 2026-10-20
+
+- `loc-planning` no longer proposes a decision only in its report, where it is easy to miss: every decision the user has not approved yet goes into one `question` file (`Decision: <topic>`) with ready `D-NN` lines and their practical effect. After the answer the approved lines are written to `loc/PRD.md` `## Decisions`.
+
 ## 2.12.0 — 2026-10-19
 
 - New `pm` agent, read-only, with a clean context: after every new plan it orders the whole queue of open plans, so a plan is not first only because it was just written. It reads `## Goal`, `## Core idea`, `## Decisions` and the new `## Priorities` of `loc/PRD.md`, keeps a running plan first, never puts plans with shared files in one group, and gives group 1 before the waiting plans only when the user called a plan urgent. It returns a reason per plan and the command to apply.
