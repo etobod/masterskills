@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.13.0 — 2026-10-21
+
+- A final review stuck after 3 rounds no longer just closes the plan. `loc-orchestrate` calls the `architect` agent in a new Triage mode, which picks one: **retry** (rounds 4–6, once per plan), **plan** (the remaining points go to a `deferred` file for `loc-planning`) or **ask** (a `question` file for the user: what is at stake, the options, the recommended one first). After round 6 only `plan` or `ask`. `check_state.py` enforces it through the gate's `triage` list.
+
 ## 2.12.2 — 2026-10-20
 
 - `claude.bat` made by `loc-init` ran `claude`, which in the project directory is `claude.bat` itself, so it called itself and failed with "The syntax of the command is incorrect.". It now runs `claude.exe`. `init_project.py` rewrites a launcher in the old form, keeping its session id; a launcher written by the user is left alone.

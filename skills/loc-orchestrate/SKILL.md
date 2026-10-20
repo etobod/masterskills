@@ -57,7 +57,7 @@ A failed gate ends in `stuck`, not in a stop.
 ## 5. At the end
 
 1. **QA gate** (`qa`), only when the plan has `**Criteria:**` (else report `**No tests:**`): `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never tests; next round. Third failure: **stuck**.
-2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode, gate `final-review`).
+2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode, gate `final-review`). Stuck: the architect's `triage` decides between more rounds, a `deferred` file and a question (`references/stuck.md`).
 3. **Close what the plan resolved**: milestone `stuck` files whose points are all fixed now get `## Resolution` and move to `loc/inbox/done/` (`references/stuck.md`).
 4. **Close the plan.** Under `## Resolution`: `done <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-stuck-…`), deviations and new `question` files. `**Status:**` → `done <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `open — QA failed`, not moved. Update `plan` in the state file, set `phase: journal`.
 5. **Journal.** First, anything that failed during the plan and worked another way must be in `loc/PATTERNS.md` (rule 10): add what is missing. Then one command, your text (English, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Details: <plan path>"`.

@@ -66,6 +66,18 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn('--type question --slug "decisions"', decisions)
         self.assertIn("After the answer: write the approved lines to loc/PRD.md ## Decisions.", decisions)
 
+    def test_final_review_goes_to_triage(self):
+        architect = read("agents/architect.md")
+        self.assertIn("## Triage", architect)
+        for verdict in ("**retry**", "**plan**", "**ask**"):
+            self.assertIn(verdict, architect)
+        stuck = read("skills/loc-orchestrate/references/stuck.md")
+        self.assertIn("## Final review triage", stuck)
+        self.assertIn("--type deferred", stuck)
+        self.assertIn("--type question", stuck)
+        self.assertIn("`triage`", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("`retry`", read("skills/loc-review/SKILL.md"))
+
     def test_init_harvests_after_migration(self):
         skill = read("skills/loc-init/SKILL.md")
         self.assertIn("harvest", skill)

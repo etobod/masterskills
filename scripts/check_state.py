@@ -28,6 +28,9 @@
 
 Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
 `stuck` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
+Only `final-review` has `triage`: the architect's verdicts after a stuck final
+review, in order, each `retry`, `plan` or `ask`. One `retry` allows rounds 4-6;
+`journal` and `done` need a stuck final review's last verdict to be `plan` or `ask`.
 A passed `M<n>/red` gate (the new tests failed before the code) keeps the
 failing test output in `output`; when the plan's milestone has a
 `(behaviour)` criterion it also says whether the `test-author` agent wrote
@@ -65,6 +68,7 @@ MODES = {"inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
+TRIAGE = {"retry", "plan", "ask"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
@@ -133,9 +137,19 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
             continue
         if not isinstance(passed, bool):
             problems.append(f"gates.{name}.passed: expected true or false")
-        if rounds > MAX_ROUNDS:
-            problems.append(f"gates.{name}: {rounds} rounds, the limit is {MAX_ROUNDS}")
-        if rounds == MAX_ROUNDS and passed is False:
+        triage = gate.get("triage", [])
+        if "triage" in gate and name != "final-review":
+            problems.append(f"gates.{name}.triage: only the final-review gate has one")
+        elif not (isinstance(triage, list) and all(v in TRIAGE for v in triage)):
+            problems.append(f"gates.{name}.triage: expected a list of {sorted(TRIAGE)}")
+            triage = []
+        elif triage.count("retry") > 1:
+            problems.append(f"gates.{name}.triage: retry is allowed once")
+        retried = "retry" in triage
+        limit = MAX_ROUNDS * (2 if retried else 1)
+        if rounds > limit:
+            problems.append(f"gates.{name}: {rounds} rounds, the limit is {limit}")
+        if (rounds == MAX_ROUNDS and passed is False) or (retried and rounds > MAX_ROUNDS):
             if not (isinstance(stuck, str) and STUCK.match(stuck)):
                 problems.append(f"gates.{name}: {MAX_ROUNDS} failed rounds without a stuck file")
             elif not any((project / p).is_file() for p in (stuck, stuck.replace("loc/inbox/", "loc/inbox/done/", 1))):
@@ -203,8 +217,12 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
                             "(tests first); a deviation for it must say why")
     if data.get("phase") not in ("journal", "done"):
         return
-    if not finished_gate(gates.get("final-review")):
+    final = gates.get("final-review")
+    if not finished_gate(final):
         problems.append("gates.final-review: journal and done need a final review that passed or went stuck")
+    elif final.get("passed") is not True and (final.get("triage") or ["retry"])[-1] not in ("plan", "ask"):
+        problems.append("gates.final-review.triage: a stuck final review needs the architect's last verdict, "
+                        "plan or ask (references/stuck.md)")
     status = STATUS.search(plan_text(project, plan))
     if data.get("phase") == "done" and not (status and CLOSED.match(status.group(1))):
         problems.append("plan: phase done but the plan's **Status:** is not 'done <date>' "

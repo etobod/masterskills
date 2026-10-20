@@ -159,6 +159,36 @@ class CheckStateTest(unittest.TestCase):
         self.assertIn("gates.final-review", "\n".join(out["problems"]))
         data["gates"]["final-review"] = {"rounds": 3, "passed": False, "stuck": "loc/inbox/008-stuck-x.md"}
         code, out = self.run_check(data, PLAN_WITH_CRITERIA, files=("loc/inbox/008-stuck-x.md",))
+        self.assertEqual(code, 1)
+        self.assertIn("gates.final-review.triage", "\n".join(out["problems"]))
+        for verdict in ("ask", "plan"):
+            data["gates"]["final-review"]["triage"] = [verdict]
+            code, out = self.run_check(data, PLAN_WITH_CRITERIA, files=("loc/inbox/008-stuck-x.md",))
+            self.assertEqual(code, 0, (verdict, out))
+
+    def test_final_review_triage(self):
+        stuck = "loc/inbox/008-stuck-x.md"
+
+        def check(gate: dict, phase: str = "final-review", name: str = "final-review") -> tuple:
+            data = self.finished(phase, {"qa": {"rounds": 1, "passed": True, "stuck": None}})
+            data["gates"][name] = gate
+            return self.run_check(data, PLAN_WITH_CRITERIA, files=(stuck,))
+
+        for rounds in (4, 5, 6):
+            code, out = check({"rounds": rounds, "passed": False, "stuck": stuck, "triage": ["retry"]})
+            self.assertEqual(code, 0, (rounds, out))
+        code, out = check({"rounds": 6, "passed": False, "stuck": stuck, "triage": ["retry", "ask"]}, "journal")
+        self.assertEqual(code, 0, out)
+        for gate, phase, name in (
+                ({"rounds": 7, "passed": False, "stuck": stuck, "triage": ["retry"]}, "final-review", "final-review"),
+                ({"rounds": 4, "passed": False, "stuck": stuck}, "final-review", "final-review"),
+                ({"rounds": 3, "passed": False, "stuck": stuck, "triage": ["retry", "retry"]}, "final-review", "final-review"),
+                ({"rounds": 3, "passed": False, "stuck": stuck, "triage": ["later"]}, "final-review", "final-review"),
+                ({"rounds": 3, "passed": False, "stuck": stuck, "triage": ["ask"]}, "final-review", "qa"),
+                ({"rounds": 4, "passed": False, "stuck": stuck, "triage": ["retry"]}, "journal", "final-review")):
+            code, out = check(gate, phase, name)
+            self.assertEqual(code, 1, (gate, phase, name, out))
+        code, out = check({"rounds": 5, "passed": True, "stuck": stuck, "triage": ["retry"]}, "journal")
         self.assertEqual(code, 0, out)
 
     def test_done_needs_the_plan_closed(self):
