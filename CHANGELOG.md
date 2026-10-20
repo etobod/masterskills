@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.12.2 — 2026-10-20
+
+- `claude.bat` made by `loc-init` ran `claude`, which in the project directory is `claude.bat` itself, so it called itself and failed with "The syntax of the command is incorrect.". It now runs `claude.exe`. `init_project.py` rewrites a launcher in the old form, keeping its session id; a launcher written by the user is left alone.
+
 ## 2.12.1 — 2026-10-20
 
 - `loc-planning` no longer proposes a decision only in its report, where it is easy to miss: every decision the user has not approved yet goes into one `question` file (`Decision: <topic>`) with ready `D-NN` lines and their practical effect. After the answer the approved lines are written to `loc/PRD.md` `## Decisions`.

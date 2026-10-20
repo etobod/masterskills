@@ -53,11 +53,16 @@ PLACEHOLDER = re.compile(r"<!--.*?-->|^#*\s*<[^>\n]*>\s*$", re.S | re.M)
 SESSION = re.compile(r"^[\w-]+$")
 CLAUDE_BAT = """@rem Resumes the Claude Code session in which loc-init ran.
 @cd /d "%~dp0"
-@set "CLAUDE=claude"
-@where claude >nul 2>nul || set "CLAUDE=%USERPROFILE%\\.local\\bin\\claude.exe"
+@set "CLAUDE=claude.exe"
+@where claude.exe >nul 2>nul || set "CLAUDE=%USERPROFILE%\\.local\\bin\\claude.exe"
 @"%CLAUDE%" --resume {session} %*
 @exit /b %ERRORLEVEL%
 """
+# Launchers before 2.12.2 ran `claude`, which in the project directory is claude.bat itself.
+OLD_CLAUDE_BAT = re.compile(r'\A@rem Resumes the Claude Code session in which loc-init ran\.\r?\n'
+                            r'@cd /d "%~dp0"\r?\n@set "CLAUDE=claude"\r?\n'
+                            r'@where claude >nul 2>nul \|\| set "CLAUDE=%USERPROFILE%\\\.local\\bin\\claude\.exe"\r?\n'
+                            r'@"%CLAUDE%" --resume ([\w-]+) %\*\r?\n@exit /b %ERRORLEVEL%\r?\n\Z')
 OPENCODE_BAT = """@rem Updates masterskills for OpenCode, then starts OpenCode in this project.
 @cd /d "%~dp0"
 @call "{installer}"
@@ -111,7 +116,12 @@ def ensure_launcher(project: Path, report: dict, session: str) -> None:
         text = OPENCODE_BAT.format(installer=installer)
     else:
         return
-    if (project / name).exists():
+    old = OLD_CLAUDE_BAT.match((project / name).read_text(encoding="utf-8", errors="replace")) \
+        if name == "claude.bat" and (project / name).is_file() else None
+    if old:
+        write(project / name, CLAUDE_BAT.format(session=old.group(1)).replace("\n", "\r\n"))
+        report["updated"].append({"path": name, "added": ["runs claude.exe, not claude.bat itself"]})
+    elif (project / name).exists():
         report["existing"].append(name)
     elif text is None:
         report["skipped"].append({"path": name, "reason": "no session id to resume: run it from the loc-init skill"})

@@ -186,10 +186,34 @@ class LauncherTest(unittest.TestCase):
         data = (self.project / "claude.bat").read_bytes()
         self.assertIn(b"\r\n", data)
         self.assertIn(f"--resume {self.SESSION}".encode(), data)
+        # In its own directory `claude` is this very file: the launcher must name claude.exe.
+        self.assertNotIn(b'"CLAUDE=claude"', data)
+        self.assertIn(b"where claude.exe", data)
         self.assertFalse((self.project / "open-code.bat").exists())
         again = self.init("--session", "11111111-2222-3333-4444-555555555555")
         self.assertIn("claude.bat", again["existing"])
         self.assertEqual((self.project / "claude.bat").read_bytes(), data)
+
+    def test_claude_bat_repairs_the_old_launcher(self):
+        broken = "\r\n".join([
+            "@rem Resumes the Claude Code session in which loc-init ran.",
+            '@cd /d "%~dp0"',
+            '@set "CLAUDE=claude"',
+            r'@where claude >nul 2>nul || set "CLAUDE=%USERPROFILE%\.local\bin\claude.exe"',
+            '@"%CLAUDE%" --resume abc-1 %*',
+            "@exit /b %ERRORLEVEL%",
+            ""])
+        (self.project / "claude.bat").write_bytes(broken.encode("utf-8"))
+        report = self.init("--session", self.SESSION)
+        data = (self.project / "claude.bat").read_bytes()
+        self.assertIn("claude.bat", [item["path"] for item in report["updated"]])
+        self.assertIn(b"--resume abc-1 %*", data)
+        self.assertIn(b"where claude.exe", data)
+        self.assertNotIn(b'"CLAUDE=claude"', data)
+        own = b"@claude --resume mine\r\n"
+        (self.project / "claude.bat").write_bytes(own)
+        self.assertIn("claude.bat", self.init("--session", self.SESSION)["existing"])
+        self.assertEqual((self.project / "claude.bat").read_bytes(), own)
 
     def test_claude_bat_needs_a_session(self):
         report = self.init()
