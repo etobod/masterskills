@@ -4,6 +4,7 @@
 **Status:** open
 **Created:** {DATE}
 **Source:** {SOURCE}
+**Created by:** {BY}
 
 ## Topic
 <what the conversation is about, in one paragraph>

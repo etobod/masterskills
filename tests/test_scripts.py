@@ -113,7 +113,7 @@ class NextNumberTest(unittest.TestCase):
         (project / "loc" / "inbox" / "done").mkdir(parents=True)
         (project / "loc" / "inbox" / "done" / "004-plan-a.md").write_text("x", encoding="utf-8")
         out = run("next_number.py", "--project", ".", "--type", "deferred", "--slug", "later", "--title", "Later",
-                  "--source", "test", cwd=project)
+                  "--source", "test", "--by", "loc-qa", cwd=project)
         result = json.loads(out.stdout)
         self.assertEqual(result["number"], "005")
         self.assertEqual(result["path"], "loc/inbox/005-deferred-later.md")
@@ -136,18 +136,29 @@ class NextNumberTest(unittest.TestCase):
         out = run(*base, "--type", "question", cwd=project)
         self.assertNotEqual(out.returncode, 0)
         self.assertFalse((project / "loc" / "inbox").exists() and any((project / "loc" / "inbox").iterdir()))
-        out = run(*base, "--type", "deferred", "--by", "architect", cwd=project)
-        self.assertNotEqual(out.returncode, 0)
         out = run(*base, "--type", "question", "--by", "architect (Triage)", cwd=project)
         text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
         self.assertIn("**Recommended by:** architect (Triage)\n", text)
+        self.assertNotIn("**Created by:**", text)
+
+    def test_every_file_names_its_author(self):
+        project = scratch_dir(self)
+        base = ("next_number.py", "--project", ".", "--title", "X", "--source", "test")
+        out = run(*base, "--type", "deferred", "--slug", "x", cwd=project)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertFalse((project / "loc" / "inbox").exists() and any((project / "loc" / "inbox").iterdir()))
+        for kind in ("brainstorm", "plan", "deferred", "review", "stuck"):
+            out = run(*base, "--type", kind, "--slug", kind, "--by", "loc-orchestrate", cwd=project)
+            self.assertEqual(out.returncode, 0, out.stderr)
+            text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
+            self.assertIn("**Created by:** loc-orchestrate\n", text, kind)
 
     def test_deferred_sections_from_options(self):
         project = scratch_dir(self)
         out = run("next_number.py", "--project", ".", "--type", "deferred", "--slug", "ui check",
                   "--title", "UI check", "--source", "loc-qa 008",
                   "--what", "Open the page: the overlay toggles", "--why", "user (deferrable)",
-                  "--when", "next time the page is opened", cwd=project)
+                  "--when", "next time the page is opened", "--by", "loc-qa", cwd=project)
         text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
         self.assertIn("## What was deferred\nOpen the page: the overlay toggles\n", text)
         self.assertIn("## Why not now\nuser (deferrable)\n", text)

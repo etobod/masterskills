@@ -5,7 +5,7 @@
 Do not start a fourth round, and **change no more code**: a fix after the last round is never reviewed. **One `stuck` file per plan run**: the first stuck gate creates it, each later one adds its own section to it. Its path is in the `stuck` field of any gate in `loc/state/<NNN>.json`; none yet → create it. Create it once:
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type stuck --slug "<plan topic>" --title "<plan> — stuck gates" --source "<plan path>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type stuck --slug "<plan topic>" --title "<plan> — stuck gates" --source "<plan path>" --by "<the skill running: loc-orchestrate or loc-review>"
 ```
 
 Per gate, one section `## M<n> <gate>` (or `## qa`, `## final-review`) with: for each round the verbatim failure output (even when it repeats the last one), what you changed and the result; `### What remains`, each point with `file:line`; whether the rounds went in circles; and which version of the code the work continued with. `**Category:**` is the most serious finding left in the whole file (`blocking` or `non-blocking`; a failing proof, red or QA gate is `blocking`); raise it when a later section is worse. Record its path in the gate's `stuck`, set the milestone to `stuck`. Call the `architect` agent in Challenge mode with this section, the plan path, `loc/PRD.md` and `CLAUDE.md`; when it recommends anything but keeping every decision, turn its report into a `question` file as in `gates.md`. Then go on with the next milestone.
@@ -16,7 +16,7 @@ A `final-review` gate that went stuck is not left as it is. Call the `architect`
 
 - **retry**: call `loc-review` again for rounds 4–6 (once per plan). It adds a `## final-review (rounds 4–6)` section; when that fails too, call the architect again: now only `plan` or `ask`.
 - **plan**: the points of `### What remains` become work for `loc-planning`:
-  `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<plan topic> final review" --title "<plan> — final review leftovers" --source "<stuck path>" --what "<each point with file:line>" --why "<the architect's reason>" --when "the next loc-planning"`
+  `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<plan topic> final review" --title "<plan> — final review leftovers" --source "<stuck path>" --what "<each point with file:line>" --why "<the architect's reason>" --when "the next loc-planning" --by "loc-orchestrate (architect: plan)"`
 - **ask**: the user decides: `next_number.py --type question --title "Final review of plan <NNN>: <topic>" --source "<stuck path>" --by "architect (Triage)"`, in the user's language: what is at stake with `file:line`, the architect's options with the recommended one first, and its reason.
 
 Name the new file in the plan's `## Resolution` and in the report. The plan then closes as usual.

@@ -50,7 +50,7 @@ After a third round (sixth, when the gate's `triage` holds `retry`) that still l
 With findings: create the file and fill `## Scope` (range, files, requirements) and `## Findings`, one line per finding in the merged format, the category first; an Unrealistic one with `Who produces it:` and the answer:
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type review --slug "<scope>" --title "<what was reviewed>" --source "<range or plan>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type review --slug "<scope>" --title "<what was reviewed>" --source "<range or plan>" --by loc-review
 ```
 
 Do not fix anything: the user decides, and `loc-planning` can turn the review into a plan. With no findings, or only Unrealistic ones, create no file: nothing waits for the user; list them in the report.

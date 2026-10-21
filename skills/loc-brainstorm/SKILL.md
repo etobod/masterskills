@@ -19,7 +19,7 @@ Look for `loc/inbox/*-brainstorm-*.md` (not `loc/inbox/done/`).
 - **None exists, or the user explicitly asks for a separate one**: create it with the script. Never pick the number yourself.
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type brainstorm --slug "<topic, few words>" --title "<topic>" --source "conversation"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type brainstorm --slug "<topic, few words>" --title "<topic>" --source "conversation" --by loc-brainstorm
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.

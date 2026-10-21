@@ -4,6 +4,7 @@
 **Status:** open
 **Created:** {DATE}
 **Source:** {SOURCE}
+**Created by:** {BY}
 
 ## What was deferred
 <the work to do, precise enough to take it up without this conversation>

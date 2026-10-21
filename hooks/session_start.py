@@ -65,8 +65,8 @@ def inbox_commands() -> str:
         "\nInbox commands: run each alone in the Bash tool, from the project directory "
         "(no `cd`, `&&` or PowerShell), so they need no approval.\n"
         f'- New file from its template, time from the clock: `{script_command(root, "scripts/next_number.py")} '
-        '--type <question|deferred|...> --slug "<few words>" --title "<title>" --source "<where it came from>"` '
-        '(a question also `--by "<who weighed the options, e.g. architect (Triage)>"`)\n'
+        '--type <question|deferred|...> --slug "<few words>" --title "<title>" --source "<where it came from>" '
+        '--by "<who created it; for a question who recommends, e.g. architect (Triage)>"`\n'
         "- Close a file: `mv loc/inbox/<file> loc/inbox/done/`"
     )
 

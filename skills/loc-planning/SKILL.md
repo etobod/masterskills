@@ -57,7 +57,7 @@ Anything the user must decide goes to its own `question` file **before** the pla
 ## 5. Write the plan
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --slug "<group>-<difficulty>-<topic>" --title "<title>" --source "<input file or PRD heading or conversation>"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --slug "<group>-<difficulty>-<topic>" --title "<title>" --source "<input file or PRD heading or conversation>" --by loc-planning
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.

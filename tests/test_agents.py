@@ -78,17 +78,17 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn("`triage`", read("skills/loc-orchestrate/SKILL.md"))
         self.assertIn("`retry`", read("skills/loc-review/SKILL.md"))
 
-    def test_every_question_names_who_recommends(self):
+    def test_every_inbox_file_names_its_author(self):
         found = 0
         for path in [*ROOT.glob("skills/**/*.md"), *ROOT.glob("agents/*.md"), *ROOT.glob("rules/*.md"),
                      *ROOT.glob("hooks/*.py")]:
             lines = path.read_text(encoding="utf-8").splitlines()
             for number, line in enumerate(lines):
-                if "--type question" in line or "--type <question" in line:
+                if re.search(r"next_number\.py\S*\s.*--type |--type <question", line):
                     found += 1
                     # A command in Python source may continue on the next line.
                     self.assertIn("--by", "\n".join(lines[number:number + 2]), f"{path.relative_to(ROOT)}: {line[:80]}")
-        self.assertGreaterEqual(found, 7)
+        self.assertGreaterEqual(found, 16)
 
     def test_init_harvests_after_migration(self):
         skill = read("skills/loc-init/SKILL.md")

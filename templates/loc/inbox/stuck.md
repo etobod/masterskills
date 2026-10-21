@@ -5,6 +5,7 @@
 **Status:** open
 **Created:** {DATE}
 **Source:** {SOURCE}
+**Created by:** {BY}
 
 <!-- One file per plan execution: every stuck gate adds its own section
 `## M<n> <gate>` (or `## qa`, `## final-review`) with the same subsections.

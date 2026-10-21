@@ -69,7 +69,8 @@ def main() -> int:
     parser.add_argument("--slug", help="short description for the file name")
     parser.add_argument("--title", help="title for the file header")
     parser.add_argument("--source", default="conversation", help="where it came from (Source)")
-    parser.add_argument("--by", help="who weighed the options of a question (Recommended by), e.g. 'architect (Triage)'")
+    parser.add_argument("--by", help="who created the file (Created by), or for a question who weighed its options "
+                        "(Recommended by), e.g. 'loc-orchestrate', 'architect (Triage)'")
     for option, heading in SECTIONS.items():
         parser.add_argument(f"--{option}", help=f"text of the '{heading}' section")
     args = parser.parse_args()
@@ -82,8 +83,8 @@ def main() -> int:
     if args.type:
         if not (args.slug and args.title):
             parser.error("--type needs --slug and --title")
-        if (args.type == "question") != bool(args.by and args.by.strip()):
-            parser.error("--by is required for a question and only for a question")
+        if not (args.by and args.by.strip()):
+            parser.error("--type needs --by: who created the file, or who recommends for a question")
         slug = slugify(args.slug)
         if not slug:
             parser.error("--slug has no usable characters")

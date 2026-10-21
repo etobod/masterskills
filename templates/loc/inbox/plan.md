@@ -4,6 +4,7 @@
 **Status:** open
 **Created:** {DATE}
 **Source:** {SOURCE}
+**Created by:** {BY}
 
 ## Goal
 <what works after the plan is executed, in one paragraph>

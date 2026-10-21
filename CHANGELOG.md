@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.15.0 — 2026-10-21
+
+- Every inbox file names its author, not only a question. `next_number.py` requires `--by` for every `--type` and creates no file without it. A question gets `**Recommended by:**` (who weighed its options); a `brainstorm`, `plan`, `deferred`, `review` or `stuck` file gets `**Created by:**`, e.g. `loc-orchestrate`. Every skill and hook that creates an inbox file passes it.
+
 ## 2.14.0 — 2026-10-21
 
 - A `question` file says who weighed its options: a new header line `**Recommended by:**`, e.g. `architect (Triage)`, `loc-planning` or `loc-orchestrate`. `next_number.py --type question` requires `--by` and creates no file without it. Every place that creates a question passes it; when the architect weighed the options and the orchestrator only writes the file, the architect is named.

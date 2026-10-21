@@ -62,7 +62,7 @@ def context(name: str) -> str:
         "- `conclusion: failure` → create an inbox file, add the run's `url` to it and tell the user "
         "in one sentence:\n"
         f'  `{script_command(root, "scripts/next_number.py")} --type stuck --slug "ci {name}" '
-        f'--title "CI failed on {name}" --source "git push"`\n'
+        f'--title "CI failed on {name}" --source "git push" --by "CI check after push"`\n'
         "- `status: in_progress` or `queued` → one sentence to the user; do not wait or poll.\n"
         "- `success` → one sentence.\n"
         "- `gh` missing, not logged in or no access → say so in one sentence; no inbox file."

@@ -4,6 +4,7 @@
 **Status:** open
 **Created:** {DATE}
 **Source:** {SOURCE}
+**Created by:** {BY}
 
 ## Scope
 <what was assessed: range of changes, files, requirements>
