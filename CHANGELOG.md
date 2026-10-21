@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.16.0 — 2026-10-21
+
+- A `stuck` file shows at once which gate stuck and what the architect recommends. `**Source:**` names the gate before the plan (`M1 code-review (milestone) of <plan path>`), and a new header line `**Stuck gates:**` lists every gate in the file. Each gate section opens with `**Gate:**`, `**Architect (Challenge):**` or `**Architect (Triage):**` (its verdict and recommendation) and `**Next:**` (what happens to what remains), then `### What remains`, and only then the rounds.
+
 ## 2.15.0 — 2026-10-21
 
 - Every inbox file names its author, not only a question. `next_number.py` requires `--by` for every `--type` and creates no file without it. A question gets `**Recommended by:**` (who weighed its options); a `brainstorm`, `plan`, `deferred`, `review` or `stuck` file gets `**Created by:**`, e.g. `loc-orchestrate`. Every skill and hook that creates an inbox file passes it.

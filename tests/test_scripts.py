@@ -141,6 +141,13 @@ class NextNumberTest(unittest.TestCase):
         self.assertIn("**Recommended by:** architect (Triage)\n", text)
         self.assertNotIn("**Created by:**", text)
 
+    def test_stuck_shows_gate_and_verdict_first(self):
+        text = (ROOT / "templates" / "loc" / "inbox" / "stuck.md").read_text(encoding="utf-8")
+        self.assertLess(text.index("**Stuck gates:**"), text.index("\n## "))
+        order = [text.index(marker) for marker in
+                 ("**Gate:**", "**Architect", "**Next:**", "### What remains", "### Rounds")]
+        self.assertEqual(order, sorted(order))
+
     def test_every_file_names_its_author(self):
         project = scratch_dir(self)
         base = ("next_number.py", "--project", ".", "--title", "X", "--source", "test")

@@ -90,6 +90,12 @@ class DecisionSkillsTest(unittest.TestCase):
                     self.assertIn("--by", "\n".join(lines[number:number + 2]), f"{path.relative_to(ROOT)}: {line[:80]}")
         self.assertGreaterEqual(found, 16)
 
+    def test_stuck_records_the_verdict_on_top(self):
+        stuck = read("skills/loc-orchestrate/references/stuck.md")
+        self.assertIn('--source "<gate, e.g. M1 code-review (milestone)> of <plan path>"', stuck)
+        for marker in ("**Stuck gates:**", "**Architect (Challenge):**", "**Architect (Triage):**", "**Next:**"):
+            self.assertIn(marker, stuck)
+
     def test_init_harvests_after_migration(self):
         skill = read("skills/loc-init/SKILL.md")
         self.assertIn("harvest", skill)
