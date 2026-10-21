@@ -4,6 +4,7 @@
 **Status:** open
 **Created:** {DATE}
 **Source:** {SOURCE}
+**Recommended by:** {BY}
 
 <!-- The headings stay in English. Write the text under Question, Context, Options
 and Interim in the `User language` of `CLAUDE.md` (English when it is empty). -->

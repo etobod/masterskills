@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.14.0 — 2026-10-21
+
+- A `question` file says who weighed its options: a new header line `**Recommended by:**`, e.g. `architect (Triage)`, `loc-planning` or `loc-orchestrate`. `next_number.py --type question` requires `--by` and creates no file without it. Every place that creates a question passes it; when the architect weighed the options and the orchestrator only writes the file, the architect is named.
+
 ## 2.13.0 — 2026-10-21
 
 - A final review stuck after 3 rounds no longer just closes the plan. `loc-orchestrate` calls the `architect` agent in a new Triage mode, which picks one: **retry** (rounds 4–6, once per plan), **plan** (the remaining points go to a `deferred` file for `loc-planning`) or **ask** (a `question` file for the user: what is at stake, the options, the recommended one first). After round 6 only `plan` or `ask`. `check_state.py` enforces it through the gate's `triage` list.

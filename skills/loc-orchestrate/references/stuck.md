@@ -17,7 +17,7 @@ A `final-review` gate that went stuck is not left as it is. Call the `architect`
 - **retry**: call `loc-review` again for rounds 4–6 (once per plan). It adds a `## final-review (rounds 4–6)` section; when that fails too, call the architect again: now only `plan` or `ask`.
 - **plan**: the points of `### What remains` become work for `loc-planning`:
   `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<plan topic> final review" --title "<plan> — final review leftovers" --source "<stuck path>" --what "<each point with file:line>" --why "<the architect's reason>" --when "the next loc-planning"`
-- **ask**: the user decides: `next_number.py --type question --title "Final review of plan <NNN>: <topic>" --source "<stuck path>"`, in the user's language: what is at stake with `file:line`, the architect's options with the recommended one first, and its reason.
+- **ask**: the user decides: `next_number.py --type question --title "Final review of plan <NNN>: <topic>" --source "<stuck path>" --by "architect (Triage)"`, in the user's language: what is at stake with `file:line`, the architect's options with the recommended one first, and its reason.
 
 Name the new file in the plan's `## Resolution` and in the report. The plan then closes as usual.
 

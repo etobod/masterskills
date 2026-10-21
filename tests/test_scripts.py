@@ -122,13 +122,25 @@ class NextNumberTest(unittest.TestCase):
     def test_question_has_english_headings_and_old_types_are_rejected(self):
         project = scratch_dir(self)
         out = run("next_number.py", "--project", ".", "--type", "question", "--slug", "colour", "--title", "Colour",
-                  "--source", "test", cwd=project)
+                  "--source", "test", "--by", "loc-planning", cwd=project)
         text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
         for heading in ("**Type:** question", "## Question", "## Options", "## Interim", "## Resolution"):
             self.assertIn(heading, text)
         old = run("next_number.py", "--project", ".", "--type", "pytanie", "--slug", "x", "--title", "X",
                   "--source", "test", cwd=project)
         self.assertNotEqual(old.returncode, 0)
+
+    def test_question_names_who_recommends(self):
+        project = scratch_dir(self)
+        base = ("next_number.py", "--project", ".", "--slug", "x", "--title", "X", "--source", "test")
+        out = run(*base, "--type", "question", cwd=project)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertFalse((project / "loc" / "inbox").exists() and any((project / "loc" / "inbox").iterdir()))
+        out = run(*base, "--type", "deferred", "--by", "architect", cwd=project)
+        self.assertNotEqual(out.returncode, 0)
+        out = run(*base, "--type", "question", "--by", "architect (Triage)", cwd=project)
+        text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
+        self.assertIn("**Recommended by:** architect (Triage)\n", text)
 
     def test_deferred_sections_from_options(self):
         project = scratch_dir(self)

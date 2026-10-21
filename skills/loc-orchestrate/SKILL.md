@@ -41,7 +41,7 @@ Update the state file before and after every step.
 
 - **Rules 1–3** (a bug, a missing critical piece such as validation, a blocker such as a missing dependency): fix it, record a deviation, carry on.
 - A step of this skill you skipped (the red gate, the `test-author` agent, a review) is not a deviation: go back and do it; if it cannot be done, the gate is **stuck**.
-- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): create a `question` file with options, costs and a recommendation (`next_number.py --type question`), record the deviation with it, and continue on the recommendation.
+- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): create a `question` file with options, costs and a recommendation (`next_number.py --type question --by loc-orchestrate`), record the deviation with it, and continue on the recommendation.
 
 ## 4. When to stop
 

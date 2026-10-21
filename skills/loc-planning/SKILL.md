@@ -52,7 +52,7 @@ The last form is an observation from a manual check: no `file:line` when it name
 
 ## 4. Unknowns become questions, not holes
 
-Anything the user must decide goes to its own `question` file **before** the plan is written: first look for a similar open one and extend it; otherwise create one with the script (below) and fill it completely (context, options with cost, recommendation). The plan then proceeds on the recommendation and says so in `## Risks and decisions` (`→ loc/inbox/NNN-question-…`, interim option A). Stop without a plan only if that interim choice would be expensive to undo.
+Anything the user must decide goes to its own `question` file **before** the plan is written: first look for a similar open one and extend it; otherwise create one with the script (below; `--type question --by loc-planning`) and fill it completely (context, options with cost, recommendation). The plan then proceeds on the recommendation and says so in `## Risks and decisions` (`→ loc/inbox/NNN-question-…`, interim option A). Stop without a plan only if that interim choice would be expensive to undo.
 
 ## 5. Write the plan
 
