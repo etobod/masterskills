@@ -69,6 +69,38 @@ class CommitPlanTest(unittest.TestCase):
         self.assertEqual(self.git("status", "--porcelain"), "M notes.txt")
         self.assertEqual(self.state()["commit"], self.git("rev-parse", "HEAD"))
 
+    def test_new_directory_needs_a_decision(self):
+        self.write("app.py", "x = 1\n")
+        self.write("src/kb/store.py", "s = 1\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "chore: start")
+        self.start_plan()
+        self.write("app.py", "x = 2\n")
+        self.write("src/kb/sources.py", "r = 1\n")
+        self.write("data/knowledge.jsonl", "{}\n")
+        self.write("data/raw/thread.md", "# thread\n")
+        code, out = self.commit("--message", "feat(kb): sources")
+        self.assertEqual(code, 1, out)
+        self.assertIn("data", out["error"])
+        self.assertIn("--leave", out["error"])
+        self.assertEqual(self.git("log", "--format=%s"), "chore: start")
+        code, out = self.commit("--message", "feat(kb): sources", "--leave", "data")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(sorted(out["files"]), ["app.py", "src/kb/sources.py"])
+        self.assertEqual(sorted(out["left"]), ["data/knowledge.jsonl", "data/raw/thread.md"])
+        self.assertTrue((self.project / "data" / "knowledge.jsonl").is_file())
+        self.assertEqual(self.git("status", "--porcelain"), "?? data/")
+
+    def test_new_directory_added_on_request(self):
+        self.write("app.py", "x = 1\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "chore: start")
+        self.start_plan()
+        self.write("tests/test_app.py", "t = 1\n")
+        code, out = self.commit("--message", "test: add tests", "--add", "tests")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(out["files"], ["tests/test_app.py"])
+
     def test_first_commit_in_an_empty_repository(self):
         self.start_plan()
         self.write("page.html", "<p>hi</p>\n")

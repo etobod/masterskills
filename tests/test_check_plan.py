@@ -497,6 +497,43 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class DecisionQuestionTest(unittest.TestCase):
+    """A decision the plan proposes waits in a question file, not only in the report."""
+
+    def run_plan(self, risks: str, prd: str = "## Decisions\n- D-02: one URL per thread. Reason: x. (2026-10-01)\n",
+                 fragment: str = "") -> tuple:
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        directory = Path(tempfile.mkdtemp(dir=SCRATCH))
+        self.addCleanup(shutil.rmtree, directory, True)
+        (directory / "loc").mkdir()
+        (directory / "loc" / "PRD.md").write_text("# PRD\n\n" + prd, encoding="utf-8")
+        text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n")
+        text = text.replace("## Risks and decisions\nBrak.\n", f"## Risks and decisions\n{risks}\n{fragment}")
+        path = directory / "007-plan-1-easy-powitania.md"
+        path.write_text(text, encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
+        result = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_plan.py"), str(path)],
+                                capture_output=True, text=True, encoding="utf-8", cwd=directory, env=env)
+        out = json.loads(result.stdout)
+        return result.returncode, "\n".join(issue["problem"] for issue in out["issues"])
+
+    def test_new_decision_without_a_question_fails(self):
+        code, problems = self.run_plan("- D-05 (proposed): the rule lives in sources.json.")
+        self.assertEqual(code, 1)
+        self.assertIn("D-05", problems)
+        self.assertIn("question", problems)
+
+    def test_new_decision_with_a_question_passes(self):
+        code, problems = self.run_plan("- D-05 (proposed) → loc/inbox/018-question-decisions.md, interim: yes.")
+        self.assertEqual(code, 0, problems)
+
+    def test_recorded_or_moved_decision_passes(self):
+        code, problems = self.run_plan("- D-02 stays.")
+        self.assertEqual(code, 0, problems)
+        code, problems = self.run_plan("- D-02 stays.", fragment="## PRD fragment\n- D-01: old line.\n")
+        self.assertEqual(code, 0, problems)
+
+
 class MilestoneLimitTest(unittest.TestCase):
     run_check = CheckPlanTest.run_check
     problems = CheckPlanTest.problems

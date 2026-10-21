@@ -41,6 +41,8 @@ Checks, in order:
     and the plan has at most 6 (`easy`), 4 (`medium`) or 3 (`hard`) milestones, not
     counting an M1 that sets up the test suite (neither with `--ready`: plans written
     before the rule still run);
+  - every `D-NN` the plan names is in `loc/PRD.md` or the plan's `## PRD fragment`,
+    or the plan points to the `NNN-question-…` file that asks the user about it;
   - no expanded path of this plugin: a plan names plugin files as
     `${CLAUDE_PLUGIN_ROOT}/...`, so it still works on another machine.
 
@@ -311,6 +313,27 @@ def check_review(text: str, issues: list) -> None:
                     f"`- {category.lower()} (planning): {ref} …`")})
 
 
+DECISION = re.compile(r"\bD-\d{2,}\b")
+QUESTION = re.compile(r"\b\d{3,}-question-")
+
+
+def check_decisions(text: str, issues: list) -> None:
+    """A decision the plan proposes waits for the user in a question file, never only in a report."""
+    if QUESTION.search(text):
+        return
+    try:
+        prd = (project_dir() / "loc" / "PRD.md").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        prd = ""
+    fragment = "\n".join(sections_of(text).get("PRD fragment", []))
+    known = set(DECISION.findall(prd)) | set(DECISION.findall(fragment))
+    new = sorted(set(DECISION.findall(text)) - known)
+    if new:
+        issues.append({"line": 0, "problem": f"{', '.join(new)} not in loc/PRD.md ## Decisions: a proposed decision "
+                       "goes into one question file (`next_number.py --type question --slug \"decisions\"`, "
+                       "references/prd.md) and the plan names that file"})
+
+
 def check(text: str) -> dict:
     issues = []
     sections = set()
@@ -409,6 +432,7 @@ def own_issues(path: Path) -> list:
     text = path.read_text(encoding="utf-8", errors="replace")
     result = check(text)
     check_review(text, result["issues"])
+    check_decisions(text, result["issues"])
     check_ready(text, result["issues"])
     return [issue["problem"] for issue in result["issues"]
             if not issue["problem"].startswith("the project has no test suite")]
@@ -449,6 +473,7 @@ def main() -> int:
         return 2
     result = check(text)
     check_review(text, result["issues"])
+    check_decisions(text, result["issues"])
     if not args.ready:
         check_name(args.plan.name, result)
     result["ok"] = not result["issues"]

@@ -2,7 +2,7 @@
 
 1. **Language.** English for everything in the project, `loc/` included. Only the text of a `question` file is in the `User language` of `CLAUDE.md`. Talk to the user in their language.
 2. **Stay in the project.** Write files only inside the project directory. Scratch files go to `loc/tmp/`, never `/tmp`, `%TEMP%` or the scratchpad. Delete only files you created there, never the directory. Directories in the project's `permissions.additionalDirectories` count as the project.
-3. **Inbox.** A file in `loc/inbox/` means something waits for the user. Create every inbox file with the `next_number.py` command under Inbox. Inside a skill, a question or deferred work becomes a file in `loc/inbox/` in the same reply (`NNN-question-…`, `NNN-deferred-…`), and work continues on the recommended option. Stop only when that choice would be expensive to undo. In plain conversation the user tracks their own questions.
+3. **Inbox.** A file in `loc/inbox/` means something waits for the user. Create every inbox file with the `next_number.py` command under Inbox. A decision you ask the user for, in a skill or not, or deferred work becomes a file in `loc/inbox/` in the same reply (`NNN-question-…`, `NNN-deferred-…`), and work continues on the recommended option. Stop only when that choice would be expensive to undo. A quick clarification stays in chat.
 4. **Code is the only source of truth.** Never document the current state of the code.
 5. **Commits.** Never add `Co-authored-by`, session links or any mention of AI.
 6. **Gates.** Every gate (plan check, rubber-duck, code-review, tests) gets at most 3 rounds. Then write `loc/inbox/NNN-stuck-…` with the full record and carry on.

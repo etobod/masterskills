@@ -96,6 +96,14 @@ class DecisionSkillsTest(unittest.TestCase):
         for marker in ("**Stuck gates:**", "**Architect (Challenge):**", "**Architect (Triage):**", "**Next:**"):
             self.assertIn(marker, stuck)
 
+    def test_questions_outside_a_skill_and_new_directories(self):
+        rules = read("rules/core.md")
+        self.assertIn("in a skill or not", rules)
+        self.assertNotIn("the user tracks their own questions", rules)
+        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        for marker in ("--add <dir>", "--leave <dir>", ".gitignore"):
+            self.assertIn(marker, orchestrate)
+
     def test_init_harvests_after_migration(self):
         skill = read("skills/loc-init/SKILL.md")
         self.assertIn("harvest", skill)

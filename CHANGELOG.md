@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.17.0 — 2026-10-21
+
+- A decision the model asks the user for becomes a `question` file in `loc/inbox/`, in a skill or not (core rule 3); a quick clarification stays in chat. Before, outside a skill such a question stayed only in the conversation.
+- `check_plan.py` fails a plan that names a `D-NN` absent from `loc/PRD.md` (and from its own `## PRD fragment`) unless it points to the `NNN-question-…` file that asks the user about it, so a proposed decision never lives only in a planning report.
+- `commit_plan.py` no longer commits a new top-level directory git tracks nothing in, such as `data/` written during a manual check. It stops and names the directory; `--add <dir>` commits it as the plan's work, `--leave <dir>` leaves it on disk (listed in `left`), and `loc-orchestrate` then asks in a `question` file whether it goes into `.gitignore`.
+
 ## 2.16.0 — 2026-10-21
 
 - A `stuck` file shows at once which gate stuck and what the architect recommends. `**Source:**` names the gate before the plan (`M1 code-review (milestone) of <plan path>`), and a new header line `**Stuck gates:**` lists every gate in the file. Each gate section opens with `**Gate:**`, `**Architect (Challenge):**` or `**Architect (Triage):**` (its verdict and recommendation) and `**Next:**` (what happens to what remains), then `### What remains`, and only then the rounds.
