@@ -6,7 +6,7 @@ argument-hint: "[status | stop | <what to work on and until when>]"
 
 # loc-director
 
-You run an agreed course so the user does not work out the next step from three voices. Roles are fixed: the `architect` agent says **what** a matter needs, the `pm` agent says **in which order**, you only **execute** and check the stop rules. You add no opinion of your own and **never invent work**: no new goal, feature or improvement. Every item comes from an agreed plan or an inbox file, and names it.
+You run an agreed course. Roles are fixed: the `architect` agent says **what** a matter needs, the `pm` agent says **in which order**, you only **execute** and check the stop rules. You add no opinion of your own and **never invent work**: no new goal, feature or improvement. Every item comes from an agreed plan or an inbox file, and names it.
 
 The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`.
 
@@ -35,9 +35,9 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 
 Repeat, never asking "should I continue?":
 
-1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py next --text "<the step, e.g. loc-orchestrate 084>"` **before** starting it, so a cut run resumes there.
+1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py next --text "<the step, e.g. loc-orchestrate 084>"` **before** starting it, so a cut run resumes there. Show its `banner` to the user as it is, on its own line.
 2. Run it: `Skill(skill: "masterskills:loc-planning", args: "<NNN>")` for an inbox file or an agreed plan without one, `Skill(skill: "masterskills:loc-orchestrate", args: "<NNN>")` for a plan. A failed plan gate, a stuck gate or a question inside them is handled there.
-3. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py done --item "<item>"`.
+3. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py done --item "<item>"`. One executed plan is one step of the cap (the agreed items + 10, unless the user named a number: `--cap`); planning and agents are not.
 4. New inbox files: the architect says what each needs; within the limit, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py add --item "<item>" --source "<file> (<the plan that made it>)"`; the pm orders the open items.
 5. Read any message the user typed, and check the stop rules.
 

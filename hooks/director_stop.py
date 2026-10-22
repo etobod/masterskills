@@ -4,7 +4,7 @@
 Reads loc/PRD.md `## Course` (`scripts/course.py`). While `**State:** open` and
 neither the time limit (`until <time>`, checked here, not by the model) nor the
 step cap is reached, it blocks the end of the turn, naming the next step. Steps
-are counted by `course.py next`, not here, so waiting costs none. When this
+are counted by `course.py done` (one finished item), not here, so waiting costs none. When this
 hook already made the model go on (`stop_hook_active`) and it stops again, the
 turn ends: it is waiting, e.g. for a background agent that resumes it. A reached limit sets `stopping — <reason>` and blocks once more
 for the stop report; the next stop closes the course. Without a PRD, a course,
@@ -58,7 +58,7 @@ def decide(section: list, active: bool = False):
         return section, None
     next_step = info.get("Next", "") or "the first open item"
     return section, (
-        f"The director's course in loc/PRD.md is open (step {done} of {cap}). Next: {next_step}. "
+        f"The director's course in loc/PRD.md is open ({done} of {cap} plans executed). Next: {next_step}. "
         "Carry on with loc-director: write each next step with course.py next before starting it, and never ask "
         "the user whether to continue. Stop only by the skill's stop rules, with course.py stop.")
 
