@@ -24,7 +24,7 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/review_diff.py --from <from> [-
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
-`empty: true`: say there is nothing to review, and stop.
+`empty: true` (only `loc/` changed): nothing to review; orchestrated, the gate gets `rounds: 0, passed: true`. Stop.
 
 ## 2. Review, in parallel
 
@@ -37,7 +37,7 @@ Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` 
 
 ## 3. Merge
 
-One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`unrealistic`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[invariant]`). Check each against the code before accepting it; a finding the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
+One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`unrealistic`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[invariant]`). Check each against the code; one the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
 
 ## 4. Orchestrated mode: fix, at most 3 rounds
 
@@ -59,4 +59,4 @@ Fix nothing. The file has no `U` (not the user's): `loc-planning` weighs it with
 
 First, a command that failed during the review and worked another way goes to `loc/PATTERNS.md` (rule 10), if it is not there yet.
 
-In the user's language, briefly: scope and level; findings by severity (or "no findings"); in orchestrated mode the rounds and what was fixed; the `review` or `stuck` file, if one was created.
+Briefly, in the user's language: scope and level; findings by severity (or "no findings"); in orchestrated mode the rounds and what was fixed; the `review` or `stuck` file, if one was created.

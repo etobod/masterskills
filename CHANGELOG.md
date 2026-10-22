@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.18.2 — 2026-10-22
+
+- A plan that changed only `loc/` (e.g. `loc/TEST-PLAN.md`) has nothing for the final review: `review_diff.py` leaves `loc/` out. `loc-review` now says what goes into the state file then, `final-review` with `rounds: 0, passed: true`, so the model no longer improvises it.
+
 ## 2.18.1 — 2026-10-22
 
 - `loc-director` no longer asks "agreed?": calling it is the agreement, with words ("work without limits", "until 21:00", "finish plan 087") or without (limit `goal`). It shows the table and starts in the same reply; it asks only for work the table cannot cover. "Without limits" means `--limit none`; `/masterskills:loc-director status` only looks.
