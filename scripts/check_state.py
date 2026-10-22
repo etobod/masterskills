@@ -17,17 +17,20 @@
       "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "qa", "final-review"
         "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ...",
                    "test_author": true},
-        "M1/proof": {"rounds": 3, "passed": false, "stuck": "loc/inbox/004-stuck-....md"}
+        "M1/proof": {"rounds": 3, "passed": false, "stuck": "plan"}
       },
       "deviations": [{"milestone": "M1", "rule": 1-4, "note": "...",
-                      "question": "loc/inbox/NNN-question-....md"}],   # question: rule 4 only
+                      "question": "loc/inbox/NNN-U-question-....md"}],   # rule 4: question or ruling
       "next_action": "exactly what to do next",
       "updated": "YYYY-MM-DD HH:MM",
       "deferred": "loc/inbox/NNN-deferred-....md" | null   # optional
     }
 
-Gate rules: at most 3 rounds; a gate that used 3 rounds without passing names its
-`stuck` file, and that file must exist in `loc/inbox/` or `loc/inbox/done/`.
+Gate rules: at most 3 rounds. A milestone or QA gate that used 3 rounds without
+passing has `"stuck": "plan"` and a `### M<n> <gate>` (or `### qa`) heading under
+the plan's `## Stuck gates`; an open `**Remains:**` point there needs a final
+triage of plan or ask. A stuck final review names its `stuck` file, which must
+exist in `loc/inbox/` or `loc/inbox/done/` (an older run's milestone may too).
 Only `final-review` has `triage`: the architect's verdicts after a stuck final
 review, in order, each `retry`, `plan` or `ask`. One `retry` allows rounds 4-6;
 `journal` and `done` need a stuck final review's last verdict to be `plan` or `ask`.
@@ -72,13 +75,14 @@ TRIAGE = {"retry", "plan", "ask"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
-STUCK = re.compile(r"^loc/inbox/(done/)?\d{3,}-stuck-[^/]+\.md$")
+STUCK = re.compile(r"^loc/inbox/(done/)?(\d{3,})-(U-)?stuck-[^/]+\.md$")
 NOTES = "Review notes"
 NOTE = re.compile(r"^- (suggestion|unrealistic|enough) \((M\d+ code-review|final-review|planning)\): (.+)$")
 PRODUCER = re.compile(r"Who produces it:\s*(.+)$")
 REASON = re.compile(r"Reason:\s*(.+)$")
 DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-deferred-[^/]+\.md$")
-QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-question-[^/]+\.md$")
+QUESTION = re.compile(r"^loc/inbox/(done/)?\d{3,}-(U-)?question-[^/]+\.md$")
+RULING = re.compile(r"\(architect, \d{4}-\d{2}-\d{2}\)")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
 BEHAVIOUR = re.compile(r"^- K\d+ \(behaviour\):")
 CRITERIA = re.compile(r"^\*\*Criteria:\*\*")
@@ -150,15 +154,55 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
         if rounds > limit:
             problems.append(f"gates.{name}: {rounds} rounds, the limit is {limit}")
         if (rounds == MAX_ROUNDS and passed is False) or (retried and rounds > MAX_ROUNDS):
-            if not (isinstance(stuck, str) and STUCK.match(stuck)):
-                problems.append(f"gates.{name}: {MAX_ROUNDS} failed rounds without a stuck file")
-            elif not any((project / p).is_file() for p in (stuck, stuck.replace("loc/inbox/", "loc/inbox/done/", 1))):
+            if stuck == "plan" and name != "final-review":
+                heading = name.replace("/", " ")
+                if heading not in stuck_headings(project, data.get("plan")):
+                    problems.append(f"gates.{name}.stuck: the plan's ## Stuck gates has no ### {heading} "
+                                    "(references/stuck.md)")
+            elif not (isinstance(stuck, str) and STUCK.match(stuck)):
+                problems.append(f"gates.{name}: {MAX_ROUNDS} failed rounds without a stuck record "
+                                "(\"plan\" for a milestone or qa, a stuck file for final-review)")
+            elif not stuck_exists(project, stuck):
                 problems.append(f"gates.{name}.stuck: {stuck} does not exist")
         elif stuck is not None:
             problems.append(f"gates.{name}.stuck: only a gate that failed {MAX_ROUNDS} rounds has one")
         output = gate.get("output")
         if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
+
+
+def stuck_section(project: Path, plan) -> list:
+    """Lines of the plan's `## Stuck gates`, where a stuck milestone or QA gate keeps its record."""
+    lines, inside = [], False
+    for line in plan_text(project, plan).splitlines():
+        if line.startswith("## "):
+            inside = line[3:].strip() == "Stuck gates"
+        elif inside:
+            lines.append(line)
+    return lines
+
+
+def stuck_headings(project: Path, plan) -> set:
+    return {line[4:].strip() for line in stuck_section(project, plan) if line.startswith("### ")}
+
+
+def open_points(project: Path, plan) -> list:
+    """Points under `**Remains:**` in `## Stuck gates` not yet marked resolved."""
+    points, remains = [], False
+    for line in stuck_section(project, plan):
+        if line.startswith("**Remains:**"):
+            remains = True
+        elif line.startswith(("**", "#")) or not line.strip():
+            remains = False
+        elif remains and line.startswith("- ") and "\u2705" not in line:
+            points.append(line)
+    return points
+
+
+def stuck_exists(project: Path, stuck: str) -> bool:
+    """By number: the file may have moved to done/ or gained or lost its `U` since."""
+    number = STUCK.match(stuck).group(2)
+    return any(any((project / "loc" / folder).glob(f"{number}-*stuck-*.md")) for folder in ("inbox", "inbox/done"))
 
 
 def plan_text(project: Path, plan) -> str:
@@ -223,6 +267,9 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
     elif final.get("passed") is not True and (final.get("triage") or ["retry"])[-1] not in ("plan", "ask"):
         problems.append("gates.final-review.triage: a stuck final review needs the architect's last verdict, "
                         "plan or ask (references/stuck.md)")
+    elif open_points(project, plan) and (final.get("triage") or ["retry"])[-1] not in ("plan", "ask"):
+        problems.append("gates.final-review.triage: ## Stuck gates of the plan still has an open point; "
+                        "the architect's triage must end in plan or ask (references/stuck.md)")
     status = STATUS.search(plan_text(project, plan))
     if data.get("phase") == "done" and not (status and CLOSED.match(status.group(1))):
         problems.append("plan: phase done but the plan's **Status:** is not 'done <date>' "
@@ -313,8 +360,12 @@ def check_deviations(data: dict, ids: list, problems: list) -> None:
             problems.append(f"{where}.rule: expected 1-4")
         if not (isinstance(item.get("note"), str) and item["note"].strip()):
             problems.append(f"{where}.note: expected text")
-        if rule == 4 and not (isinstance(item.get("question"), str) and QUESTION.match(item["question"])):
-            problems.append(f"{where}: rule 4 (architecture) needs a question file in 'question'")
+        asked = isinstance(item.get("question"), str) and QUESTION.match(item["question"])
+        ruled = isinstance(item.get("ruling"), str) and RULING.search(item["ruling"])
+        if rule == 4 and not (asked or ruled):
+            problems.append(f"{where}: rule 4 (architecture) needs the architect's 'ruling' "
+                            "('<what> — <why> — cost if wrong: <…> (architect, <date>)') or, "
+                            "when it escalated, a question file in 'question'")
 
 
 def check(path: Path, data) -> list:

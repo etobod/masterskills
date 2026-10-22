@@ -349,6 +349,12 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(text, ready=True, files=("loc/inbox/done/001-brainstorm-fourier.md",))
         self.assertEqual(code, 0, out)
 
+    def test_ready_finds_the_input_by_number(self):
+        text = self.ready_plan("- round 1: skan czysty\n")
+        code, out = self.run_check(text, ready=True, files=("loc/inbox/001-U-brainstorm-fourier.md",))
+        self.assertEqual(code, 1)
+        self.assertIn("input loc/inbox/001-U-brainstorm-fourier.md is still open", self.problems(out))
+
     def test_expanded_plugin_path_fails(self):
         for path in (f"{ROOT.as_posix()}/templates/loc/TEST-PLAN.md", str(ROOT / "templates" / "loc" / "TEST-PLAN.md")):
             with self.subTest(path=path):

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """List what the project has waiting: open inbox files and plan state files.
 
-Open files are `loc/inbox/*.md` (never `loc/inbox/done/`), named `NNN-<type>-<desc>.md`.
+Open files are `loc/inbox/*.md` (never `loc/inbox/done/`), named `NNN-[U-]<type>-<desc>.md`; `U` marks a file
+that waits for the user, and those come first.
 State files are `loc/state/*.json` of runs not yet done, newest first. A
 project without `loc/inbox/` gives an empty list, not an error.
 
 Prints JSON to stdout:
     {"project": ..., "has_inbox": bool,
-     "inbox": [{"path", "number", "type", "title", "template"}], "state": [path, ...]}
+     "inbox": [{"path", "number", "type", "user", "title", "template"}], "state": [path, ...]}
 
 `template` is true when the file still holds its template's first placeholder.
 """
@@ -19,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-NAME = re.compile(r"^(\d{3,})-([a-z]+)-")
+NAME = re.compile(r"^(\d{3,})-(?:(U)-)?([a-z]+)-")
 TITLE = re.compile(r"^#\s+\d+\s*[—-]+\s*(.+?)\s*$")
 PLACEHOLDER = re.compile(r"^<[^\n]*>$", re.M)
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "loc" / "inbox"
@@ -63,10 +64,13 @@ def summarize(project: Path) -> dict:
             inbox.append({
                 "path": path.relative_to(project).as_posix(),
                 "number": match.group(1) if match else None,
-                "type": match.group(2) if match else None,
+                "type": match.group(3) if match else None,
+                # A question is always the user's, also one named before the marker existed.
+                "user": bool(match and (match.group(2) or match.group(3) == "question")),
                 "title": read_title(path),
-                "template": bool(match) and is_template(path, match.group(2)),
+                "template": bool(match) and is_template(path, match.group(3)),
             })
+        inbox.sort(key=lambda item: not item["user"])
 
     state_dir = project / "loc" / "state"
     state = []

@@ -43,7 +43,7 @@ One list: duplicates merged, each finding with `file:line`, category (**Blocking
 
 Each round, in the state file's `final-review` gate: increase `rounds`, review (steps 1–3), give the Blocking and Non-blocking findings to the `judge` agent (`gates.md`, "The judge"), fix those it marks `fix`, rerun the `Proof` of every milestone the fixes touched. Suggestions, Unrealistic findings and the judge's `enough` verdicts are not fixed and create no inbox file: one line each in the plan's `## Review notes`, gate `final-review` (format in `gates.md`). A finding already there as `enough` goes to the judge marked as already judged and never gets a second line. The gate passes when the judge leaves nothing to fix; set `passed: true`.
 
-After a third round (sixth, when the gate's `triage` holds `retry`) that still leaves something to fix: do not start another and change no more code. Add a `## final-review` section to the plan run's `stuck` file (the path in any `stuck` of the state file), creating it if none exists (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`): each round's findings, what was changed, what remains with `file:line`, whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, whose architect decides what follows.
+After a third round (sixth, when the gate's `triage` holds `retry`) that still leaves something to fix: do not start another and change no more code. Write a `## final-review` section in the plan run's `stuck` file, creating it after round 3 (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`): each round's findings, what was changed, what remains with `file:line`, whether the rounds went in circles. Record it in the gate's `stuck`, and hand back to `loc-orchestrate`, whose architect decides what follows.
 
 ## 5. Standalone mode: report to inbox
 
@@ -53,7 +53,7 @@ With findings: create the file and fill `## Scope` (range, files, requirements) 
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type review --slug "<scope>" --title "<what was reviewed>" --source "<range or plan>" --by loc-review
 ```
 
-Do not fix anything: the user decides, and `loc-planning` can turn the review into a plan. With no findings, or only Unrealistic ones, create no file: nothing waits for the user; list them in the report.
+Fix nothing. The file has no `U` (not the user's): `loc-planning` weighs it with the `judge` and plans each `fix`; only an architect escalation reaches the user. With no findings, or only Unrealistic ones, create no file; list them in the report.
 
 ## 6. Report
 

@@ -6,7 +6,7 @@ argument-hint: "[topic]"
 
 # loc-brainstorm
 
-Keeps the notes of a design conversation in **one** file, `loc/inbox/NNN-brainstorm-<topic>.md`, so the conversation survives `/clear`, compaction and the next session, and so `loc-planning` can turn it into a plan.
+Keeps the notes of a design conversation in **one** file, `loc/inbox/NNN-U-brainstorm-<topic>.md`, so the conversation survives `/clear`, compaction and the next session, and so `loc-planning` can turn it into a plan.
 
 Brainstorming only records. **Do not write code, do not write a plan**, even when the idea looks finished. The user moves on with `loc-planning`.
 
@@ -39,7 +39,7 @@ Record only what the user decided as a decision. Your suggestion stays in `## Op
 
 ## 3. Answer
 
-Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notes: `loc/inbox/004-brainstorm-greeting-language.md` (B-01…B-03)."
+Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notes: `loc/inbox/004-U-brainstorm-greeting-language.md` (B-01…B-03)."
 
 When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. When `## Goal` in `loc/PRD.md` is still only the template, mention first that `/masterskills:loc-init <NNN>` fills the project's goal and `CLAUDE.md` from it. Do not start either yourself.
 
@@ -48,3 +48,13 @@ When the open list is empty or the user says the idea is ready, mention that `/m
 - One active brainstorm; a second only when the user asks.
 - The file must make sense on its own to someone who missed the conversation.
 - The brainstorm is closed by `loc-planning`, never by this skill.
+
+## Approval
+
+A new brainstorm is `**Status:** open` and carries `U`: it waits for the user. When the user says to go with its decisions ("let's go with this"), set `**Status:** approved <date>` (date from `date "+%Y-%m-%d"`) and hand it over, so it becomes work to plan:
+
+```sh
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/inbox_owner.py --number <NNN> --director
+```
+
+Its open items then go through planning like any unknown. A new decision after approval sets it back to `open` (`--user`).

@@ -34,6 +34,7 @@ Every workflow file lives in `loc/`, ignored by git with one line: the inbox (`l
 - `loc-orchestrate` executes a plan milestone by milestone: tests first with a red gate that must fail on an assertion (the `test-author` agent writes behaviour tests without reading the code), then the code, the proof and a code review. It keeps a copy of the tests from the start of the plan.
 - `loc-qa` gives the QA verdict, APPROVED or NOT APPROVED: the full suite once, the tests compared with that copy, a test for every criterion, and the project's own `qa-*` skills whose `qa-paths:` header matches the change. It changes tests only. `loc-orchestrate` runs it before the final review; run `/masterskills:loc-qa` yourself at any time.
 - `loc-review` reviews the diff; `loc-journal` records lessons.
+- `loc-director` runs a course you agree once ("until plan 087 is done", "until 21:00"): the `pm` agent orders the work, the `architect` agent says what each inbox file needs, and it plans and executes until a stop rule. The course lives in `loc/PRD.md` `## Course`; a `Stop` hook keeps it going, `/masterskills:loc-director status` shows what happened, "stop" ends it.
 
 ## Guards
 

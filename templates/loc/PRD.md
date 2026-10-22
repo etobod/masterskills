@@ -13,6 +13,9 @@ What the project is for and where it is heading. Only what is current.
   instead of restating them. `loc-planning` adds one after the user agrees.
 - `## Priorities` is written only by the user. The `pm` agent orders the
   queue of plans by it.
+- `## Course` appears at the end while `loc-director` works: the course the user
+  agreed, its limit and next step. Only `scripts/course.py` and the Stop hook
+  change it.
 
 ## Goal
 <what this project is for and for whom; a few sentences or a short numbered list>

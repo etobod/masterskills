@@ -52,7 +52,7 @@ The last form is an observation from a manual check: no `file:line` when it name
 
 ## 4. Unknowns become questions, not holes
 
-Anything the user must decide goes to its own `question` file **before** the plan is written: first look for a similar open one and extend it; otherwise create one with the script (below; `--type question --by loc-planning`) and fill it completely (context, options with cost, recommendation). The plan then proceeds on the recommendation and says so in `## Risks and decisions` (`→ loc/inbox/NNN-question-…`, interim option A). Stop without a plan only if that interim choice would be expensive to undo.
+Anything you would ask the user goes **before** the plan is written to the `architect` agent in Decide mode (context, options with cost, your recommendation). **decide**: its ruling line goes into `## Risks and decisions`. **escalate**: extend a similar open `question` file, or create one with the script (below; `--type question --by "architect (Decide)"`) with its options; the plan proceeds on the recommendation (`→ loc/inbox/NNN-U-question-…`, interim option A). Stop without a plan only if that interim choice would be expensive to undo.
 
 ## 5. Write the plan
 
@@ -126,7 +126,7 @@ Each round, recorded as one line in `## Plan gate`:
 1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge.
 2. The `rubber-duck` agent with **what was asked** (the input file, or the PRD fragment or text) and **what was produced** (the plan path); ask it also whether a milestone does several independent things, and whether the plan contradicts a `D-NN` of `loc/PRD.md` without saying it replaces it (blocking). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
 
-The round passes when the script exits `0` and the critic reports nothing blocking. After a failed third round: set the plan's `**Status:**` to `open — gate failed`, create a `stuck` file with all three rounds and the remaining issues, and report. Do not start a fourth round.
+The round passes when the script exits `0` and the critic reports nothing blocking. After a failed third round, no fourth: a `stuck` file and the `architect` agent's Triage decide what follows (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`, `## Plan gate`).
 
 ## 7. Close the input
 

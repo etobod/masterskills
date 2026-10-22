@@ -2,6 +2,15 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.18.0 — 2026-10-22
+
+- New skill `loc-director`: you agree a course once ("until plan 087 is done", "until I say stop", "until 21:00") and it runs it. The `pm` agent orders the plans and the `deferred`, `stuck` and `review` files, the `architect` agent says what each needs, and the director plans and executes until a stop rule: all done, only your files left, the same stuck point back after a plan for it, or the time or step limit. It never invents work and never asks whether to continue; every stop ends with Done / Skipped / Left and the resume command. The course lives in `loc/PRD.md` `## Course` (`scripts/course.py`); a `Stop` hook keeps it going and checks the clock; `/masterskills:loc-director status` prints what happened since the last report.
+- The user gets only what the architect cannot decide. Where a skill would ask a question, it first calls the `architect` agent in a new Decide mode: within its competence (technical choices inside Goal, Core idea, Scenarios, Decisions and Invariants) its ruling `<what> — <why> — cost if wrong: <…> (architect, <date>)` is applied at once; beyond it a `question` file is created. Triage asks only beyond that competence.
+- An inbox file that waits for you has `U` after its number (`088-U-question-…`): questions, an open brainstorm, and a file handed to you with `scripts/inbox_owner.py --user`. Session start lists them first. Lookups go by number, so a renamed file is still found.
+- A brainstorm is `**Status:** open` while discussed and `approved <date>` once you say to go with it.
+- Options are named by file, letter and content (`088 A: finish the half-written entry`); "as the architect recommends" is an answer. The architect names its options by word and ends with `Bears on: 088 → A`.
+- A milestone or QA gate stuck after 3 rounds writes no `stuck` file: its record goes into the plan's `## Stuck gates`, and the architect weighs it once at the end, also when the final review passed. A failed plan gate gets the architect's Triage. A `review` file waits for the director, not for you.
+
 ## 2.17.0 — 2026-10-21
 
 - A decision the model asks the user for becomes a `question` file in `loc/inbox/`, in a skill or not (core rule 3); a quick clarification stays in chat. Before, outside a skill such a question stayed only in the conversation.
