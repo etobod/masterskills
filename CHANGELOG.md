@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.18.6 — 2026-10-22
+
+- A change to `Goal`, `Core idea` or `Scenarios` is asked in a `PRD:` `question` file (`NNN-U-question-…`) also outside a plan, never only in chat. A yes/no asked only in chat was lost when the next agent report pushed it out of view.
+- Rule 3: only a quick clarification stays in chat; a question the user may miss never does. Rules trimmed to stay within 470 words.
+
 ## 2.18.5 — 2026-10-22
 
 - `loc-director` never starts a course without showing its table first. When the `pm` and `architect` answered after the director's reply had ended, it could go straight to `course.py start` and show only the banner.
