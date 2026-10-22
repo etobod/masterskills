@@ -213,6 +213,11 @@ class SkillTest(unittest.TestCase):
                        "/masterskills:loc-director", "should I continue", "never invent"):
             self.assertIn(marker, skill)
 
+    def test_skill_starts_without_asking_when_told_to_work(self):
+        skill = (ROOT / "skills" / "loc-director" / "SKILL.md").read_text(encoding="utf-8")
+        for marker in ("Calling you is the agreement", "without asking", "without limits", "none means `goal`"):
+            self.assertIn(marker, skill)
+
 
 if __name__ == "__main__":
     unittest.main()
