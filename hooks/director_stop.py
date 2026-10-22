@@ -3,8 +3,10 @@
 
 Reads loc/PRD.md `## Course` (`scripts/course.py`). While `**State:** open` and
 neither the time limit (`until <time>`, checked here, not by the model) nor the
-step cap is reached, it counts a step and blocks the end of the turn, naming
-the next step. A reached limit sets `stopping — <reason>` and blocks once more
+step cap is reached, it blocks the end of the turn, naming the next step. Steps
+are counted by `course.py next`, not here, so waiting costs none. When this
+hook already made the model go on (`stop_hook_active`) and it stops again, the
+turn ends: it is waiting, e.g. for a background agent that resumes it. A reached limit sets `stopping — <reason>` and blocks once more
 for the stop report; the next stop closes the course. Without a PRD, a course,
 or an open one, it prints nothing: the turn ends as usual.
 
@@ -30,7 +32,7 @@ def command(script: str) -> str:
     return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
 
 
-def decide(section: list):
+def decide(section: list, active: bool = False):
     """(new section, reason to block or None)."""
     info = fields(section)
     state = info.get("State", "")
@@ -52,9 +54,11 @@ def decide(section: list):
         return set_field(section, "State", f"stopping — {limit}"), (
             f"The course reached its {limit}. Finish no new task. Give the stop report (Done / Skipped / Left, "
             f'and the command to resume), then run `{stop} stop --reason "{limit}"`.')
+    if active:
+        return section, None
     next_step = info.get("Next", "") or "the first open item"
-    return set_field(section, "Steps", f"{done + 1} of {cap}"), (
-        f"The director's course in loc/PRD.md is open (step {done + 1} of {cap}). Next: {next_step}. "
+    return section, (
+        f"The director's course in loc/PRD.md is open (step {done} of {cap}). Next: {next_step}. "
         "Carry on with loc-director: write each next step with course.py next before starting it, and never ask "
         "the user whether to continue. Stop only by the skill's stop rules, with course.py stop.")
 
@@ -73,7 +77,7 @@ def main() -> int:
     if section is None:
         return 0
     try:
-        new, reason = decide(section)
+        new, reason = decide(section, hook_input.get("stop_hook_active") is True)
     except ValueError:  # a course the hook cannot read switches it off
         return 0
     if new != section:

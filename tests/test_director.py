@@ -37,9 +37,9 @@ def section(cwd: Path) -> str:
     return text.split("## Course")[1]
 
 
-def stop_hook(cwd: Path) -> subprocess.CompletedProcess:
+def stop_hook(cwd: Path, active: bool = False) -> subprocess.CompletedProcess:
     env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
-    data = {"hook_event_name": "Stop", "cwd": str(cwd), "stop_hook_active": False}
+    data = {"hook_event_name": "Stop", "cwd": str(cwd), "stop_hook_active": active}
     return subprocess.run([sys.executable, "-B", str(ROOT / "hooks" / "director_stop.py")], input=json.dumps(data),
                           capture_output=True, text=True, encoding="utf-8", env=env)
 
@@ -146,17 +146,37 @@ class StatusTest(unittest.TestCase):
 
 
 class StopHookTest(unittest.TestCase):
-    def test_open_course_blocks_and_counts_steps(self):
+    def test_open_course_blocks_and_next_counts_steps(self):
         cwd = project(self)
         course(cwd, "start", "--limit", "goal", "--agreed", "x", "--item", "plan 084")
         course(cwd, "next", "--text", "loc-orchestrate 084")
-        result = stop_hook(cwd)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        out = json.loads(result.stdout)
-        self.assertEqual(out["decision"], "block")
-        self.assertIn("loc-orchestrate 084", out["reason"])
-        self.assertIn("never ask", out["reason"])
         self.assertIn("**Steps:** 1 of 40", section(cwd))
+        for _ in range(3):
+            result = stop_hook(cwd)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            out = json.loads(result.stdout)
+            self.assertEqual(out["decision"], "block")
+            self.assertIn("loc-orchestrate 084", out["reason"])
+            self.assertIn("never ask", out["reason"])
+        self.assertIn("**Steps:** 1 of 40", section(cwd))
+        course(cwd, "next", "--text", "loc-planning 087")
+        self.assertIn("**Steps:** 2 of 40", section(cwd))
+
+    def test_a_second_stop_after_the_hook_waits(self):
+        cwd = project(self)
+        course(cwd, "start", "--limit", "goal", "--agreed", "x", "--item", "plan 084")
+        course(cwd, "next", "--text", "loc-orchestrate 084")
+        result = stop_hook(cwd, active=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+        self.assertIn("**State:** open", section(cwd))
+        self.assertIn("**Steps:** 1 of 40", section(cwd))
+
+    def test_time_limit_stops_even_while_waiting(self):
+        cwd = project(self)
+        course(cwd, "start", "--limit", f"until {minutes(-5)}", "--agreed", "x", "--item", "plan 084")
+        self.assertEqual(json.loads(stop_hook(cwd, active=True).stdout)["decision"], "block")
+        self.assertIn("**State:** stopping — time limit", section(cwd))
 
     def test_time_limit_stops_after_one_report(self):
         cwd = project(self)

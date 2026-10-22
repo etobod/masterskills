@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.18.3 — 2026-10-22
+
+- The director's step cap counted every stop of the turn, so waiting for a background agent used it up ("step 15 … 19 of 40" with the same next step). Now `course.py next` counts a step, when work starts. The `Stop` hook no longer counts, and when it already made the model go on (`stop_hook_active`) and the model stops again, it lets the turn end: the model is waiting, and the agent's result resumes it. The time limit is still checked at every stop.
+
 ## 2.18.2 — 2026-10-22
 
 - A plan that changed only `loc/` (e.g. `loc/TEST-PLAN.md`) has nothing for the final review: `review_diff.py` leaves `loc/` out. `loc-review` now says what goes into the state file then, `final-review` with `rounds: 0, passed: true`, so the model no longer improvises it.
