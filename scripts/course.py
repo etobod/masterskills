@@ -17,7 +17,7 @@ resumes from it:
 Commands (times come from the clock, never from the model):
 
     start --limit <goal|none|"until YYYY-MM-DD HH:MM"> --agreed "<words>" [--item "<item>"]...
-    next --text "<step>"
+    next --text "<step>"            (counts a step)
     add --item "<item>" --source "<the file or plan it comes from>"
     done --item "<item>"
     stop --reason "<why>"
@@ -94,6 +94,14 @@ def is_open(section) -> bool:
 def read(project: Path):
     path = project / "loc" / "PRD.md"
     return path, split(path.read_text(encoding="utf-8"))
+
+
+def next_step(section: list, text: str) -> list:
+    """Write the next step and count it: a step is work started, not a stop of the turn."""
+    steps = STEPS.match(fields(section).get("Steps", ""))
+    if steps:
+        section = set_field(section, "Steps", f"{int(steps[1]) + 1} of {steps[2]}")
+    return set_field(section, "Next", text)
 
 
 def check_limit(value: str) -> bool:
@@ -253,7 +261,7 @@ def main() -> int:
             parser.error('--limit: goal, none or "until YYYY-MM-DD HH:MM"')
         return start(project, args)
     if args.command == "next":
-        return change(project, lambda s: set_field(s, "Next", args.text))
+        return change(project, lambda s: next_step(s, args.text))
     if args.command == "add":
         return change(project, lambda s: add(s, args.item, args.source))
     if args.command == "done":
