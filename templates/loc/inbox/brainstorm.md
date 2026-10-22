@@ -2,6 +2,7 @@
 
 **Type:** brainstorm
 **Status:** open
+<!-- open while discussed (the file name has U); approved <date> once the user says to go with its decisions -->
 **Created:** {DATE}
 **Source:** {SOURCE}
 **Created by:** {BY}

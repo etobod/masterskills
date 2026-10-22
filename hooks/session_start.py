@@ -42,7 +42,8 @@ def inbox_section(summary: dict) -> str:
     for item in summary["inbox"]:
         kind = item["type"] or "?"
         empty = " — still the empty template: fill it or delete it" if item.get("template") else ""
-        lines.append(f"- `{item['path']}` ({kind}) {item['title']}".rstrip() + empty)
+        user = " — waits for you" if item.get("user") else ""
+        lines.append(f"- `{item['path']}` ({kind}) {item['title']}".rstrip() + user + empty)
     if not summary["inbox"]:
         lines.append("Nothing open.")
     if summary["state"]:
@@ -67,6 +68,8 @@ def inbox_commands() -> str:
         f'- New file from its template, time from the clock: `{script_command(root, "scripts/next_number.py")} '
         '--type <question|deferred|...> --slug "<few words>" --title "<title>" --source "<where it came from>" '
         '--by "<who created it; for a question who recommends, e.g. architect (Triage)>"`\n'
+        f'- Hand a file to the user or back (`U` after its number): `{script_command(root, "scripts/inbox_owner.py")} '
+        '--number <NNN> --user` or `--director`\n'
         "- Close a file: `mv loc/inbox/<file> loc/inbox/done/`"
     )
 

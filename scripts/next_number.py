@@ -5,7 +5,10 @@ The number is max(NNN in `loc/inbox/` and `loc/inbox/done/`) + 1, zero-padded to
 digits; an empty inbox gives `001`. Never count files by hand: counting gives
 repeated numbers once files move to `loc/inbox/done/`.
 
-With `--type`, `--slug` and `--title` the file `loc/inbox/NNN-<type>-<slug>.md` is
+A file that waits for the user carries `U` after its number: `question` and `brainstorm`
+always, `deferred`, `review` and `stuck` with `--user`, a `plan` never.
+
+With `--type`, `--slug` and `--title` the file `loc/inbox/NNN-[U-]<type>-<slug>.md` is
 created from `templates/loc/inbox/<type>.md`, with the number, title, source and the
 current time filled in. An existing file is never overwritten. `--what`, `--why` and
 `--when` fill the sections of a `deferred` file in the same step, so it is never
@@ -28,6 +31,7 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates" / "loc" / "inbox"
 TYPES = ["brainstorm", "plan", "question", "deferred", "review", "stuck"]
+USER_TYPES = {"question", "brainstorm"}  # always wait for the user when created
 NUMBER = re.compile(r"^(\d{3,})-")
 SECTIONS = {"what": "What was deferred", "why": "Why not now", "when": "When to return"}
 
@@ -71,6 +75,8 @@ def main() -> int:
     parser.add_argument("--source", default="conversation", help="where it came from (Source)")
     parser.add_argument("--by", help="who created the file (Created by), or for a question who weighed its options "
                         "(Recommended by), e.g. 'loc-orchestrate', 'architect (Triage)'")
+    parser.add_argument("--user", action="store_true",
+                        help="mark a deferred, review or stuck file as waiting for the user (U)")
     for option, heading in SECTIONS.items():
         parser.add_argument(f"--{option}", help=f"text of the '{heading}' section")
     args = parser.parse_args()
@@ -85,10 +91,13 @@ def main() -> int:
             parser.error("--type needs --slug and --title")
         if not (args.by and args.by.strip()):
             parser.error("--type needs --by: who created the file, or who recommends for a question")
+        if args.user and args.type == "plan":
+            parser.error("--user: a plan never waits for the user")
         slug = slugify(args.slug)
         if not slug:
             parser.error("--slug has no usable characters")
-        rel = f"loc/inbox/{number}-{args.type}-{slug}.md"
+        marker = "U-" if args.user or args.type in USER_TYPES else ""
+        rel = f"loc/inbox/{number}-{marker}{args.type}-{slug}.md"
         path = project / rel
         if path.exists():
             print(json.dumps({**result, "path": rel, "created": False, "error": "exists"}))

@@ -6,18 +6,18 @@
 **Created:** {DATE}
 **Source:** {SOURCE}
 **Created by:** {BY}
-**Stuck gates:** <every gate with a section below, e.g. `M1 code-review` (milestone), `final-review`>
+**Stuck gates:** <every gate with a section below, e.g. `final-review`, `plan gate`>
 
-<!-- One file per plan execution: every stuck gate adds its own section
-`## M<n> <gate>` (or `## qa`, `## final-review`) with the same subsections,
-and adds itself to **Stuck gates:**. The plan gate in loc-planning has one
-section `## plan gate`. -->
+<!-- One file per plan run, only for the final review and the plan gate:
+a stuck milestone or QA gate is recorded in the plan's `## Stuck gates`.
+Every stuck gate adds its own section (`## final-review`, `## plan gate`)
+and adds itself to **Stuck gates:**. -->
 
-## <gate, e.g. M2 code-review>
+## <gate, e.g. final-review>
 
-**Gate:** <milestone M2 code-review | final review | QA | plan gate> of <plan path>
-**Architect (<Challenge | Triage>):** <its verdict and recommendation in one or two sentences>
-**Next:** <what happens to what remains, e.g. "a later milestone may fix it; checked against the code after the final review", or the new `deferred` / `question` file>
+**Gate:** <final review | plan gate> of <plan path>
+**Architect (Triage):** <its verdict and reason in one or two sentences>
+**Next:** <the new `deferred`, `question` or plan file, or "rounds 4–6">
 
 ### What remains
 <findings unresolved after 3 rounds, each with `file:line`>
@@ -34,4 +34,4 @@ section `## plan gate`. -->
 <whether the rounds went in circles; which version of the code the work continued with; the architect's full report>
 
 ## Resolution
-<empty until the user reads it and decides>
+<what closed it: the plan that fixed it, or the file it became>

@@ -35,13 +35,13 @@ Update the state file before and after every step.
 6. **Manual check**, only for `**Performer:** user (blocking)`, after the proof and the review passed: ask the user to do the milestone's `**Manual check:**`, exactly what to look at, and wait. For `user (deferrable)`, do not ask: append the `**Manual check:**` with the milestone and plan to an open `deferred` file of manual checks, or create one with the text in the same command (`next_number.py --type deferred … --what "<check, milestone, plan>" --why "user (deferrable)" --when "<when>" --by loc-orchestrate`). A fault the user reports first becomes a test that fails on it, then the fix, the proof and the review again; ask the user again only when that test passes. The user's word with the date goes under the milestone in the plan.
 7. Mark the milestone `done`, move to the next one.
 
-**Stuck gate.** No fourth round, no more code changes: add the gate to the plan's single `stuck` file (`references/stuck.md`), record it in the gate's `stuck`, set the milestone to `stuck`, and go on with the next milestone.
+**Stuck gate.** No fourth round, no more code changes: record the gate in the plan's `## Stuck gates` (`references/stuck.md`), set its `stuck` to `"plan"` and the milestone to `stuck`, and go on with the next milestone.
 
 ## 3. Deviations from the plan
 
 - **Rules 1–3** (a bug, a missing critical piece such as validation, a blocker such as a missing dependency): fix it, record a deviation, carry on.
 - A step of this skill you skipped (the red gate, the `test-author` agent, a review) is not a deviation: go back and do it; if it cannot be done, the gate is **stuck**.
-- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): create a `question` file with options, costs and a recommendation (`next_number.py --type question --by loc-orchestrate`), record the deviation with it, and continue on the recommendation.
+- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): call the `architect` agent in Decide mode with the options, costs and your recommendation; record the deviation with its ruling, or, when it escalates, with a `question` file of its options (`next_number.py --type question --by "architect (Decide)"`), and continue on the recommendation.
 
 ## 4. When to stop
 
@@ -57,9 +57,9 @@ A failed gate ends in `stuck`, not in a stop.
 ## 5. At the end
 
 1. **QA gate** (`qa`), only when the plan has `**Criteria:**` (else report `**No tests:**`): `phase: qa`, `Skill(skill: "masterskills:loc-qa", args: "plan <NNN>")`. NOT APPROVED: fix the code behind each FAIL, never tests; next round. Third failure: **stuck**.
-2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode, gate `final-review`). Stuck: the architect's `triage` decides between more rounds, a `deferred` file and a question (`references/stuck.md`).
-3. **Close what the plan resolved**: milestone `stuck` files whose points are all fixed now get `## Resolution` and move to `loc/inbox/done/` (`references/stuck.md`).
-4. **Close the plan.** Under `## Resolution`: `done <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-stuck-…`), deviations and new `question` files. `**Status:**` → `done <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `open — QA failed`, not moved. Update `plan` in the state file, set `phase: journal`.
+2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode, gate `final-review`).
+3. **Close what the plan resolved**, then **triage** (`references/stuck.md`): mark the fixed points of `## Stuck gates`; a stuck final review or a point still open goes to the architect, whose `triage` decides between more rounds, a `deferred` file and a question.
+4. **Close the plan.** Under `## Resolution`: `done <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-deferred-…`), deviations and new `question` files. `**Status:**` → `done <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `open — QA failed`, not moved. Update `plan` in the state file, set `phase: journal`.
 5. **Journal.** First, anything that failed during the plan and worked another way must be in `loc/PATTERNS.md` (rule 10): add what is missing. Then one command, your text (English, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Details: <plan path>"`.
 6. **Commit** the plan's files, never push: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/commit_plan.py --state loc/state/<NNN>.json --message "<type(scope): summary>"`, or `--skip "<reason>"` when the project's `CLAUDE.md` says the user commits. A new directory git tracks nothing in stops it: run again with `--add <dir>` for the plan's own work or `--leave <dir>` for files it did not make (e.g. manual-check data), then a `question` file asks whether `<dir>` goes into `.gitignore`. Rejected: report it, never bypass. Then `phase: done`, validate.
 7. **Report** in the user's language, briefly: the commit, milestones with proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, QA verdict, final review result. Then **"Judge: enough"**: every `enough` line, numbered in plan order, grouped by its PRD point; "fix 2" goes to `loc-planning`.

@@ -77,6 +77,40 @@ class CheckStateTest(unittest.TestCase):
         self.assertEqual(self.run_check({**state({}), "milestones": milestones(2)})[0], 0)
         self.assertEqual(self.run_check({**three, "mode": "subagent"})[0], 0)
 
+    def test_stuck_milestone_is_recorded_in_the_plan(self):
+        plan = ("**Status:** done 2026-10-22\n\n## Milestones\n\n### M1 — powitanie\n**Proof:** `x` → `1`\n\n"
+                "## Stuck gates\n\n### M1 code-review\n**Remains:**\n{point}\n**Rounds:**\n1. x\n"
+                "**Continued with:** the last fix; rounds went in circles: no\n\n## Resolution\n")
+        gates = {"M1/proof": {"rounds": 1, "passed": True, "stuck": None},
+                 "M1/code-review": {"rounds": 3, "passed": False, "stuck": "plan"},
+                 "final-review": {"rounds": 1, "passed": True, "stuck": None}}
+        data = {**state(gates), "phase": "done", "commit": "skipped: test",
+                "milestones": [{"id": "M1", "status": "stuck", "start": "abc1234", "end": "def5678"}]}
+        resolved = plan.format(point="- ✅ resolved in final review: `app.py:3`")
+        code, out = self.run_check(data, plan=resolved)
+        self.assertEqual(code, 0, out)
+        missing = resolved.replace("### M1 code-review", "### M1 proof")
+        code, out = self.run_check(data, plan=missing)
+        self.assertEqual(code, 1)
+        self.assertTrue(any("### M1 code-review" in p for p in out["problems"]), out)
+        open_point = plan.format(point="- `app.py:3` — still parses 05:00")
+        code, out = self.run_check(data, plan=open_point)
+        self.assertEqual(code, 1)
+        self.assertTrue(any("triage" in p for p in out["problems"]), out)
+        triaged = {**gates, "final-review": {**gates["final-review"], "triage": ["plan"]}}
+        code, out = self.run_check({**data, "gates": triaged}, plan=open_point)
+        self.assertEqual(code, 0, out)
+
+    def test_rule_four_needs_a_ruling_or_a_question(self):
+        base = {"milestone": "M1", "rule": 4, "note": "a new cache module"}
+        code, out = self.run_check({**state({}), "deviations": [base]})
+        self.assertEqual(code, 1)
+        self.assertTrue(any("rule 4" in p for p in out["problems"]), out)
+        ruling = "one cache module — fewer reads — cost if wrong: one file (architect, 2026-10-22)"
+        self.assertEqual(self.run_check({**state({}), "deviations": [{**base, "ruling": ruling}]})[0], 0)
+        asked = {**base, "question": "loc/inbox/008-U-question-cache.md"}
+        self.assertEqual(self.run_check({**state({}), "deviations": [asked]})[0], 0)
+
     def test_red_gate_with_output_is_valid(self):
         red = {"rounds": 1, "passed": True, "stuck": None,
                "output": "AssertionError: 'Hello, Ann' != 'Cześć, Ann'"}

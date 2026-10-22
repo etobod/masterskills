@@ -72,7 +72,7 @@ class DecisionSkillsTest(unittest.TestCase):
         for verdict in ("**retry**", "**plan**", "**ask**"):
             self.assertIn(verdict, architect)
         stuck = read("skills/loc-orchestrate/references/stuck.md")
-        self.assertIn("## Final review triage", stuck)
+        self.assertIn("## Triage", stuck)
         self.assertIn("--type deferred", stuck)
         self.assertIn("--type question", stuck)
         self.assertIn("`triage`", read("skills/loc-orchestrate/SKILL.md"))
@@ -92,8 +92,8 @@ class DecisionSkillsTest(unittest.TestCase):
 
     def test_stuck_records_the_verdict_on_top(self):
         stuck = read("skills/loc-orchestrate/references/stuck.md")
-        self.assertIn('--source "<gate, e.g. M1 code-review (milestone)> of <plan path>"', stuck)
-        for marker in ("**Stuck gates:**", "**Architect (Challenge):**", "**Architect (Triage):**", "**Next:**"):
+        self.assertIn('--source "<gate, e.g. final-review> of <plan path>"', stuck)
+        for marker in ("**Stuck gates:**", "**Architect (Triage):**", "**Next:**"):
             self.assertIn(marker, stuck)
 
     def test_questions_outside_a_skill_and_new_directories(self):
@@ -108,6 +108,97 @@ class DecisionSkillsTest(unittest.TestCase):
         skill = read("skills/loc-init/SKILL.md")
         self.assertIn("harvest", skill)
         self.assertIn("`architect`", skill)
+
+
+class OptionLabelTest(unittest.TestCase):
+    def test_rule_names_options_and_accepts_delegated_answers(self):
+        rule = read("rules/core.md").split("8. ")[1].split("\n9. ")[0]
+        self.assertIn("as the architect recommends", rule)
+        self.assertIn("088 A:", rule)
+
+    def test_architect_names_options_by_verb(self):
+        report = read("agents/architect.md").split("## Report")[1]
+        self.assertNotRegex(report, r"(?m)^\d\. ")
+        self.assertIn("Bears on:", report)
+
+    def test_question_template_letters_only_options(self):
+        template = read("templates/loc/inbox/question.md")
+        self.assertIn("not lettered", template)
+
+
+class ArchitectFirstTest(unittest.TestCase):
+    def test_architect_decides_within_its_competence(self):
+        text = read("agents/architect.md")
+        for marker in ("## Competence", "## Priorities", "## Decide", "**decide**", "**escalate**",
+                       "cost if wrong", "(architect, <date>)"):
+            self.assertIn(marker, text)
+
+    def test_only_an_escalation_asks_the_user(self):
+        found = 0
+        for path in [*ROOT.glob("skills/**/*.md"), *ROOT.glob("agents/*.md"), *ROOT.glob("rules/*.md")]:
+            if path.name == "prd.md":  # a change to Goal, Core idea or Scenarios is always the user's
+                continue
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if "--type question" in line:
+                    found += 1
+                    self.assertIn('--by "architect (', line, f"{path.relative_to(ROOT)}: {line[:80]}")
+        self.assertGreaterEqual(found, 4)
+
+    def test_skills_call_the_architect_before_a_question(self):
+        planning = read("skills/loc-planning/SKILL.md").split("## 4.")[1].split("## 5.")[0]
+        self.assertIn("Decide", planning)
+        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        rule4 = orchestrate.split("**Rule 4**")[1].splitlines()[0]
+        self.assertIn("Decide", rule4)
+
+    def test_brainstorm_is_open_until_approved(self):
+        self.assertIn("**Status:** open", read("templates/loc/inbox/brainstorm.md"))
+        skill = read("skills/loc-brainstorm/SKILL.md")
+        for marker in ("approved <date>", "inbox_owner.py --number", "--director"):
+            self.assertIn(marker, skill)
+
+
+class StuckInPlanTest(unittest.TestCase):
+    def test_milestone_and_qa_record_in_the_plan(self):
+        stuck = read("skills/loc-orchestrate/references/stuck.md")
+        milestone = stuck.split("## Stuck milestone or QA gate")[1].split("\n## ")[0]
+        for marker in ("## Stuck gates", "**Remains:**", "**Continued with:**", '`"plan"`'):
+            self.assertIn(marker, milestone)
+        self.assertNotIn("next_number.py", milestone)
+        self.assertNotIn("Challenge", milestone)
+        triage = stuck.split("## Triage")[1]
+        self.assertIn("even though the final review passed", triage)
+        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        self.assertIn("## Stuck gates", orchestrate)
+        self.assertNotIn("single `stuck` file", orchestrate)
+        template = read("templates/loc/inbox/stuck.md")
+        self.assertNotIn("Challenge", template)
+
+    def test_triage_asks_only_beyond_competence(self):
+        triage = read("agents/architect.md").split("## Triage")[1].split("## Report")[0]
+        self.assertIn("in circles", triage.split("**plan**")[1].split("**ask**")[0])
+        self.assertIn("beyond your competence", triage.split("**ask**")[1])
+
+
+class PlanGateTriageTest(unittest.TestCase):
+    def test_failed_plan_gate_goes_to_triage(self):
+        planning = read("skills/loc-planning/SKILL.md").split("## 6.")[1].split("## 7.")[0]
+        for marker in ("`architect`", "Triage", "## Plan gate"):
+            self.assertIn(marker, planning)
+        gate = read("skills/loc-orchestrate/references/stuck.md").split("## Plan gate")[1].split("\n## ")[0]
+        for verdict in ("**retry**", "**plan**", "**ask**", "open — gate failed", "--type question"):
+            self.assertIn(verdict, gate)
+
+    def test_review_file_waits_for_the_director(self):
+        standalone = read("skills/loc-review/SKILL.md").split("## 5.")[1].split("## 6.")[0]
+        self.assertNotIn("the user decides", standalone)
+        for marker in ("`judge`", "no `U`", "escalat"):
+            self.assertIn(marker, standalone)
+
+    def test_pm_orders_inbox_work_with_plans(self):
+        pm = read("agents/pm.md")
+        for marker in ("`deferred`", "`stuck`", "`review`", "`U`"):
+            self.assertIn(marker, pm)
 
 
 class PmTest(unittest.TestCase):

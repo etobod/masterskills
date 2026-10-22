@@ -94,7 +94,7 @@ BROWSER = re.compile(r"^\s*(open|start|xdg-open)\b")
 GATE_RECORD = "Plan gate"
 FINDING = re.compile(r"^- \*\*\[([^\]]+)\]\*\*")
 NO_JUDGE = {"suggestion", "unrealistic", "low"}
-INPUT = re.compile(r"\b\d{3,}-(brainstorm|review|deferred|stuck|question)-[^\s`/\\)]+\.md\b")
+INPUT = re.compile(r"\b\d{3,}-(?:U-)?(brainstorm|review|deferred|stuck|question)-[^\s`/\\)]+\.md\b")
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -250,8 +250,9 @@ def check_ready(text: str, issues: list) -> None:
                        "through the loc-planning gate; run loc-planning on it"})
     source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
     for match in INPUT.finditer(source.group(1) if source else ""):
-        if (project_dir() / "loc" / "inbox" / match.group(0)).is_file():
-            issues.append({"line": 0, "problem": f"input loc/inbox/{match.group(0)} is still open: loc-planning "
+        number = match.group(0).split("-", 1)[0]
+        for path in (project_dir() / "loc" / "inbox").glob(f"{number}-*.md"):
+            issues.append({"line": 0, "problem": f"input loc/inbox/{path.name} is still open: loc-planning "
                            "did not close it (its step 7); run loc-planning on the plan"})
 
 
@@ -268,9 +269,10 @@ def sections_of(text: str) -> dict:
 
 
 def find_input(name: str):
+    """By number: the file may have gained or lost its `U` since the plan named it."""
+    number = name.split("-", 1)[0]
     for folder in ("inbox", "inbox/done"):
-        path = project_dir() / "loc" / folder / name
-        if path.is_file():
+        for path in sorted((project_dir() / "loc" / folder).glob(f"{number}-*.md")):
             return path
     return None
 
@@ -314,7 +316,7 @@ def check_review(text: str, issues: list) -> None:
 
 
 DECISION = re.compile(r"\bD-\d{2,}\b")
-QUESTION = re.compile(r"\b\d{3,}-question-")
+QUESTION = re.compile(r"\b\d{3,}-(?:U-)?question-")
 
 
 def check_decisions(text: str, issues: list) -> None:
