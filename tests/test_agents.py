@@ -230,5 +230,12 @@ class PmTest(unittest.TestCase):
             self.assertIn(marker, init)
 
 
+class EmptyReviewTest(unittest.TestCase):
+    def test_an_empty_diff_passes_the_gate_without_rounds(self):
+        skill = read("skills/loc-review/SKILL.md")
+        self.assertIn("only `loc/` changed", skill)
+        self.assertIn("`rounds: 0, passed: true`", skill)
+
+
 if __name__ == "__main__":
     unittest.main()
