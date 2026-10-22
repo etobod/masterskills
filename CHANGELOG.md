@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.18.5 — 2026-10-22
+
+- `loc-director` never starts a course without showing its table first. When the `pm` and `architect` answered after the director's reply had ended, it could go straight to `course.py start` and show only the banner.
+
 ## 2.18.4 — 2026-10-22
 
 - A director's step is one executed plan: `course.py next` counts a new `loc-orchestrate <NNN>`, once per plan, also when it is resumed. Planning, inbox files and agents' answers no longer count; before, every stop of the turn (2.18.1) or every `next` (2.18.3) did. The cap is the agreed items + 10 (20 in the table → 30; none → 10); the user can name another (`--cap`).
