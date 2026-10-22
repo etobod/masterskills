@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.18.1 — 2026-10-22
+
+- `loc-director` no longer asks "agreed?": calling it is the agreement, with words ("work without limits", "until 21:00", "finish plan 087") or without (limit `goal`). It shows the table and starts in the same reply; it asks only for work the table cannot cover. "Without limits" means `--limit none`; `/masterskills:loc-director status` only looks.
+
 ## 2.18.0 — 2026-10-22
 
 - New skill `loc-director`: you agree a course once ("until plan 087 is done", "until I say stop", "until 21:00") and it runs it. The `pm` agent orders the plans and the `deferred`, `stuck` and `review` files, the `architect` agent says what each needs, and the director plans and executes until a stop rule: all done, only your files left, the same stuck point back after a plan for it, or the time or step limit. It never invents work and never asks whether to continue; every stop ends with Done / Skipped / Left and the resume command. The course lives in `loc/PRD.md` `## Course` (`scripts/course.py`); a `Stop` hook keeps it going and checks the clock; `/masterskills:loc-director status` prints what happened since the last report.

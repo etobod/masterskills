@@ -26,10 +26,10 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 | User says | `--limit` | Which files you take |
 |---|---|---|
 | nothing, or "until plan 087 is done" | `goal` | the agreed items and what they produce (a file whose `**Source:**` names one) |
-| "until I say stop" | `none` | also older files, after the agreed items |
+| "until I say stop", "without limits" | `none` | also older files, after the agreed items |
 | "until 21:00" | `until <YYYY-MM-DD HH:MM>` | as `none`; the Stop hook checks the clock |
 
-5. When the user agrees: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py start --limit <limit> --agreed "<their words>" --item "plan 084" --item "loc/inbox/091-stuck-x.md"`. One question at a time until then; never start without the agreement.
+5. Start: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py start --limit <limit> --agreed "<their words>" --item "plan 084" --item "loc/inbox/091-stuck-x.md"`. Calling you is the agreement, with or without words ("work without limits", "until 21:00", "finish plan 087"; none means `goal`): show the table and start in the same reply, without asking. Ask only when they named work the table cannot cover.
 
 ## 2. Run it
 
