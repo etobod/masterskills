@@ -8,7 +8,7 @@ resumes from it:
     **State:** open | stopping — <reason> | closed <time> — <reason>
     **Agreed:** <time> — <the user's words>
     **Limit:** goal | none | until <YYYY-MM-DD HH:MM>
-    **Steps:** <n> of <cap>
+    **Steps:** <n> of <cap>   (plans executed: a new `loc-orchestrate <NNN>`)
     **Next:** <the next step, written before it starts>
     **Last report to the user:** <time>
     - [ ] plan 084 — agreed
@@ -16,8 +16,8 @@ resumes from it:
 
 Commands (times come from the clock, never from the model):
 
-    start --limit <goal|none|"until YYYY-MM-DD HH:MM"> --agreed "<words>" [--item "<item>"]...
-    next --text "<step>"            (counts a step)
+    start --limit <goal|none|"until YYYY-MM-DD HH:MM"> --agreed "<words>" [--item "<item>"]... [--cap <n>]
+    next --text "<step>"            (prints a banner line; a new `loc-orchestrate <NNN>` counts a step)
     add --item "<item>" --source "<the file or plan it comes from>"
     done --item "<item>"
     stop --reason "<why>"
@@ -25,7 +25,7 @@ Commands (times come from the clock, never from the model):
 
 `status` prints Markdown in fixed sections built from the course, loc/MEMORY.md
 and loc/inbox/ since the last report; `--mark` then moves the last report to now.
-The other commands print JSON {"course": [<section lines>]}. Exit 1 when the
+The other commands print JSON {"course": [<section lines>]}; `next` adds "banner". Exit 1 when the
 course is missing, already open (start) or has no such item; 2 on a bad argument.
 """
 
@@ -37,10 +37,11 @@ import re
 import sys
 from pathlib import Path
 
-CAP = 40
+CAP = 10  # plans beyond the agreed items
 FIELD = re.compile(r"^\*\*(?P<name>[^*]+):\*\*\s*(?P<value>.*?)\s*$")
 UNTIL = re.compile(r"^until (\d{4}-\d{2}-\d{2} \d{2}:\d{2})$")
 STEPS = re.compile(r"^(\d+) of (\d+)$")
+PLAN = re.compile(r"loc-orchestrate\s+(\d+)")
 ITEM = re.compile(r"^- \[(?P<mark>[ x])\] (?P<text>.+?)(?: — done (?P<done>\d{4}-\d{2}-\d{2} \d{2}:\d{2}))?$")
 ENTRY = re.compile(r"^## (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) — \[([^\]]+)\] (.+?)\s*$")
 RULING = re.compile(r"\(architect, (\d{4}-\d{2}-\d{2})\)")
@@ -97,11 +98,24 @@ def read(project: Path):
 
 
 def next_step(section: list, text: str) -> list:
-    """Write the next step and count it: a step is work started, not a stop of the turn."""
-    steps = STEPS.match(fields(section).get("Steps", ""))
-    if steps:
+    """Write the next step. A step of the cap is one plan executed: a `loc-orchestrate <NNN>` other than the
+    current one. Planning, inbox files and agents are not counted, and resuming the same plan counts once."""
+    info = fields(section)
+    plan, current = PLAN.search(text), PLAN.search(info.get("Next", ""))
+    steps = STEPS.match(info.get("Steps", ""))
+    if plan and steps and not (current and current[1] == plan[1]):
         section = set_field(section, "Steps", f"{int(steps[1]) + 1} of {steps[2]}")
     return set_field(section, "Next", text)
+
+
+def banner(section: list, text: str, ended: str) -> str:
+    """One line the user sees between two steps: what ended, what starts, the plans executed."""
+    info = fields(section)
+    parts = [f"ended: {ended}"] if ended and ended != "the first open item" else []
+    parts.append(f"starting: {text}")
+    if STEPS.match(info.get("Steps", "")):
+        parts.append(f"plans {info['Steps']}")
+    return f"-------- {' | '.join(parts)} --------"
 
 
 def check_limit(value: str) -> bool:
@@ -124,14 +138,14 @@ def start(project: Path, args) -> int:
         return 1
     stamp = now()
     new = ["**State:** open", f"**Agreed:** {stamp} — {args.agreed}", f"**Limit:** {args.limit}",
-           f"**Steps:** 0 of {args.cap}", "**Next:** the first open item",
+           f"**Steps:** 0 of {len(args.item) + CAP if args.cap is None else args.cap}", "**Next:** the first open item",
            f"**Last report to the user:** {stamp}", *[f"- [ ] {item} — agreed" for item in args.item]]
     path.write_text(join(before, new, after), encoding="utf-8")
     print(json.dumps({"course": new}))
     return 0
 
 
-def change(project: Path, edit) -> int:
+def change(project: Path, edit, extra=None) -> int:
     path, (before, section, after) = read(project)
     if not fields(section).get("State"):
         print(json.dumps({"error": "loc/PRD.md has no ## Course"}))
@@ -140,7 +154,7 @@ def change(project: Path, edit) -> int:
     if new is None:
         return 1
     path.write_text(join(before, new, after), encoding="utf-8")
-    print(json.dumps({"course": new}))
+    print(json.dumps({**(extra(section) if extra else {}), "course": new}))
     return 0
 
 
@@ -238,7 +252,7 @@ def main() -> int:
     begin.add_argument("--limit", required=True)
     begin.add_argument("--agreed", required=True)
     begin.add_argument("--item", action="append", default=[])
-    begin.add_argument("--cap", type=int, default=CAP)
+    begin.add_argument("--cap", type=int, help="plans to execute at most; default: the agreed items + 10")
     commands.add_parser("next").add_argument("--text", required=True)
     extra = commands.add_parser("add")
     extra.add_argument("--item", required=True)
@@ -261,7 +275,7 @@ def main() -> int:
             parser.error('--limit: goal, none or "until YYYY-MM-DD HH:MM"')
         return start(project, args)
     if args.command == "next":
-        return change(project, lambda s: next_step(s, args.text))
+        return change(project, lambda s: next_step(s, args.text), lambda s: {"banner": banner(next_step(s, args.text), args.text, fields(s).get("Next", ""))})
     if args.command == "add":
         return change(project, lambda s: add(s, args.item, args.source))
     if args.command == "done":

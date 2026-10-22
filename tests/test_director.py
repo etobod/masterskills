@@ -55,7 +55,7 @@ class CourseTest(unittest.TestCase):
                         "--item", "plan 084", "--item", "plan 087")
         self.assertEqual(result.returncode, 0, result.stderr)
         text = section(cwd)
-        for marker in ("**State:** open", "**Limit:** goal", "**Steps:** 0 of 40", "**Next:**",
+        for marker in ("**State:** open", "**Limit:** goal", "**Steps:** 0 of 12", "**Next:**",
                        "**Last report to the user:**", "- [ ] plan 084 — agreed", "- [ ] plan 087 — agreed"):
             self.assertIn(marker, text)
         self.assertRegex(text, r"\*\*Agreed:\*\* \d{4}-\d{2}-\d{2} \d{2}:\d{2} — plan 084, then 087")
@@ -145,12 +145,27 @@ class StatusTest(unittest.TestCase):
         self.assertIn("No course", result.stdout)
 
 
-class StopHookTest(unittest.TestCase):
-    def test_open_course_blocks_and_next_counts_steps(self):
+class CapTest(unittest.TestCase):
+    def test_cap_is_the_agreed_items_plus_ten_unless_named(self):
         cwd = project(self)
-        course(cwd, "start", "--limit", "goal", "--agreed", "x", "--item", "plan 084")
-        course(cwd, "next", "--text", "loc-orchestrate 084")
-        self.assertIn("**Steps:** 1 of 40", section(cwd))
+        course(cwd, "start", "--limit", "none", "--agreed", "x")
+        self.assertIn("**Steps:** 0 of 10", section(cwd))
+        course(cwd, "stop", "--reason", "test")
+        course(cwd, "start", "--limit", "goal", "--agreed", "x", "--item", "plan 084", "--cap", "5")
+        self.assertIn("**Steps:** 0 of 5", section(cwd))
+
+
+class StopHookTest(unittest.TestCase):
+    def test_open_course_blocks_and_an_executed_plan_counts_a_step(self):
+        cwd = project(self)
+        course(cwd, "start", "--limit", "goal", "--agreed", "x", "--item", "plan 084", "--item", "plan 087")
+        first = json.loads(course(cwd, "next", "--text", "loc-planning 084").stdout)
+        self.assertEqual(first["banner"], "-------- starting: loc-planning 084 | plans 0 of 12 --------")
+        self.assertIn("**Steps:** 0 of 12", section(cwd))
+        second = json.loads(course(cwd, "next", "--text", "loc-orchestrate 084").stdout)
+        self.assertEqual(second["banner"],
+                         "-------- ended: loc-planning 084 | starting: loc-orchestrate 084 | plans 1 of 12 --------")
+        self.assertIn("**Steps:** 1 of 12", section(cwd))
         for _ in range(3):
             result = stop_hook(cwd)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -158,9 +173,12 @@ class StopHookTest(unittest.TestCase):
             self.assertEqual(out["decision"], "block")
             self.assertIn("loc-orchestrate 084", out["reason"])
             self.assertIn("never ask", out["reason"])
-        self.assertIn("**Steps:** 1 of 40", section(cwd))
+        course(cwd, "next", "--text", "loc-orchestrate 084 (resumed)")
+        course(cwd, "done", "--item", "plan 084")
         course(cwd, "next", "--text", "loc-planning 087")
-        self.assertIn("**Steps:** 2 of 40", section(cwd))
+        self.assertIn("**Steps:** 1 of 12", section(cwd))
+        course(cwd, "next", "--text", "loc-orchestrate 087")
+        self.assertIn("**Steps:** 2 of 12", section(cwd))
 
     def test_a_second_stop_after_the_hook_waits(self):
         cwd = project(self)
@@ -170,7 +188,7 @@ class StopHookTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), "")
         self.assertIn("**State:** open", section(cwd))
-        self.assertIn("**Steps:** 1 of 40", section(cwd))
+        self.assertIn("**Steps:** 1 of 11", section(cwd))
 
     def test_time_limit_stops_even_while_waiting(self):
         cwd = project(self)
@@ -199,7 +217,7 @@ class StopHookTest(unittest.TestCase):
         cwd = project(self)
         course(cwd, "start", "--limit", "none", "--agreed", "x", "--item", "plan 084")
         prd = cwd / "loc" / "PRD.md"
-        prd.write_text(prd.read_text(encoding="utf-8").replace("**Steps:** 0 of 40", "**Steps:** 40 of 40"),
+        prd.write_text(prd.read_text(encoding="utf-8").replace("**Steps:** 0 of 11", "**Steps:** 11 of 11"),
                        encoding="utf-8")
         self.assertEqual(json.loads(stop_hook(cwd).stdout)["decision"], "block")
         self.assertIn("**State:** stopping — step cap", section(cwd))
@@ -222,7 +240,7 @@ class StopHookTest(unittest.TestCase):
 class SkillTest(unittest.TestCase):
     def test_skill_runs_the_course(self):
         skill = (ROOT / "skills" / "loc-director" / "SKILL.md").read_text(encoding="utf-8")
-        for marker in ("name: loc-director", "`status`", "`stop`", "`pm`", "`architect`", "course.py start",
+        for marker in ("name: loc-director", "`banner`", "One executed plan is one step", "`status`", "`stop`", "`pm`", "`architect`", "course.py start",
                        "course.py next", "--source", "goal", "none", "until", "masterskills:loc-planning",
                        "masterskills:loc-orchestrate"):
             self.assertIn(marker, skill)
