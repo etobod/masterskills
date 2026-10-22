@@ -240,7 +240,7 @@ class StopHookTest(unittest.TestCase):
 class SkillTest(unittest.TestCase):
     def test_skill_runs_the_course(self):
         skill = (ROOT / "skills" / "loc-director" / "SKILL.md").read_text(encoding="utf-8")
-        for marker in ("name: loc-director", "`banner`", "One executed plan is one step", "`status`", "`stop`", "`pm`", "`architect`", "course.py start",
+        for marker in ("name: loc-director", "`banner`", "Never start without it", "One executed plan is one step", "`status`", "`stop`", "`pm`", "`architect`", "course.py start",
                        "course.py next", "--source", "goal", "none", "until", "masterskills:loc-planning",
                        "masterskills:loc-orchestrate"):
             self.assertIn(marker, skill)
