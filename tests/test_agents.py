@@ -105,6 +105,8 @@ class DecisionSkillsTest(unittest.TestCase):
         orchestrate = read("skills/loc-orchestrate/SKILL.md")
         for marker in ("--add <dir>", "--leave <dir>", ".gitignore"):
             self.assertIn(marker, orchestrate)
+        self.assertIn("**A blocker only the user can remove**", orchestrate)
+        self.assertIn("a `question` file at once, never only in chat", orchestrate)
 
     def test_init_harvests_after_migration(self):
         skill = read("skills/loc-init/SKILL.md")

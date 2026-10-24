@@ -6,7 +6,7 @@ argument-hint: "<plan number or file>"
 
 # loc-orchestrate
 
-Executes `loc/inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the contract: build what it says, prove it with its `Proof` lines, review each milestone's diff, then the whole. Do not redesign it.
+Executes `loc/inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the contract: build it, prove it with its `Proof` lines, review each milestone, then the whole. Do not redesign it.
 
 **Do not ask "shall I continue?" between milestones.**
 
@@ -35,11 +35,12 @@ Update the state file before and after every step.
 6. **Manual check**, only for `**Performer:** user (blocking)`, after the proof and the review passed: ask the user to do the milestone's `**Manual check:**`, exactly what to look at, and wait. For `user (deferrable)`, do not ask: append the `**Manual check:**` with the milestone and plan to an open `deferred` file of manual checks, or create one with the text in the same command (`next_number.py --type deferred … --what "<check, milestone, plan>" --why "user (deferrable)" --when "<when>" --by loc-orchestrate`). A fault the user reports first becomes a test that fails on it, then the fix, the proof and the review again; ask the user again only when that test passes. The user's word with the date goes under the milestone in the plan.
 7. Mark the milestone `done`, move to the next one.
 
-**Stuck gate.** No fourth round, no more code changes: record the gate in the plan's `## Stuck gates` (`references/stuck.md`), set its `stuck` to `"plan"` and the milestone to `stuck`, and go on with the next milestone.
+**Stuck gate.** No fourth round or code change: record the gate in the plan's `## Stuck gates` (`references/stuck.md`), set its `stuck` to `"plan"` and the milestone to `stuck`, and go on with the next milestone.
 
 ## 3. Deviations from the plan
 
 - **Rules 1–3** (a bug, a missing critical piece such as validation, a blocker such as a missing dependency): fix it, record a deviation, carry on.
+- **A blocker only the user can remove** (a file outside the project is gone): a `question` file at once, never only in chat; the milestone `stuck`, then the next one.
 - A step of this skill you skipped (the red gate, the `test-author` agent, a review) is not a deviation: go back and do it; if it cannot be done, the gate is **stuck**.
 - **Rule 4** (architecture: a new component, a changed interface or data model, a different library): call the `architect` agent in Decide mode with the options, costs and your recommendation; record the deviation with its ruling, or, when it escalates, with a `question` file of its options (`next_number.py --type question --by "architect (Decide)"`), and continue on the recommendation.
 
