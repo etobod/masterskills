@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.18.7 — 2026-10-24
+
+- `loc-orchestrate`: a blocker only the user can remove (e.g. a file outside the project is gone) gets a `question` file at once, never only in chat; the milestone goes `stuck` and the next one starts. Before, the question stayed in chat and, under the director, every stop of the turn repeated "waiting for your answer".
+
 ## 2.18.6 — 2026-10-22
 
 - A change to `Goal`, `Core idea` or `Scenarios` is asked in a `PRD:` `question` file (`NNN-U-question-…`) also outside a plan, never only in chat. A yes/no asked only in chat was lost when the next agent report pushed it out of view.
