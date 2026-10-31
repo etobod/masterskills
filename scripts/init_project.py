@@ -43,7 +43,7 @@ from migrate import FORMAT
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates"
 
-DIRS = ["loc/inbox", "loc/inbox/done"]
+DIRS = ["loc/inbox", "loc/inbox/done", "loc/diagrams", "loc/diagrams/tmp"]
 DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"]
 LOC_ENTRY = re.compile(r"^/?loc(/(\*\*?)?)?\s*$")
 PRD_FRAME = ["Goal", "Core idea", "Scenarios"]  # Directions is work to plan, not the project's frame

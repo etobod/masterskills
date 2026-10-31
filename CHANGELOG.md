@@ -2,6 +2,14 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.20.0 — 2026-10-31
+
+- New skill `loc-diagram`: a question like "how does saving an entry work?" gets a diagram drawn in the terminal from the code read now, with `file:line` on every box, a numbered walk-through, what is left out and where to look first.
+- Diagrams are kept in `loc/diagrams/`, one file per topic, each with the commit it shows. Asked again, an unchanged diagram is shown at once and a changed one is redrawn in the same file. The project overview and the topics listed under the new `## Diagrams` section of `CLAUDE.md` stay; every other diagram goes to `loc/diagrams/tmp/`. "Keep it" moves one out of `tmp/`.
+- The overview and every kept diagram also get a self-contained HTML version (inline SVG, light and dark) to open in the browser; any other diagram gets one on request.
+- `loc-orchestrate` refreshes the overview after every plan; it redraws it only when the plan added, removed or renamed a part of the project or a flow between parts.
+- `loc-init` creates `loc/diagrams/` and `loc/diagrams/tmp/` and adds the `## Diagrams` section.
+
 ## 2.19.0 — 2026-10-31
 
 - When work waits on a `question` file (a `PRD:` change, a blocker only the user can remove, what a director's stop report leaves), the user also gets Claude Code's choice prompt (`AskUserQuestion`): one line naming the file, its options with the recommended one first, and their own text as another answer. The file stays the record; the answer goes under `## Resolution` as before. A question the work goes on without stays a file only, so a director's night run does not wait on a click.

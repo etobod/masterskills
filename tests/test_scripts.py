@@ -56,6 +56,14 @@ class InitProjectTest(unittest.TestCase):
         self.assertFalse((self.project / "loc" / "TEST-PLAN.md").exists())
         self.assertIn("## Project-specific workflow", (self.project / "CLAUDE.md").read_text(encoding="utf-8"))
 
+    def test_diagrams_have_a_kept_and_a_tmp_directory(self):
+        run("init_project.py", "--project", ".", cwd=self.project)
+        self.assertTrue((self.project / "loc" / "diagrams" / "tmp").is_dir())
+        self.assertIn("## Diagrams", (self.project / "CLAUDE.md").read_text(encoding="utf-8"))
+        root = Path(__file__).resolve().parent.parent
+        orchestrate = (root / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn('Skill(skill: "masterskills:loc-diagram", args: "overview")', orchestrate)
+
     def test_reports_the_empty_sections_a_brainstorm_may_fill(self):
         fresh = json.loads(run("init_project.py", "--project", ".", cwd=self.project).stdout)["empty"]
         self.assertEqual(fresh["loc/PRD.md"], ["Goal", "Core idea", "Scenarios"])
