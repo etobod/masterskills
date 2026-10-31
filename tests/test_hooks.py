@@ -334,7 +334,10 @@ class SessionStartTest(unittest.TestCase):
         self.assertNotIn("systemMessage", out)
 
     def test_project_without_loc(self):
-        self.assertIn("no `loc/inbox/` yet", self.context(scratch_dir(self)))
+        text = self.context(scratch_dir(self))
+        self.assertIn("no `loc/inbox/` yet", text)
+        self.assertIn("`Run loc-init first` (recommended) or `Do nothing`", text)
+        self.assertIn("the skill does not run", text)
 
     def test_restores_a_file_left_mutated(self):
         project = scratch_dir(self)

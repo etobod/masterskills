@@ -41,7 +41,7 @@ Record only what the user decided as a decision. Your suggestion stays in `## Op
 
 Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notes: `loc/inbox/004-U-brainstorm-greeting-language.md` (B-01…B-03)."
 
-When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. When `## Goal` in `loc/PRD.md` is still only the template, mention first that `/masterskills:loc-init <NNN>` fills the project's goal and `CLAUDE.md` from it. Do not start either yourself.
+When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. When `## Goal` in `loc/PRD.md` is still only the template and the notes already say what the project is for, the points it stands on and how it is used, ask with `AskUserQuestion`: `Fill the project from <NNN> now` (recommended: `loc-init` writes the PRD frame and `CLAUDE.md`, the rest stays here for a plan) or `Keep talking`. Fill: `Skill(skill: "masterskills:loc-init", args: "<NNN>")`. Never start `loc-planning` yourself.
 
 ## Rules
 

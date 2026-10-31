@@ -32,7 +32,8 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 - a directory → `<dir>`; none → `${CLAUDE_PROJECT_DIR}`;
 - a number `NNN` → `loc/inbox/NNN-brainstorm-*.md` (or in `loc/inbox/done/`);
-- a path to a `.md` file → that file.
+- a path to a `.md` file → that file;
+- `for <skill>`: another skill asked for the setup; after the report, go back to that skill, with no project brainstorm.
 
 Run each script exactly once (a brainstorm adds the read-only `--check`). Do not create, rename or move any file yourself: the scripts decide what is missing and never overwrite anything. The only exceptions are translating and the decisions `question` after a migration (above), and filling sections from a brainstorm (below).
 
@@ -52,5 +53,6 @@ The script prints JSON.
   `.claude/settings.json` turns off Claude's auto memory (lessons go to `loc/PATTERNS.md`) and AI attribution in commits and pull requests. If both `created` and `updated` are empty, say the project is already complete and nothing changed. Then point out the next step:
   - fill the empty `CLAUDE.md` sections (`Commands` first: skills run those commands and never guess them);
   - write in `loc/PRD.md` what the project is for (`Goal`), the few points it stands on (`Core idea`), how it is used (`Scenarios`) and its ideas (`Directions`); the review judge weighs findings against the first three.
-- **`ok: false`.** Show `message` as it is, in the user's language, and stop. With `no-git` the directory is not the root of a git repository: plans snapshot milestones with git, reviews read the diff and work ends in a commit, so none of that works without it. Nothing was created. Do not run `git init` unless the user asks.
+- **Project brainstorm.** No brainstorm given, no `for <skill>`, and `empty` lists `Goal`: right after the report, `Skill(skill: "masterskills:loc-brainstorm", args: "the project: what it is for, who uses it and how")`, and ask the user to describe the project. Everything they write goes into that brainstorm; `loc-brainstorm` offers to fill the project from it when it is enough.
+- **`ok: false`.** Show `message` as it is, in the user's language. With `no-git`, ask with `AskUserQuestion`: `Run git init in <dir>` (recommended) or `No`. Run: `git init "<dir>"`, then the script again. No, or any other error: stop; nothing was created.
 

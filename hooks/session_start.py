@@ -39,7 +39,12 @@ def project_dir(hook_input: dict) -> Path:
 
 def inbox_section(summary: dict) -> str:
     if not summary["has_inbox"]:
-        return "## Inbox\nThis project has no `loc/inbox/` yet (`loc-init` sets it up)."
+        # OpenCode names its Python in MASTERSKILLS_PYTHON; its choice prompt is the `question` tool.
+        ask = "the `question` tool" if os.environ.get("MASTERSKILLS_PYTHON") else "`AskUserQuestion`"
+        return ("## No loc/ yet\nThis project has no `loc/inbox/` yet. Before any masterskills skill other than "
+                f"`loc-init` runs here, ask with {ask}: `Run loc-init first` (recommended) or `Do nothing`. "
+                "Run: the `loc-init` skill with the argument `for <skill>`, then that skill. "
+                "Do nothing: the skill does not run.")
 
     lines = [f"## Inbox — {len(summary['inbox'])} open"]
     for item in summary["inbox"]:

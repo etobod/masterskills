@@ -109,6 +109,16 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn("**A blocker only the user can remove**", orchestrate)
         self.assertIn("a `question` file at once, never only in chat", orchestrate)
 
+    def test_init_offers_git_and_a_project_brainstorm(self):
+        init = read("skills/loc-init/SKILL.md")
+        self.assertIn("`Run git init in <dir>` (recommended) or `No`", init)
+        self.assertIn('Skill(skill: "masterskills:loc-brainstorm"', init)
+        self.assertIn("`for <skill>`", init)
+        brainstorm = read("skills/loc-brainstorm/SKILL.md")
+        self.assertIn('Skill(skill: "masterskills:loc-init", args: "<NNN>")', brainstorm)
+        self.assertIn("`Keep talking`", brainstorm)
+        self.assertIn("→ moved to <file> <section>", read("skills/loc-init/references/brainstorm.md"))
+
     def test_init_harvests_after_migration(self):
         skill = read("skills/loc-init/SKILL.md")
         self.assertIn("harvest", skill)

@@ -43,7 +43,7 @@ After filling, run once: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_
 
 ## The brainstorm itself
 
-Read it only. Do not edit, move or close it: `loc-planning` closes it when it makes the plan. Create no plan and no inbox file.
+Do not move or close it: `loc-planning` makes the plan from what is left and closes it. Only mark what went into the project: each decision and note you used ends with `→ moved to <file> <section>` (e.g. `→ moved to loc/PRD.md Goal`), so what is left is the work to plan. Create no plan and no inbox file.
 
 ## Report
 
