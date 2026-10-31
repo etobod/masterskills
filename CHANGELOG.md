@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.19.0 — 2026-10-31
+
+- When work waits on a `question` file (a `PRD:` change, a blocker only the user can remove, what a director's stop report leaves), the user also gets Claude Code's choice prompt (`AskUserQuestion`): one line naming the file, its options with the recommended one first, and their own text as another answer. The file stays the record; the answer goes under `## Resolution` as before. A question the work goes on without stays a file only, so a director's night run does not wait on a click.
+- `loc-planning` asks for consent to a `PRD:` change with the prompt.
+- OpenCode: `AskUserQuestion` becomes its `question` tool.
+- Core rules trimmed to stay within 470 words.
+
 ## 2.18.7 — 2026-10-24
 
 - `loc-orchestrate`: a blocker only the user can remove (e.g. a file outside the project is gone) gets a `question` file at once, never only in chat; the milestone goes `stuck` and the next one starts. Before, the question stayed in chat and, under the director, every stop of the turn repeated "waiting for your answer".

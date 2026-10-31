@@ -98,6 +98,14 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertIn("edit: deny", agent)
         self.assertIn("bash: deny", agent)
 
+    def test_ask_user_question_becomes_the_question_tool(self):
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        for path in out.rglob("*.md"):
+            self.assertNotIn("AskUserQuestion", path.read_text(encoding="utf-8"), path)
+        rules = (out / "masterskills" / "rules" / "core.md").read_text(encoding="utf-8")
+        self.assertIn("also ask it with the `question` tool", rules)
+
     def test_installer_upgrades_opencode_first(self):
         lines = (ROOT / "opencode-install.bat").read_text(encoding="utf-8").splitlines()
         upgrade = next(i for i, line in enumerate(lines) if "winget upgrade --id SST.opencode -e" in line)
