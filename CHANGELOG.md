@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.21.1 — 2026-10-31
+
+- README rewritten for a public repository: what the plugin does, the team of agents, the skills, and how it compares with other skill packs.
+- MIT `LICENSE` file.
+- Tests and scenarios no longer name a local drive: test projects go to `../tmp/masterskills/` beside the repository.
+
 ## 2.21.0 — 2026-10-31
 
 - `loc-init` in a directory without git asks with a choice prompt: run `git init` (recommended) and go on, or no and stop as before.

@@ -2,7 +2,7 @@
 
 Nothing leaves the machine: the model is tests/fake_model.py on 127.0.0.1, which
 answers each prompt with one scripted tool call. All OpenCode state lives in
-C:/BC/tmp/masterskills/oc-e2e/ (CLAUDE.md rule 1). Skipped without `opencode`.
+`../tmp/masterskills/oc-e2e/` beside the repository (nothing is written outside it). Skipped without `opencode`.
 """
 
 import json
@@ -18,7 +18,7 @@ from pathlib import Path
 from fake_model import FakeModel
 
 ROOT = Path(__file__).resolve().parent.parent
-E2E = Path("C:/BC/tmp/masterskills/oc-e2e")
+E2E = ROOT.parent / "tmp" / "masterskills" / "oc-e2e"
 OPENCODE = shutil.which("opencode")
 ATTRIBUTION = "Co-authored-by: " + "Claude <noreply@anthropic.com>"
 

@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-# Scratch files stay inside the repository (CLAUDE.md rule 1), in an ignored directory.
+# Scratch files stay inside the repository (nothing is written outside it), in an ignored directory.
 SCRATCH = ROOT / "tmp" / "scratch" / "tests"
 
 HEAD = """# 007 — Plan: powitania
