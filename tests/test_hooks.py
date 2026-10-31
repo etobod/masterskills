@@ -293,6 +293,19 @@ class SessionStartTest(unittest.TestCase):
         (project / "loc" / "VERSION").write_text("4\n", encoding="utf-8")
         self.assertNotIn("migrate", self.context(project))
 
+    def test_session_start_asks_for_the_overview_on_a_new_plugin_version(self):
+        project = scratch_dir(self)
+        (project / "loc" / "inbox").mkdir(parents=True)
+        self.assertIn('args: "overview"', self.context(project))
+        version = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
+        overview = project / "loc" / "diagrams" / "overview.md"
+        overview.parent.mkdir(parents=True)
+        overview.write_text("# Overview\n**Plugin:** 0.0.1\n", encoding="utf-8")
+        self.assertIn("was drawn with masterskills 0.0.1", self.context(project))
+        overview.write_text(f"# Overview\n**Plugin:** {version}\n", encoding="utf-8")
+        self.assertNotIn("## Project overview", self.context(project))
+        self.assertNotIn("## Project overview", self.context(scratch_dir(self)))
+
     def test_empty_template_is_marked(self):
         project = scratch_dir(self)
         inbox = project / "loc" / "inbox"

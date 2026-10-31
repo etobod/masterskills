@@ -16,5 +16,8 @@
 ## User language
 <!-- The language the user reads best, e.g. Polish. Question files are written in it; everything else in `loc/` is English. Empty: English. -->
 
+## Diagrams
+<!-- Topics whose diagram `loc-diagram` keeps up to date in `loc/diagrams/` besides the project overview, one per line, e.g. "saving an entry". Empty: only the overview. -->
+
 ## Project-specific workflow
 <!-- Deviations from the plugin's workflow, e.g. which documents a plan must update after a change. -->

@@ -23,7 +23,7 @@ To update: `/plugin marketplace update masterskills`, then `/plugin update maste
 
 ## Getting started
 
-In a project, run `/masterskills:loc-init`. It creates `loc/` (inbox, `PRD.md`, `PATTERNS.md`, `MEMORY.md`), the standard `CLAUDE.md` sections, a `loc/` entry in `.gitignore` and `.claude/settings.json` (Claude's auto memory off, since lessons go to `loc/PATTERNS.md`; no AI attribution in commits and pull requests). It only adds what is missing, so run it again after updating the plugin.
+In a project, run `/masterskills:loc-init`. It creates `loc/` (inbox, `diagrams/`, `PRD.md`, `PATTERNS.md`, `MEMORY.md`), the standard `CLAUDE.md` sections, a `loc/` entry in `.gitignore` and `.claude/settings.json` (Claude's auto memory off, since lessons go to `loc/PATTERNS.md`; no AI attribution in commits and pull requests). It only adds what is missing, so run it again after updating the plugin.
 
 ## Workflow
 
@@ -34,6 +34,7 @@ Every workflow file lives in `loc/`, ignored by git with one line: the inbox (`l
 - `loc-orchestrate` executes a plan milestone by milestone: tests first with a red gate that must fail on an assertion (the `test-author` agent writes behaviour tests without reading the code), then the code, the proof and a code review. It keeps a copy of the tests from the start of the plan.
 - `loc-qa` gives the QA verdict, APPROVED or NOT APPROVED: the full suite once, the tests compared with that copy, a test for every criterion, and the project's own `qa-*` skills whose `qa-paths:` header matches the change. It changes tests only. `loc-orchestrate` runs it before the final review; run `/masterskills:loc-qa` yourself at any time.
 - `loc-review` reviews the diff; `loc-journal` records lessons.
+- `loc-diagram` answers "how does X work?" with a diagram drawn in the terminal from the code, `file:line` on every box. It keeps them in `loc/diagrams/`: the project overview and the topics listed under `## Diagrams` in `CLAUDE.md` stay up to date (`loc-orchestrate` refreshes the overview after every plan, and a new plugin version draws it at session start), with an HTML version to open in the browser; any other diagram goes to `loc/diagrams/tmp/`. Asking about the same topic again updates its diagram.
 - `loc-director` runs a course you agree once ("until plan 087 is done", "until 21:00"): the `pm` agent orders the work, the `architect` agent says what each inbox file needs, and it plans and executes until a stop rule. The course lives in `loc/PRD.md` `## Course`; a `Stop` hook keeps it going, `/masterskills:loc-director status` shows what happened, "stop" ends it.
 
 ## Guards

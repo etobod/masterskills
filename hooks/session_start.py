@@ -8,10 +8,13 @@ Runs on startup, /clear and after compaction, so the rules come back into
 context whenever it is rebuilt. Reads the hook input JSON from stdin and
 prints hookSpecificOutput.additionalContext as JSON. An old `loc/` format also
 gets a systemMessage, shown to the user whatever the model does with its context.
+A project without the overview diagram, or with one drawn by another plugin
+version (its `**Plugin:**` line), is asked to draw it before other work.
 """
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -95,6 +98,35 @@ def migration_section(project: Path) -> str:
             f"/masterskills:loc-init to migrate loc/ to format {FORMAT}.")
 
 
+def plugin_version() -> str:
+    """plugin.json in Claude Code; the OpenCode build writes VERSION beside scripts/."""
+    try:
+        return json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
+    except (OSError, ValueError, KeyError):
+        pass
+    try:
+        return (PLUGIN_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
+def overview_section(project: Path) -> str:
+    if not (project / "loc" / "inbox").is_dir():
+        return ""
+    version = plugin_version()
+    overview = project / "loc" / "diagrams" / "overview.md"
+    try:
+        drawn = re.search(r"(?m)^\*\*Plugin:\*\*\s*(\S+)", overview.read_text(encoding="utf-8"))
+    except OSError:
+        drawn = None
+    if not version or (drawn and drawn.group(1) == version):
+        return ""
+    why = f"was drawn with masterskills {drawn.group(1)}" if drawn else "does not exist yet"
+    return (f"\n\n## Project overview\n`loc/diagrams/overview.md` {why}. Before other work, draw it: "
+            f'`Skill(skill: "masterskills:loc-diagram", args: "overview")`, with `**Plugin:** {version}` '
+            "in its header. Tell the user in one line that it is there.")
+
+
 def main() -> int:
     hook_input = read_input()
     project = project_dir(hook_input).resolve()
@@ -102,7 +134,7 @@ def main() -> int:
     rules = (PLUGIN_ROOT / "rules" / "core.md").read_text(encoding="utf-8").strip()
     summary = summarize(project)
 
-    context = f"{rules}\n\n{inbox_section(summary)}{migration_section(project)}{mutation}\n"
+    context = f"{rules}\n\n{inbox_section(summary)}{migration_section(project)}{overview_section(project)}{mutation}\n"
     output = {
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",
