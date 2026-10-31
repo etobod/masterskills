@@ -101,6 +101,7 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn("in a skill or not", rules)
         self.assertNotIn("the user tracks their own questions", rules)
         self.assertIn("a question the user may miss never does", rules)
+        self.assertIn("When work waits on one, also ask it with `AskUserQuestion`", rules)
         self.assertIn("consent in a `PRD:` `question` file, also outside a plan", rules)
         orchestrate = read("skills/loc-orchestrate/SKILL.md")
         for marker in ("--add <dir>", "--leave <dir>", ".gitignore"):
