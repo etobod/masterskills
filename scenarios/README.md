@@ -14,14 +14,15 @@ One scenario per file, `scenarios/NN-short-name.md`, with exactly these level-2 
 
 ## How to run a scenario
 
-Test projects live in `C:/BC/tmp/masterskills/scenarios/<NN>/`, outside this repository: Claude Code treats every file inside a loaded plugin's directory as sensitive, so a test project inside the repository would be read-only (CLAUDE.md rule 1). Results stay in `tmp/scratch/scenario-results/`.
+Test projects live in `$W/scenarios/<NN>/`, where `$W` is a directory outside this repository (here `../tmp/masterskills`, beside it): Claude Code treats every file inside a loaded plugin's directory as sensitive, so a test project inside the repository would be read-only. Results stay in `tmp/scratch/scenario-results/`.
 
-1. **Prepare the test project.** Create `C:/BC/tmp/masterskills/scenarios/<NN>/` as described in the Setup section. It must be its own git repository (`git init`) unless the scenario says otherwise.
+1. **Prepare the test project.** Create `$W/scenarios/<NN>/` as described in the Setup section. It must be its own git repository (`git init`) unless the scenario says otherwise.
 2. **Act.** Run a fresh Claude Code session in the test project with the plugin loaded from this repository, sending each step from the Steps section as one turn:
 
    ```
-   cd C:/BC/tmp/masterskills/scenarios/<NN>
-   S="--plugin-dir C:/BC/masterskills --settings C:/BC/masterskills/scenarios/actor-settings.json"
+   cd $W/scenarios/<NN>
+   REPO=<this repository>
+   S="--plugin-dir $REPO --settings $REPO/scenarios/actor-settings.json"
    echo "<step 1>" | claude -p $S
    echo "<step 2>" | claude -p --continue $S
    ```
@@ -33,7 +34,7 @@ Test projects live in `C:/BC/tmp/masterskills/scenarios/<NN>/`, outside this rep
    - Save the state after each step (inbox file list, `git status`, `git log`, hashes of the files that must not change) and each reply to `tmp/scratch/scenario-results/`, for checks about intermediate states.
 3. **Judge.** Start a sub-agent (read-only use) with this prompt:
 
-   > Read `scenarios/<NN>-<name>.md` and inspect `C:/BC/tmp/masterskills/scenarios/<NN>/` (files, contents, `git status`, `git log`). For every check in the Expected section decide PASS or FAIL from evidence on disk only. Report in the format from `scenarios/README.md`.
+   > Read `scenarios/<NN>-<name>.md` and inspect `$W/scenarios/<NN>/` (files, contents, `git status`, `git log`). For every check in the Expected section decide PASS or FAIL from evidence on disk only. Report in the format from `scenarios/README.md`.
 
 4. **Record.** Save the judge's report to `tmp/scratch/scenario-results/<NN>-<YYYY-MM-DD>.md`, and write its first four lines, any failing check and any `permission_denials` under `## Result` at the end of the scenario file (replacing an older one).
 
