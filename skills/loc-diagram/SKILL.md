@@ -6,7 +6,7 @@ argument-hint: "<what to explain, e.g. saving an entry> | overview"
 
 # loc-diagram
 
-The user asked how something works. A paragraph makes them rebuild the picture in their head; draw it for them, **from the code read now**, never from memory, a plan or `loc/MEMORY.md`.
+A paragraph makes the user rebuild the picture in their head; draw it for them, **from the code read now**, never from memory, a plan or `loc/MEMORY.md`.
 
 ## 1. Find the diagram
 
@@ -24,12 +24,12 @@ A file is a picture of the code at one commit, never a source of truth: code win
 
 ## 2. Read the path
 
-1. Find the entry point (the command, handler, hook or function where it starts). Grep for it; do not guess.
+1. Find the entry point (command, handler, hook, function). Grep for it; do not guess.
 2. Follow it to the end: every call that matters, every file or table it reads or writes, every branch that changes the outcome, every process or agent it hands over to. Note `file:line` for each.
 3. Across more than about ten files, send the `Explore` agent for the map first and read only the steps it names.
 4. What you could not confirm (a dynamic call, a runtime config, a service outside the project) is marked `?` and named under the diagram.
 
-**Overview**: the parts of the project (apps, services, modules, stores, external systems) and what flows between them, read from the entry points, the top-level directories and the manifests. At the end of a plan, redraw it only when the plan added, removed or renamed a part or a flow between parts; otherwise only update its commit.
+**Overview**: the parts of the project (apps, services, modules, stores, external systems) and what flows between them, read from the entry points, the top-level directories and the manifests. At the end of a plan, redraw it only when the plan added, removed or renamed a part or a flow between parts; otherwise only update its commit. Its header also has `**Plugin:** <version>`: keep it, unless the session-start note names a new one.
 
 ## 3. Draw it
 
@@ -70,7 +70,7 @@ Under the diagram, in the user's language:
 2. **Not shown**: what you left out, and every `?` with what would confirm it.
 3. **Where to look first** when changing it: one or two `file:line`.
 
-In the answer: the diagram and those three, shorter than the diagram, then one line with the file path. When asked for more detail on one box, draw that box as its own diagram, the same way.
+Answer with the diagram and those three, shorter than it, then the file path. When asked for more detail on one box, draw that box as its own diagram, the same way.
 
 **HTML**: the overview, every kept diagram, and any diagram the user asks to see in the browser ("w przegladarce", "html") also get `<slug>.html` beside the `.md`; follow `references/html.md`. Give the user the path to open.
 

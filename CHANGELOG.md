@@ -9,6 +9,7 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 - The overview and every kept diagram also get a self-contained HTML version (inline SVG, light and dark) to open in the browser; any other diagram gets one on request.
 - `loc-orchestrate` refreshes the overview after every plan; it redraws it only when the plan added, removed or renamed a part of the project or a flow between parts.
 - `loc-init` creates `loc/diagrams/` and `loc/diagrams/tmp/` and adds the `## Diagrams` section.
+- A new plugin version draws the overview: the overview records the version it was drawn with (`**Plugin:**`), and at session start a project without it, or with another version, is asked to draw it before other work.
 
 ## 2.19.0 — 2026-10-31
 
