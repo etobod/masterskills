@@ -24,7 +24,7 @@ Keeps the project's diary, `loc/MEMORY.md`: what was done, newest first, one sho
 
 Nothing changed (a conversation, a question, a failed attempt that was undone): no entry; say so in one line.
 
-If the project has no `loc/MEMORY.md`, say that `/masterskills:loc-init` creates it, and stop.
+If the project has no `loc/MEMORY.md`, ask as for any skill in a project without `loc/` (session start): `loc-init` first, or nothing and stop.
 
 ## 2. Write the entry
 

@@ -23,7 +23,7 @@ To update: `/plugin marketplace update masterskills`, then `/plugin update maste
 
 ## Getting started
 
-In a project, run `/masterskills:loc-init`. It creates `loc/` (inbox, `diagrams/`, `PRD.md`, `PATTERNS.md`, `MEMORY.md`), the standard `CLAUDE.md` sections, a `loc/` entry in `.gitignore` and `.claude/settings.json` (Claude's auto memory off, since lessons go to `loc/PATTERNS.md`; no AI attribution in commits and pull requests). It only adds what is missing, so run it again after updating the plugin.
+In a project, run `/masterskills:loc-init`. It creates `loc/` (inbox, `diagrams/`, `PRD.md`, `PATTERNS.md`, `MEMORY.md`), the standard `CLAUDE.md` sections, a `loc/` entry in `.gitignore` and `.claude/settings.json` (Claude's auto memory off, since lessons go to `loc/PATTERNS.md`; no AI attribution in commits and pull requests). Without git it offers to run `git init`; in a new project it then opens a brainstorm about the project and offers to fill `loc/PRD.md` and `CLAUDE.md` from it once it says enough. It only adds what is missing, so run it again after updating the plugin.
 
 ## Workflow
 

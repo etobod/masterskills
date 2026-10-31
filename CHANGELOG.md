@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.21.0 — 2026-10-31
+
+- `loc-init` in a directory without git asks with a choice prompt: run `git init` (recommended) and go on, or no and stop as before.
+- `loc-init` in a new project without a brainstorm opens a project brainstorm right after creating the files: what the user writes about the project goes there. When the notes say what the project is for, the points it stands on and how it is used, `loc-brainstorm` offers to fill the project from it (`loc-init <NNN>`) or keep talking.
+- Filling the project from a brainstorm marks each decision and note it used `→ moved to <file> <section>`; what is left is the work `loc-planning` makes a plan from.
+- In a project without `loc/`, a masterskills skill first asks: run `loc-init` first (recommended), then the skill, or do nothing, and the skill does not run.
+
 ## 2.20.0 — 2026-10-31
 
 - New skill `loc-diagram`: a question like "how does saving an entry work?" gets a diagram drawn in the terminal from the code read now, with `file:line` on every box, a numbered walk-through, what is left out and where to look first.

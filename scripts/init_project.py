@@ -74,8 +74,8 @@ OPENCODE_BAT = """@rem Updates masterskills for OpenCode, then starts OpenCode i
 NO_GIT = (
     "This directory is not the root of a git repository. masterskills needs git: plans take a "
     "snapshot of every milestone with git, reviews read the diff "
-    "and commits close the work. Run `git init` and then this again. Nothing "
-    "was created."
+    "and commits close the work. Nothing was created; with `git init` it can "
+    "go on."
 )
 
 
