@@ -2,6 +2,15 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.22.0 — 2026-11-01
+
+- New skill `loc-debug` for a reported bug outside a plan: reproduce it with one command, pin it with a test that fails on it, test two or three hypotheses cheapest first, fix the cause and not the symptom. At most 3 rounds of hypotheses; a fix too large for one change, or a cause not found, becomes a `deferred` file with the reproduction and the test.
+- Frontend projects: a new `## Frontend` section in `CLAUDE.md` names the design plugin installed beside masterskills, its review command, a UI check command that fails on a defect, and the screenshot command with its widths. With it filled, brainstorms record a visual direction for every new screen, plans run the UI check in the proof of every milestone that changes what the user sees, and `loc-review` runs the design review beside the other reviewers (source `[design]`). `loc-init` adds the section to existing projects; the `loc/TEST-PLAN.md` example has `ui` and `screenshots` layers.
+- Every review finding gets a verdict before the judge: `confirmed`, `needs_validation` or `rejected`. An unconfirmed finding goes to the judge marked as such instead of being dropped; a rejected one is dropped with one line saying why. The gate keeps the last round's counts in `verdicts`, checked by `check_state.py`.
+- Before writing code, `loc-orchestrate` checks whether it needs to exist: already in the project, the standard library, the platform or an installed dependency. Validation, error handling, security and accessibility are never cut. Code review also flags new code that duplicates what is already there.
+- `loc-brainstorm` has a grill mode ("grill me"): it asks one question at a time about the weakest point of the idea, each with a recommended answer.
+- `loc-diagram` marks every box and arrow as read from the code (`file:line`) or inferred (`?`).
+
 ## 2.21.1 — 2026-10-31
 
 - README rewritten for a public repository: what the plugin does, the team of agents, the skills, and how it compares with other skill packs.
