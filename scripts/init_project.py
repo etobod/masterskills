@@ -10,7 +10,8 @@ so running it again is safe. A project without git is refused and nothing is
 created.
 
 On Windows it also leaves a launcher for the tool that runs it, unless one
-exists: `claude.bat` resumes the Claude Code session given by `--session`;
+exists: `claude.bat` resumes the Claude Code session given by `--session`
+(plus `open-code.bat` when the OpenCode build is installed on this machine);
 `open-code.bat` (plugin built for OpenCode, which records its source
 repository in `SOURCE`) updates the plugin from that repository and starts
 OpenCode.
@@ -103,19 +104,33 @@ def append(path: Path, text: str, block: str) -> None:
     write(path, text + block.replace("\n", nl))
 
 
+def opencode_installer(source: Path):
+    """The `opencode-install.bat` of the repository an OpenCode build records in `SOURCE`, if it exists."""
+    if not source.is_file():
+        return None
+    installer = Path(source.read_text(encoding="utf-8").strip()) / "opencode-install.bat"
+    return installer if installer.is_file() else None
+
+
 def ensure_launcher(project: Path, report: dict, session: str) -> None:
     if sys.platform != "win32":
         return
-    source = PLUGIN_ROOT / "SOURCE"
+    launchers = []
     if (PLUGIN_ROOT / ".claude-plugin").is_dir():
-        name = "claude.bat"
-        text = CLAUDE_BAT.format(session=session) if SESSION.match(session) else None
-    elif source.is_file():
-        name = "open-code.bat"
-        installer = Path(source.read_text(encoding="utf-8").strip()) / "opencode-install.bat"
-        text = OPENCODE_BAT.format(installer=installer)
-    else:
-        return
+        launchers.append(("claude.bat", CLAUDE_BAT.format(session=session) if SESSION.match(session) else None))
+        # The OpenCode build installed on this machine gets its launcher too.
+        config = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+        installer = opencode_installer(config / "opencode" / "masterskills" / "SOURCE")
+        if installer:
+            launchers.append(("open-code.bat", OPENCODE_BAT.format(installer=installer)))
+    elif (PLUGIN_ROOT / "SOURCE").is_file():
+        installer = Path((PLUGIN_ROOT / "SOURCE").read_text(encoding="utf-8").strip()) / "opencode-install.bat"
+        launchers.append(("open-code.bat", OPENCODE_BAT.format(installer=installer)))
+    for name, text in launchers:
+        write_launcher(project, report, name, text)
+
+
+def write_launcher(project: Path, report: dict, name: str, text) -> None:
     old = OLD_CLAUDE_BAT.match((project / name).read_text(encoding="utf-8", errors="replace")) \
         if name == "claude.bat" and (project / name).is_file() else None
     if old:
