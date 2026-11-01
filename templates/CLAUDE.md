@@ -19,5 +19,8 @@
 ## Diagrams
 <!-- Topics whose diagram `loc-diagram` keeps up to date in `loc/diagrams/` besides the project overview, one per line, e.g. "saving an entry". Empty: only the overview. -->
 
+## Frontend
+<!-- Only for a project with a user interface; empty: none. The design plugin installed beside masterskills and its review command; the UI check command, which fails on a defect; the screenshot command and the widths, e.g. 375, 768, 1440. Plans prove UI milestones with them, loc-review runs the design review. -->
+
 ## Project-specific workflow
 <!-- Deviations from the plugin's workflow, e.g. which documents a plan must update after a change. -->

@@ -15,6 +15,8 @@ Example:
 | unit | `python -m pytest tests/unit -q` | gate | fast, after every milestone |
 | integration | `python -m pytest tests/integration -q` | gate | full, in `loc-qa` |
 | model behaviour | `python evals/run.py` | report | on demand |
+| ui | the UI check command from `## Frontend` in `CLAUDE.md` | gate | fast, after every UI milestone |
+| screenshots | the screenshot command from `## Frontend`, at its widths | gate | full, in `loc-qa` |
 -->
 
 ## (b) What changed → what to extend

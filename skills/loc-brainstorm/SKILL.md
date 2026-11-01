@@ -37,6 +37,8 @@ Every reply in which something new was said updates the file **before** you answ
 
 Record only what the user decided as a decision. Your suggestion stays in `## Open` until they agree.
 
+When the project's `CLAUDE.md` has a filled `## Frontend`, a new screen or page needs its visual direction as a decision before planning (e.g. `B-05 — calm editorial look, one accent colour, real photos`); propose two or three in `## Open`, using the design plugin named there.
+
 ## 3. Answer
 
 Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notes: `loc/inbox/004-U-brainstorm-greeting-language.md` (B-01…B-03)."
