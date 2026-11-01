@@ -38,7 +38,7 @@ Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` 
 
 ## 3. Merge
 
-One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`unrealistic`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[design]`, `[invariant]`). Check each against the code; one the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
+One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`unrealistic`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[design]`, `[invariant]`). Check each against the code and give it a verdict (`gates.md`, "Verdicts"): a `rejected` one is dropped with one line saying why, a `needs_validation` one stays, marked unconfirmed. **"No findings" is a correct result**; do not invent any.
 
 ## 4. Orchestrated mode: fix, at most 3 rounds
 

@@ -34,6 +34,8 @@ exist in `loc/inbox/` or `loc/inbox/done/` (an older run's milestone may too).
 Only `final-review` has `triage`: the architect's verdicts after a stuck final
 review, in order, each `retry`, `plan` or `ask`. One `retry` allows rounds 4-6;
 `journal` and `done` need a stuck final review's last verdict to be `plan` or `ask`.
+A code-review or final-review gate may keep `verdicts`, the last round's
+counts {"confirmed": n, "needs_validation": n, "rejected": n}.
 A passed `M<n>/red` gate (the new tests failed before the code) keeps the
 failing test output in `output`; when the plan's milestone has a
 `(behaviour)` criterion it also says whether the `test-author` agent wrote
@@ -72,6 +74,7 @@ PHASES = {"start", "implement", "proof", "code-review", "qa", "final-review", "j
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
 TRIAGE = {"retry", "plan", "ask"}
+VERDICTS = {"confirmed", "needs_validation", "rejected"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
 GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
@@ -166,9 +169,20 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
                 problems.append(f"gates.{name}.stuck: {stuck} does not exist")
         elif stuck is not None:
             problems.append(f"gates.{name}.stuck: only a gate that failed {MAX_ROUNDS} rounds has one")
+        if "verdicts" in gate:
+            check_verdicts(name, match, gate["verdicts"], problems)
         output = gate.get("output")
         if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
+
+
+def check_verdicts(name: str, match, verdicts, problems: list) -> None:
+    """The last round's finding verdicts, kept by a code-review or final-review gate."""
+    if match.group(2) != "code-review" and match.group(3) != "final-review":
+        problems.append(f"gates.{name}.verdicts: only a code-review or final-review gate has them")
+    elif not (isinstance(verdicts, dict) and set(verdicts) == VERDICTS
+              and all(is_int(v) and v >= 0 for v in verdicts.values())):
+        problems.append(f"gates.{name}.verdicts: expected counts >= 0 of {sorted(VERDICTS)}")
 
 
 def stuck_section(project: Path, plan) -> list:
