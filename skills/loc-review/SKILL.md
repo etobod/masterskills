@@ -31,7 +31,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 Start both in the same step:
 
 - **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `loc/PATTERNS.md`."
-- **`Skill(skill: "code-review", args: "<changed files> <level>")`**: always the explicit files and level, because `code-review` otherwise reuses the level typed last.
+- **`Skill(skill: "code-review", args: "<changed files> <level> — also flag new code the project, its standard library, platform or dependencies already provide")`**: always the explicit files and level, because `code-review` otherwise reuses the level typed last.
 
 Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` that the changed files touch, and every `❌` entry of `loc/PATTERNS.md` whose **When to use** matches them.
 

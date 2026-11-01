@@ -27,7 +27,7 @@ A file is a picture of the code at one commit, never a source of truth: code win
 1. Find the entry point (command, handler, hook, function). Grep for it; do not guess.
 2. Follow it to the end: every call that matters, every file or table it reads or writes, every branch that changes the outcome, every process or agent it hands over to. Note `file:line` for each.
 3. Across more than about ten files, send the `Explore` agent for the map first and read only the steps it names.
-4. What you could not confirm (a dynamic call, a runtime config, a service outside the project) is marked `?` and named under the diagram.
+4. Mark every box and every arrow: read from the code, with `file:line`, or inferred (a dynamic call, a runtime config, a service outside the project), marked `?` and named under the diagram.
 
 **Overview**: the parts of the project (apps, services, modules, stores, external systems) and what flows between them, read from the entry points, the top-level directories and the manifests. At the end of a plan, redraw it only when the plan added, removed or renamed a part or a flow between parts; otherwise only update its commit. Its header also has `**Plugin:** <version>`: keep it, unless the session-start note names a new one.
 

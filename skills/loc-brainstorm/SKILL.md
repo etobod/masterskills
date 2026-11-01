@@ -1,6 +1,6 @@
 ---
 name: loc-brainstorm
-description: Use as soon as a conversation turns into shaping a change (ideas for a feature, options being weighed, "thinking about…", "what if…", a decision about how something should work) and nobody has asked for a plan yet. Keeps one growing brainstorm file in loc/inbox/ with numbered decisions. Also when the user asks to note or continue a brainstorm.
+description: Use as soon as a conversation turns into shaping a change (ideas for a feature, options being weighed, "thinking about…", "what if…", a decision about how something should work) and nobody has asked for a plan yet. Keeps one growing brainstorm file in loc/inbox/ with numbered decisions. Also when the user asks to note or continue a brainstorm, or to be grilled about an idea ("grill me", "przepytaj mnie").
 argument-hint: "[topic]"
 ---
 
@@ -42,6 +42,10 @@ Record only what the user decided as a decision. Your suggestion stays in `## Op
 Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notes: `loc/inbox/004-U-brainstorm-greeting-language.md` (B-01…B-03)."
 
 When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. When `## Goal` in `loc/PRD.md` is still only the template and the notes already say what the project is for, the points it stands on and how it is used, ask with `AskUserQuestion`: `Fill the project from <NNN> now` (recommended: `loc-init` writes the PRD frame and `CLAUDE.md`, the rest stays here for a plan) or `Keep talking`. Fill: `Skill(skill: "masterskills:loc-init", args: "<NNN>")`. Never start `loc-planning` yourself.
+
+## Grill mode
+
+When the user asks to be grilled ("grill me", "przepytaj mnie"), lead instead of waiting: ask one question at a time about the weakest point of the idea, each with the answer you recommend and why. Record each answer as usual (a decision or a note) before the next question. Stop when `## Open` is empty and nothing important is unasked, or when the user says so.
 
 ## Rules
 
