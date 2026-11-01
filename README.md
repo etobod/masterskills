@@ -119,6 +119,7 @@ In Claude Code the code reviewer is its built-in `code-review` skill; the OpenCo
 | `loc-review` | review a diff at the level you choose |
 | `loc-journal` | record what was learned after work outside a plan |
 | `loc-diagram` | see how something works, drawn from the code |
+| `loc-debug` | fix a reported bug: reproduce it, pin it with a failing test, find the cause before changing code |
 | `loc-director` | run an agreed course ("until plan 087 is done", "until 21:00") without you |
 
 ## Compared with other skill packs
