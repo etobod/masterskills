@@ -33,6 +33,7 @@ Where things go:
 | how a person checks the result | `Manual verification / UAT` |
 | a convention the code does not show | `Developer notes` |
 | what is not allowed (cloud, data, costs) | `Limits` |
+| a user interface: the design plugin, the UI check, screen widths | `Frontend` |
 | a feature, an idea, a task | nowhere: it is for `loc-planning` |
 
 `Goal` is never left empty: the brainstorm's `## Topic` always says what the project is.

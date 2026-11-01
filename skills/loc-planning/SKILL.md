@@ -102,7 +102,7 @@ A criterion says **what the code must do**, never "a test exists" or "it works":
 
 `loc/TEST-PLAN.md` is the project's test contract and changes only through a milestone: when the plan adds something new to the product, one milestone extends section (b) (tests only).
 
-**The user checks after your tests, never instead of them.** So every milestone that changes code has criteria with tests and a command proof, also when a person must look at the result; the user gets only what no command can see: the look, the feel, a real device, per `Manual verification / UAT`. Even a canvas animation has testable logic (the math, the data, the empty input), and that is tested first.
+**The user checks after your tests, never instead of them.** So every milestone that changes code has criteria with tests and a command proof, also when a person must look at the result; the user gets only what no command can see: the look, the feel, a real device, per `Manual verification / UAT`. Even a canvas animation has testable logic (the math, the data, the empty input), and that is tested first. With a filled `## Frontend` in `CLAUDE.md`, a milestone that changes what the user sees also runs the `ui` layer of `loc/TEST-PLAN.md` (a) in its `**Proof:**`; only the look stays a `**Manual check:**`.
 
 **Performer** (`**Performer:**`): `auto`, the proof command run by `loc-orchestrate` (default); `agent`, a check an agent performs and records; `user (blocking)` or `user (deferrable)`: after the proof and the code review pass, the user does the milestone's `**Manual check:**` and gives their word with a date. A user performer and a `**Manual check:**` line go together; a criterion may point to `manual` only next to criteria with tests:
 

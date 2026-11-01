@@ -119,6 +119,7 @@ In Claude Code the code reviewer is its built-in `code-review` skill; the OpenCo
 | `loc-review` | review a diff at the level you choose |
 | `loc-journal` | record what was learned after work outside a plan |
 | `loc-diagram` | see how something works, drawn from the code |
+| `loc-debug` | fix a reported bug: reproduce it, pin it with a failing test, find the cause before changing code |
 | `loc-director` | run an agreed course ("until plan 087 is done", "until 21:00") without you |
 
 ## Compared with other skill packs
@@ -147,6 +148,26 @@ Both cover the road from an idea through a plan and test-driven development to r
 | **Project knowledge** | Project facts live in your `CLAUDE.md` and `loc/PRD.md`, never in the skills, so the skills stay the same in every project |
 | **Understanding the code** | Diagrams drawn from the code with `file:line`, refreshed after every plan |
 | **Other tools** | The same skills build for OpenCode |
+
+## Frontend projects
+
+Tests prove that a page works, not that it looks good. masterskills does not ship its own design rules; it works with a design plugin installed beside it and is told about it in a `## Frontend` section of your `CLAUDE.md`:
+
+```markdown
+## Frontend
+Design plugin: impeccable. Design review: its critique command.
+UI check: <the plugin's detector command>, fails on a finding.
+Screenshots: npx playwright test tests/screens, widths 375, 768, 1440.
+```
+
+With that section filled:
+
+- **brainstorms** record a visual direction for every new screen as a decision;
+- **plans** run the UI check in the proof of every milestone that changes what the user sees, and leave only the look to a manual check;
+- **`loc-qa`** runs the UI check and the screenshot layer of `loc/TEST-PLAN.md` like any other gate;
+- **`loc-review`** runs the design review beside `rubber-duck` and `code-review`, and its findings go through the `judge` like the rest.
+
+We suggest [pbakaus/impeccable](https://github.com/pbakaus/impeccable): its slop detector is deterministic, so a UI check can really fail. [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) is an alternative when you want art direction and browser checks at three widths. An empty `## Frontend` means the project has no user interface, and nothing changes.
 
 ## Guards
 

@@ -28,16 +28,17 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 ## 2. Review, in parallel
 
-Start both in the same step:
+Start them in the same step:
 
 - **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `loc/PATTERNS.md`."
-- **`Skill(skill: "code-review", args: "<changed files> <level>")`**: always the explicit files and level, because `code-review` otherwise reuses the level typed last.
+- **`Skill(skill: "code-review", args: "<changed files> <level> — also flag new code the project, its standard library, platform or dependencies already provide")`**: always the explicit files and level, because `code-review` otherwise reuses the level typed last.
+- **Design review**, only when the project's `CLAUDE.md` has a filled `## Frontend` and a changed file is part of what the user sees: in the same step, run the design review command named there on those files, read-only.
 
 Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` that the changed files touch, and every `❌` entry of `loc/PATTERNS.md` whose **When to use** matches them.
 
 ## 3. Merge
 
-One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`unrealistic`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[invariant]`). Check each against the code; one the code does not support is dropped, with one line saying why. **"No findings" is a correct result**; do not invent any.
+One list: duplicates merged, each finding with `file:line`, category (**Blocking**, **Non-blocking**, **Suggestion**, **Unrealistic** (`unrealistic`); code-review `high`, `medium`, `low`; definitions and the "who produces this?" test in `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/gates.md`), the fix, and its source (`[rubber-duck]`, `[code-review]`, `[design]`, `[invariant]`). Check each against the code and give it a verdict (`gates.md`, "Verdicts"): a `rejected` one is dropped with one line saying why, a `needs_validation` one stays, marked unconfirmed. **"No findings" is a correct result**; do not invent any.
 
 ## 4. Orchestrated mode: fix, at most 3 rounds
 
