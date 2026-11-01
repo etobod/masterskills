@@ -11,7 +11,7 @@ and they ask you only what they cannot decide.
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#install)
 [![OpenCode](https://img.shields.io/badge/OpenCode-supported-555)](#opencode)
 
-[Install](#install) · [How it works](#how-it-works) · [The team](#the-team) · [Compared with](#compared-with-other-skill-packs) · [Changelog](CHANGELOG.md)
+[Install](#install) · [How it works](#how-it-works) · [The team](#the-team) · [Frontend](#frontend-projects) · [Compared with](#compared-with-other-skill-packs) · [Changelog](CHANGELOG.md)
 
 </div>
 
@@ -21,10 +21,12 @@ and they ask you only what they cannot decide.
 
 - **Plans that can fail.** Every milestone ends with a proof: a command and its expected result. Tests come first, written by an agent that never reads the implementation, and they must fail on an assertion before any code is written.
 - **Decisions without interruptions.** The `architect` settles what you need not decide. What only you can decide becomes a question file with a recommended option, and the work goes on with that option meanwhile.
-- **Reviews that end.** Every gate gets at most three rounds. The `judge` weighs each finding against what the project is for (`fix`, `enough`, or `challenges D-07`), so review does not turn into polishing.
+- **Reviews that end.** Every gate gets at most three rounds. The `judge` weighs each finding against what the project is for (`fix`, `enough`, or `challenges D-07`), so review does not turn into polishing. Each finding is first checked against the code: one the code contradicts is dropped with a reason, one it cannot settle reaches the judge marked unconfirmed.
+- **Less code.** Before writing code, the team checks whether it needs to exist: already in the project, the standard library, the platform or an installed dependency. Validation, error handling, security and accessibility are never cut.
+- **Bugs fixed at the cause.** `loc-debug` reproduces a bug with a command, pins it with a failing test and tests hypotheses before changing any code.
 - **Memory that survives `/clear`.** Ideas, decisions, plans, open questions and lessons live in `loc/` inside your project, and every session starts with what is open.
 - **Small by contract.** About 470 words of rules are always loaded; each skill loads only when it is used. Word budgets are enforced by the test suite, not promised.
-- **Answers with a picture.** Ask "how does saving an entry work?" and get a diagram drawn from the code, with `file:line` on every box, kept up to date in `loc/diagrams/`.
+- **Answers with a picture.** Ask "how does saving an entry work?" and get a diagram drawn from the code, with `file:line` on every box and `?` on what was inferred, kept up to date in `loc/diagrams/`.
 
 ## Install
 
@@ -60,6 +62,7 @@ To update later: `/plugin marketplace update masterskills`, then run `/masterski
 /masterskills:loc-planning 001             make a plan from brainstorm 001
 /masterskills:loc-orchestrate 002          execute plan 002, milestone by milestone
 /masterskills:loc-director until 21:00     or let the team run a course on its own
+/masterskills:loc-debug <what fails>       fix a bug outside a plan, cause first
 ```
 
 ## How it works
@@ -112,7 +115,7 @@ In Claude Code the code reviewer is its built-in `code-review` skill; the OpenCo
 | Skill | Use it to |
 |---|---|
 | `loc-init` | set up or update `loc/` and `CLAUDE.md`; fill the project's goal from a brainstorm |
-| `loc-brainstorm` | keep the notes and decisions of a design conversation in one file |
+| `loc-brainstorm` | keep the notes and decisions of a design conversation in one file; "grill me" to be questioned about an idea |
 | `loc-planning` | turn a brainstorm into plans whose milestones have criteria, tests and proofs |
 | `loc-orchestrate` | execute a plan: tests first, code, proof, review, commit |
 | `loc-qa` | get a QA verdict on a plan or a change, at any time |
