@@ -1,6 +1,7 @@
 """Tests for the scripts that create and read the project's `loc/` files."""
 
 import json
+import os
 import subprocess
 import shutil
 import sys
@@ -211,10 +212,13 @@ class LauncherTest(unittest.TestCase):
     def setUp(self):
         self.project = scratch_dir(self)
         subprocess.run(["git", "init", "-q"], cwd=self.project, check=True)
+        # An empty config home: whether this machine has OpenCode must not change the result.
+        self.config = scratch_dir(self)
 
     def init(self, *args: str, scripts: Path = ROOT / "scripts") -> dict:
+        env = {**os.environ, "XDG_CONFIG_HOME": str(self.config)}
         out = subprocess.run([sys.executable, "-B", str(scripts / "init_project.py"), "--project", ".", *args],
-                             cwd=self.project, capture_output=True, text=True, encoding="utf-8")
+                             cwd=self.project, capture_output=True, text=True, encoding="utf-8", env=env)
         self.assertEqual(out.returncode, 0, out.stderr)
         return json.loads(out.stdout)
 
@@ -257,6 +261,23 @@ class LauncherTest(unittest.TestCase):
         report = self.init()
         self.assertFalse((self.project / "claude.bat").exists())
         self.assertIn("claude.bat", [item["path"] for item in report["skipped"]])
+
+    def test_claude_also_leaves_open_code_bat(self):
+        """With the OpenCode build installed, Claude Code's loc-init leaves both launchers."""
+        source = self.config / "opencode" / "masterskills" / "SOURCE"
+        source.parent.mkdir(parents=True)
+        source.write_text(str(ROOT) + "\n", encoding="utf-8")
+        report = self.init("--session", self.SESSION)
+        self.assertIn("claude.bat", report["created"])
+        self.assertIn("open-code.bat", report["created"])
+        self.assertIn(f'call "{ROOT / "opencode-install.bat"}"', (self.project / "open-code.bat").read_text(encoding="utf-8"))
+        own = b"@opencode\r\n"
+        (self.project / "open-code.bat").write_bytes(own)
+        self.assertIn("open-code.bat", self.init("--session", self.SESSION)["existing"])
+        self.assertEqual((self.project / "open-code.bat").read_bytes(), own)
+        source.write_text(str(self.config) + "\n", encoding="utf-8")  # no installer there
+        (self.project / "open-code.bat").unlink()
+        self.assertNotIn("open-code.bat", self.init("--session", self.SESSION)["created"])
 
     def test_open_code_bat_updates_the_plugin(self):
         build = scratch_dir(self)

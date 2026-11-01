@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.23.0 — 2026-11-01
+
+- `loc-init` in Claude Code on Windows also leaves `open-code.bat` when the OpenCode build of masterskills is installed on the machine (its `SOURCE` file in the OpenCode config names a repository with `opencode-install.bat`). Without it only `claude.bat` is created, as before; an existing launcher is never touched.
+
 ## 2.22.0 — 2026-11-01
 
 - New skill `loc-debug` for a reported bug outside a plan: reproduce it with one command, pin it with a test that fails on it, test two or three hypotheses cheapest first, fix the cause and not the symptom. At most 3 rounds of hypotheses; a fix too large for one change, or a cause not found, becomes a `deferred` file with the reproduction and the test.
