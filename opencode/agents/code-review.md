@@ -52,3 +52,5 @@ Never inflate a severity to be heard or lower one to be agreeable.
 ```
 
 Write `## Findings` with `None.` when there is nothing: no findings is a correct result. Check every claim against the code before you write it; a guess is not a finding.
+
+**Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it.

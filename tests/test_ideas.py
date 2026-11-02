@@ -32,8 +32,8 @@ class BudgetTest(unittest.TestCase):
         self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
         self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2650)
         self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
-        self.assertEqual(overrides["agents/judge.md"], 550)
-        self.assertEqual(overrides["agents/rubber-duck.md"], 550)
+        self.assertEqual(overrides["agents/judge.md"], 650)
+        self.assertEqual(overrides["agents/rubber-duck.md"], 650)
 
 
 class LadderTest(unittest.TestCase):
@@ -95,6 +95,43 @@ class TrackedInputsTest(unittest.TestCase):
         self.assertTrue(rule, "no rule about test inputs in .gitignore")
         for part in ("test", "manual check", "in git", "made by the test"):
             self.assertIn(part, rule[0])
+
+
+class LeanReviewTest(unittest.TestCase):
+    """A reviewer runs once per round, and the final code review skips what the milestones reviewed."""
+
+    def read(self, rel: str) -> str:
+        return (ROOT / rel).read_text(encoding="utf-8")
+
+    def test_reviewers_run_once_per_round(self):
+        review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
+        step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
+                 if line.startswith("5. **Code-review gate**")][0]
+        for text in (review, step5):
+            self.assertIn("once per round", text)
+            self.assertIn("never a relaunch", text)
+
+    def test_final_code_review_skips_reviewed_milestones(self):
+        review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("Orchestrated", review)
+        self.assertIn("how the milestones work together", review)
+        self.assertIn("after the last milestone's `end`", review)
+
+
+class AgentAnswerTest(unittest.TestCase):
+    """An agent ends with its report alone, and says so when it found nothing."""
+
+    def test_every_agent_ends_with_its_report(self):
+        files = sorted((ROOT / "agents").glob("*.md")) + sorted((ROOT / "opencode" / "agents").glob("*.md"))
+        self.assertTrue(files)
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            for part in ("last message is this report alone", "no running commentary",
+                         "never list what passed", "With nothing to report", "never end without it"):
+                self.assertIn(part, text, path.name)
+
+    def test_agent_budget_is_600(self):
+        self.assertEqual(measure().LIMITS["agent"], 600)
 
 
 if __name__ == "__main__":

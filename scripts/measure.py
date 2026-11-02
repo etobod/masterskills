@@ -7,8 +7,8 @@ file of the plugin and compares them with their limit:
     rules/*.md                    470 words in total (one always-loaded block)
     skills/*/SKILL.md             800 words per skill core
     skills/*/references/*.md      800 words per reference
-    agents/*.md                   500 words per agent definition
-    opencode/agents/*.md          500 words per OpenCode-only agent
+    agents/*.md                   600 words per agent definition
+    opencode/agents/*.md          600 words per OpenCode-only agent
 
 Exceptions approved by the user are listed in OVERRIDES.
 
@@ -25,7 +25,7 @@ LIMITS = {
     "rule": 470,
     "skill": 800,
     "reference": 800,
-    "agent": 500,
+    "agent": 600,
 }
 
 # Per-file limits approved by the user; everything else uses LIMITS.
@@ -35,8 +35,8 @@ OVERRIDES = {
     "skills/loc-review/SKILL.md": 900,
     "skills/loc-diagram/SKILL.md": 850,
     "skills/loc-qa/SKILL.md": 1000,
-    "agents/rubber-duck.md": 550,
-    "agents/judge.md": 550,
+    "agents/rubber-duck.md": 650,
+    "agents/judge.md": 650,
 }
 
 PATTERNS = [
