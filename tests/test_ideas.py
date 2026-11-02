@@ -86,5 +86,16 @@ class DiagramMarksTest(unittest.TestCase):
         self.assertIn("`?`", text)
 
 
+class TrackedInputsTest(unittest.TestCase):
+    """A plan never gitignores a file its proofs, tests or manual checks need."""
+
+    def test_planning_keeps_test_inputs_in_git(self):
+        text = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
+        rule = [line for line in text.splitlines() if "`.gitignore`" in line and "proof" in line]
+        self.assertTrue(rule, "no rule about test inputs in .gitignore")
+        for part in ("test", "manual check", "in git", "made by the test"):
+            self.assertIn(part, rule[0])
+
+
 if __name__ == "__main__":
     unittest.main()

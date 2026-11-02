@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.23.1 — 2026-11-01
+
+- `loc-planning`: a file a proof, test or manual check needs is kept in git or made by the test, never added to `.gitignore`. A plan that ignored its own sample input failed on any clean checkout.
+
 ## 2.23.0 — 2026-11-01
 
 - `loc-init` in Claude Code on Windows also leaves `open-code.bat` when the OpenCode build of masterskills is installed on the machine (its `SOURCE` file in the OpenCode config names a repository with `opencode-install.bat`). Without it only `claude.bat` is created, as before; an existing launcher is never touched.
