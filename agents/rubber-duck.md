@@ -35,3 +35,5 @@ Findings grouped by severity, most severe first. Each one: **what** is wrong, wi
 - **Unrealistic**: needs an input nothing in the project produces, or only someone in the plan's `Not defended against`; say what produces that input instead, or quote that line.
 
 Omit empty groups. **If there are no substantive issues, say so in one line** ("No blocking or non-blocking issues.") and stop. Inventing findings to look thorough is a failure of this review.
+
+**Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it.

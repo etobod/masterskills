@@ -32,8 +32,8 @@ class BudgetTest(unittest.TestCase):
         self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
         self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2650)
         self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
-        self.assertEqual(overrides["agents/judge.md"], 550)
-        self.assertEqual(overrides["agents/rubber-duck.md"], 550)
+        self.assertEqual(overrides["agents/judge.md"], 650)
+        self.assertEqual(overrides["agents/rubber-duck.md"], 650)
 
 
 class LadderTest(unittest.TestCase):
@@ -116,6 +116,22 @@ class LeanReviewTest(unittest.TestCase):
         self.assertIn("Orchestrated", review)
         self.assertIn("how the milestones work together", review)
         self.assertIn("after the last milestone's `end`", review)
+
+
+class AgentAnswerTest(unittest.TestCase):
+    """An agent ends with its report alone, and says so when it found nothing."""
+
+    def test_every_agent_ends_with_its_report(self):
+        files = sorted((ROOT / "agents").glob("*.md")) + sorted((ROOT / "opencode" / "agents").glob("*.md"))
+        self.assertTrue(files)
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            for part in ("last message is this report alone", "no running commentary",
+                         "never list what passed", "With nothing to report", "never end without it"):
+                self.assertIn(part, text, path.name)
+
+    def test_agent_budget_is_600(self):
+        self.assertEqual(measure().LIMITS["agent"], 600)
 
 
 if __name__ == "__main__":

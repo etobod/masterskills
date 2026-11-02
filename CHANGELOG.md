@@ -6,6 +6,8 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 
 - `loc-review` and `loc-orchestrate`: each reviewer (`rubber-duck`, `code-review`) runs once per round; an empty or unreadable answer counts as no findings, never a relaunch. A model that could not read a long answer started the same reviewer three times.
 - `loc-review`, orchestrated: the final `code-review` looks only at how the milestones work together and at what changed after the last milestone's `end`, since each milestone's diff was already reviewed at its own gate. The final `rubber-duck` still reads the whole plan.
+- Every agent ends with its report alone: it checks in silence, never lists what passed, and with nothing to report says so in one line. A reviewer that narrated every criterion ran out before its report and came back empty.
+- Agent budget raised by 100 words: 600 per agent, 650 for `rubber-duck` and `judge`.
 
 ## 2.23.1 — 2026-11-01
 

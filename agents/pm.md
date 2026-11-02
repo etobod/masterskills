@@ -41,3 +41,5 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py --set 070=2 --set
 ```
 
 One line per plan in the new order: the group, the number, one reason. Then the command with a `--set NNN=G` for every plan whose group changes; a running plan is never in it. When nothing changes, say so and give no command. Do not edit files, do not change plans.
+
+**Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it.
