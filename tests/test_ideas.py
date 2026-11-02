@@ -97,5 +97,26 @@ class TrackedInputsTest(unittest.TestCase):
             self.assertIn(part, rule[0])
 
 
+class LeanReviewTest(unittest.TestCase):
+    """A reviewer runs once per round, and the final code review skips what the milestones reviewed."""
+
+    def read(self, rel: str) -> str:
+        return (ROOT / rel).read_text(encoding="utf-8")
+
+    def test_reviewers_run_once_per_round(self):
+        review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
+        step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
+                 if line.startswith("5. **Code-review gate**")][0]
+        for text in (review, step5):
+            self.assertIn("once per round", text)
+            self.assertIn("never a relaunch", text)
+
+    def test_final_code_review_skips_reviewed_milestones(self):
+        review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("Orchestrated", review)
+        self.assertIn("how the milestones work together", review)
+        self.assertIn("after the last milestone's `end`", review)
+
+
 if __name__ == "__main__":
     unittest.main()

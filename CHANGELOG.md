@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.24.0 — 2026-11-03
+
+- `loc-review` and `loc-orchestrate`: each reviewer (`rubber-duck`, `code-review`) runs once per round; an empty or unreadable answer counts as no findings, never a relaunch. A model that could not read a long answer started the same reviewer three times.
+- `loc-review`, orchestrated: the final `code-review` looks only at how the milestones work together and at what changed after the last milestone's `end`, since each milestone's diff was already reviewed at its own gate. The final `rubber-duck` still reads the whole plan.
+
 ## 2.23.1 — 2026-11-01
 
 - `loc-planning`: a file a proof, test or manual check needs is kept in git or made by the test, never added to `.gitignore`. A plan that ignored its own sample input failed on any clean checkout.
