@@ -82,6 +82,25 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertIn("edit: allow", qa)
         self.assertIn("bash: allow", qa)
 
+    def test_agents_get_only_their_listed_tools(self):
+        # Claude Code limits an agent to its `tools:`; OpenCode would otherwise give it
+        # the web and every MCP server.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        for name in ("rubber-duck", "judge", "code-review"):
+            head = front((out / "agents" / f"{name}.md").read_text(encoding="utf-8"))
+            lines = head.splitlines()
+            self.assertIn('  "*": deny', lines, name)
+            self.assertLess(lines.index('  "*": deny'), lines.index("  read: allow"), name)
+            for tool in ("grep", "glob", "list"):
+                self.assertIn(f"  {tool}: allow", lines, name)
+            for tool in ("webfetch", "websearch", "task", "skill"):
+                self.assertNotIn(f"  {tool}: allow", lines, name)
+        qa = front((out / "agents" / "qa.md").read_text(encoding="utf-8")).splitlines()
+        self.assertIn("  skill: allow", qa)
+        base = out.resolve().as_posix()
+        self.assertIn(f'    "{base}/masterskills/**": allow', qa)
+
     def test_code_review_is_an_agent(self):
         # Claude Code's code-review skill is built in; OpenCode gets an agent instead.
         out = self.scratch()
