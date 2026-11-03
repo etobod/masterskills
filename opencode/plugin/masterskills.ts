@@ -90,8 +90,32 @@ function hook(name: string, data: object, directory: string): any {
   }
 }
 
-export const Masterskills = async ({ directory }: { directory: string }) => {
+export const Masterskills = async ({ directory, client }: { directory: string; client: any }) => {
   const rules = new Map<string, string>()
+  // Sessions the Stop hook just sent on: their next idle is Claude Code's `stop_hook_active`.
+  const pushed = new Set<string>()
+
+  // The Stop hooks (the director's course). OpenCode has no Stop event: when the main session
+  // goes idle the hook runs, and a "block" sends its reason as the next message. After one push,
+  // the next idle counts as `stop_hook_active`, as in Claude Code, so a waiting session is not
+  // pushed in a loop. Agents' sessions (with a parent) are never pushed.
+  async function stop(id: string) {
+    const names = hooksFor("Stop", "")
+    if (!id || !names.length) return
+    const active = pushed.delete(id)
+    try {
+      const session = await client.session.get({ path: { id } })
+      if (session?.data?.parentID) return
+      for (const name of names) {
+        const data = { hook_event_name: "Stop", stop_hook_active: active, session_id: id, cwd: directory }
+        const output = hook(name, data, directory)
+        if (output?.decision !== "block" || !output.reason) continue
+        pushed.add(id)
+        await client.session.promptAsync({ path: { id }, body: { parts: [{ type: "text", text: output.reason }] } })
+        return
+      }
+    } catch {}
+  }
 
   return {
     // The PreToolUse hooks (write guard, commit guard): a deny stops the tool with the hook's reason.
@@ -136,6 +160,7 @@ export const Masterskills = async ({ directory }: { directory: string }) => {
 
     event: async ({ event }: any) => {
       if (event?.type === "session.compacted") rules.delete(event.properties?.sessionID ?? "")
+      if (event?.type === "session.idle") await stop(event.properties?.sessionID ?? "")
     },
 
     // The skills' commands find the plugin and the project as they do in Claude Code.
