@@ -75,6 +75,10 @@ The file comes from the template with all sections. Fill them in English:
 - **Milestones**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Proof:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Manual check:**` for what only a person can see (below). Code and its tests go in the same milestone (below). A milestone's product is never a decision, an audit or a question.
 - **Risks and decisions**: references to brainstorm decisions (`B-01`…), decisions of `loc/PRD.md` (`D-01`…, cited, never restated) and `question` files, and what each risk would cost. A lasting choice later plans must follow: `references/prd.md`.
 
+### Search milestones
+
+A milestone is a **proof** milestone unless the requirement is a number to improve with an unknown ceiling (a pass rate, a speed), or the user or brainstorm asked for a search; never a way out of a hard proof. Unsure: the `architect` (Decide). A search milestone (`**Kind:** search`, its fields, the budget, `**Leads:**` from the `researcher`): `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/search.md`.
+
 ### Tests in the plan
 
 A milestone that changes only documents or configuration has no criteria: it says so with the reason, `**No tests:** documents only`. Every milestone that changes code has acceptance criteria. `check_plan.py` rejects a milestone with neither line.

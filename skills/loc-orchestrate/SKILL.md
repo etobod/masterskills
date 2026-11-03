@@ -25,6 +25,8 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 Update the state file before and after every step.
 
+A milestone with `**Kind:** search` runs the search loop of `references/search.md` instead of steps 2 and 3; a missed target is its accepted result, never stuck.
+
 1. **Snapshot** `--point start`.
 2. **Implement** exactly this milestone, code and its tests together. With `**Criteria:**`: tests first, red gate `M<n>/red`, then the code (`references/tests.md`). Before writing code, climb the ladder and stop at the first rung that works: is it needed at all, already in the project, in the standard library, a platform feature (the browser's date picker), an installed dependency, one line; only then the minimum that works. Never cut validation, error handling, security or accessibility.
    - *inline*: do it yourself.

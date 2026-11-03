@@ -8,13 +8,14 @@
       "plan": "loc/inbox/018-plan-csv-export.md",   # or loc/inbox/done/..., NNN = file name
       "mode": "inline" | "subagent",              # inline: 2 milestones at most, or a rule-3 deviation
       "milestone": 1,                            # current one, 1-based
-      "phase": "start" | "implement" | "proof" | "code-review"
+      "phase": "start" | "implement" | "proof" | "code-review" | "search"
                | "qa" | "final-review" | "journal" | "done",
       "milestones": [
         {"id": "M1", "status": "pending" | "in_progress" | "done" | "stuck",
          "start": "<snapshot hash>" | null, "end": "<snapshot hash>" | null}
       ],
-      "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "qa", "final-review"
+      "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "M1/search",
+                                                 # "qa", "final-review"
         "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ...",
                    "test_author": true},
         "M1/proof": {"rounds": 3, "passed": false, "stuck": "plan"}
@@ -34,6 +35,9 @@ exist in `loc/inbox/` or `loc/inbox/done/` (an older run's milestone may too).
 Only `final-review` has `triage`: the architect's verdicts after a stuck final
 review, in order, each `retry`, `plan` or `ask`. One `retry` allows rounds 4-6;
 `journal` and `done` need a stuck final review's last verdict to be `plan` or `ask`.
+A `M<n>/search` gate (a search milestone) names its iteration log in `log`,
+`loc/state/<NNN>/search-M<n>.md`, which exists once the gate passed; missing
+the target is not a failure, so it passes whenever the search stopped.
 A code-review or final-review gate may keep `verdicts`, the last round's
 counts {"confirmed": n, "needs_validation": n, "rejected": n}.
 A passed `M<n>/red` gate (the new tests failed before the code) keeps the
@@ -70,14 +74,15 @@ KEYS = {"plan", "mode", "milestone", "phase", "milestones", "gates", "deviations
         "next_action", "updated"}
 OPTIONAL = {"deferred", "commit"}
 MODES = {"inline", "subagent"}
-PHASES = {"start", "implement", "proof", "code-review", "qa", "final-review", "journal", "done"}
+PHASES = {"start", "implement", "proof", "code-review", "search", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
 TRIAGE = {"retry", "plan", "ask"}
 VERDICTS = {"confirmed", "needs_validation", "rejected"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
-GATE = re.compile(r"^(M\d+)/(red|proof|code-review)$|^(qa|final-review)$")
+GATE = re.compile(r"^(M\d+)/(red|proof|code-review|search)$|^(qa|final-review)$")
+SEARCH_LOG = re.compile(r"^loc/state/\d{3,}/search-M\d+\.md$")
 STUCK = re.compile(r"^loc/inbox/(done/)?(\d{3,})-(U-)?stuck-[^/]+\.md$")
 NOTES = "Review notes"
 NOTE = re.compile(r"^- (suggestion|unrealistic|enough) \((M\d+ code-review|final-review|planning)\): (.+)$")
@@ -131,7 +136,7 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
     for name, gate in gates.items():
         match = GATE.match(name)
         if not match:
-            problems.append(f"gates: unknown gate {name!r} (M<n>/red, M<n>/proof, M<n>/code-review, qa, final-review)")
+            problems.append(f"gates: unknown gate {name!r} (M<n>/red, M<n>/proof, M<n>/code-review, M<n>/search, qa, final-review)")
             continue
         if match.group(1) and match.group(1) not in ids:
             problems.append(f"gates.{name}: no such milestone")
@@ -174,6 +179,12 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
         output = gate.get("output")
         if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
+        if match.group(2) == "search":
+            log = gate.get("log")
+            if not (isinstance(log, str) and SEARCH_LOG.match(log)):
+                problems.append(f"gates.{name}.log: expected loc/state/<NNN>/search-{match.group(1)}.md")
+            elif passed is True and not (project / log).is_file():
+                problems.append(f"gates.{name}.log: {log} does not exist")
 
 
 def check_verdicts(name: str, match, verdicts, problems: list) -> None:

@@ -105,6 +105,7 @@ Agents are spawned with a clean context and narrow tools, so each one judges onl
 | 🦆 | **Rubber duck** | `rubber-duck` | Independent critic of a plan or a change: are all requirements covered, can every proof really fail | read-only |
 | 🧪 | **QA** | `qa` | Runs the suite once, compares the tests with the plan's starting copy (a weakened test is caught), writes what is missing, gives the verdict | edits tests only |
 | ✍️ | **Test author** | `test-author` | Writes tests from a milestone's behaviour criteria before the code exists | writes tests only, never reads the code |
+| 🎯 | **Searcher** | `searcher` | One try of a search milestone: one change with its hypothesis, read from the log of earlier tries | changes only the files the plan allows, never the metric |
 | 🔎 | **Researcher** | `researcher` | Maps what exists before a change: files, call sites, tests, commands, with `file:line` | documents, never judges |
 | 🔍 | **Code reviewer** | `code-review` | Reviews the diff of every milestone and the final change | read-only |
 

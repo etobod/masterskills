@@ -329,6 +329,54 @@ class CheckPlanTest(unittest.TestCase):
                 .replace("**Status:** open", "**Status:** open\n**Source:** loc/inbox/done/001-brainstorm-fourier.md")
                 + "\n## Plan gate\n" + record + "\n## Resolution\n")
 
+    SEARCH = ("### M1 — najlepsze polecenie\n"
+              "**Kind:** search\n"
+              "**Metric:** `python -B score.py` prints the pass rate\n"
+              "**Target:** >= 80\n"
+              "**Budget:** {budget}\n"
+              "**Give up:** no gain in 8 tries in a row\n"
+              "**May change:** `prompt.txt`\n"
+              "**Measure:** one run, the cases are deterministic\n"
+              "**Hold-out:** none, 40 cases only\n"
+              "**Proof:** {proof}\n")
+    LOG_PROOF = ('`sh "${{CLAUDE_PLUGIN_ROOT}}/scripts/py.sh" scripts/search_log.py --check '
+                 '--log loc/state/007/search-M1.md` → `ok`')
+
+    def search(self, budget="50", proof=None) -> str:
+        return plan(self.SEARCH.format(budget=budget, proof=proof or self.LOG_PROOF.format()))
+
+    def test_search_milestone_needs_no_criteria(self):
+        code, out = self.run_check(self.search())
+        self.assertEqual(code, 0, out)
+
+    def test_search_milestone_needs_its_fields(self):
+        text = self.search().replace("**Hold-out:** none, 40 cases only\n", "").replace("**Target:** >= 80",
+                                                                                        "**Target:** 80%")
+        code, out = self.run_check(text)
+        self.assertEqual(code, 1)
+        self.assertIn("**Hold-out:**", self.problems(out))
+        self.assertIn("`>= <number>`", self.problems(out))
+
+    def test_search_budget_over_50_needs_the_user(self):
+        code, out = self.run_check(self.search(budget="80"))
+        self.assertEqual(code, 1)
+        self.assertIn("user's consent", self.problems(out))
+        code, out = self.run_check(self.search(budget="80 — user approved 2026-11-03"))
+        self.assertEqual(code, 0, out)
+        code, out = self.run_check(self.search(budget="20"))
+        self.assertEqual(code, 0, out)
+
+    def test_search_proof_checks_the_log(self):
+        code, out = self.run_check(self.search(proof="`python -B score.py` → `80`"))
+        self.assertEqual(code, 1)
+        self.assertIn("search_log.py --check", self.problems(out))
+
+    def test_unknown_kind_fails(self):
+        code, out = self.run_check(plan("### M1 — x\n**Kind:** tuning\n**No tests:** documents only\n"
+                                        "**Proof:** `python -m unittest` → `OK`\n"))
+        self.assertEqual(code, 1)
+        self.assertIn("proof or search", self.problems(out))
+
     def test_ready_needs_a_recorded_gate(self):
         for record in ("", "<zapis rund bramki: runda, wynik `check_plan.py`>\n"):
             with self.subTest(record=record):
