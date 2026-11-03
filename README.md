@@ -23,6 +23,7 @@ and they ask you only what they cannot decide.
 - **Decisions without interruptions.** The `architect` settles what you need not decide. What only you can decide becomes a question file with a recommended option, and the work goes on with that option meanwhile.
 - **Reviews that end.** Every gate gets at most three rounds. The `judge` weighs each finding against what the project is for (`fix`, `enough`, or `challenges D-07`), so review does not turn into polishing. Each finding is first checked against the code: one the code contradicts is dropped with a reason, one it cannot settle reaches the judge marked unconfirmed.
 - **Less code.** Before writing code, the team checks whether it needs to exist: already in the project, the standard library, the platform or an installed dependency. Validation, error handling, security and accessibility are never cut.
+- **Search when there is no pass/fail.** A milestone can improve a number toward a target instead (a prompt's pass rate, a run time): a fresh agent tries one idea at a time, only a better score is kept, and the search stops at the target, at its budget or when ideas run out. Missing the target is an accepted result, not a failure.
 - **Bugs fixed at the cause.** `loc-debug` reproduces a bug with a command, pins it with a failing test and tests hypotheses before changing any code.
 - **Memory that survives `/clear`.** Ideas, decisions, plans, open questions and lessons live in `loc/` inside your project, and every session starts with what is open.
 - **Small by contract.** About 470 words of rules are always loaded; each skill loads only when it is used. Word budgets are enforced by the test suite, not promised.
@@ -81,6 +82,23 @@ flowchart TD
     Q --> RV["<b>loc-review</b><br/>final review"]
     RV --> J["<b>loc-journal</b><br/>lessons + overview diagram"]
 ```
+
+### Proof and search milestones
+
+Most milestones are **proof** milestones: a command that must pass. When the goal is a number to improve with no known ceiling, `loc-planning` makes a **search** milestone instead, and only then: never as a way out of a hard proof.
+
+```markdown
+### M2 — best prompt for the classifier
+**Kind:** search
+**Metric:** `python -B eval/score.py` prints the pass rate of `eval/cases/`
+**Target:** >= 80
+**Budget:** 50
+**Give up:** no gain in 8 tries in a row
+**May change:** `prompts/classify.txt`
+**Hold-out:** `eval/holdout/`, scored at the start and the end only
+```
+
+Each try is one change with a hypothesis from a fresh `searcher` agent; `search_log.py` decides keep or revert and keeps the log, so a search resumes after `/clear`. The budget is 50 tries by default and more only with your consent. The metric changes only when the `judge` agrees it was wrong, at most twice. The result reads `20 → 64 (target >= 80), stopped: budget`, with ideas for going further kept as a deferred item.
 
 Everything the workflow writes stays in `loc/`, ignored by git with one line:
 
@@ -144,7 +162,7 @@ Both cover the road from an idea through a plan and test-driven development to r
 
 | | masterskills |
 |---|---|
-| **Context** | ~470 words of rules always loaded; a skill loads only when used. Budgets are checked by the test suite: a skill core ≤ 800 words, an agent ≤ 500 |
+| **Context** | ~470 words of rules always loaded; a skill loads only when used. Budgets are checked by the test suite: a skill core ≤ 800 words, an agent ≤ 600 |
 | **Interruptions** | The `architect` decides what you need not; your questions wait in files with a recommended option while work continues; `loc-director` runs a course overnight |
 | **Review loops** | At most three rounds per gate, then recorded and carried on; the `judge` stops fixes the project does not need |
 | **Tests you can trust** | A red gate that must fail on an assertion; tests written blind by `test-author`; QA compares the final tests with the plan's starting copy |
