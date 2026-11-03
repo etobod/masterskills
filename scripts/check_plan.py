@@ -86,7 +86,7 @@ PERFORMER = re.compile(r"^\*\*Performer:\*\*\s*(?P<value>.*?)\s*$")
 PERFORMERS = re.compile(r"^(auto|agent|user \((blocking|deferrable)\))$")
 MANUAL_CHECK = re.compile(r"^\*\*Manual check:\*\*")
 KIND = re.compile(r"^\*\*Kind:\*\*\s*(?P<value>.*?)\s*$")
-SEARCH_FIELDS = ["Metric", "Target", "Budget", "Give up", "May change", "Measure", "Hold-out"]
+SEARCH_FIELDS = ["Metric", "Quick metric", "Baseline", "Target", "Budget", "Give up", "May change", "Measure", "Hold-out"]
 SEARCH_FIELD = re.compile(r"^\*\*(?P<key>" + "|".join(SEARCH_FIELDS) + r"):\*\*\s*(?P<value>.*?)\s*$")
 SEARCH_TARGET = re.compile(r"^`?\s*(>=|<=|≥|≤)\s*-?\d+(\.\d+)?\s*%?\s*`?$")
 SEARCH_BUDGET = re.compile(r"^(?P<n>\d+)\b(?P<rest>.*)$")

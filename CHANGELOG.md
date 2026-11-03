@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.25.1 — 2026-11-03
+
+- Search milestones measure in proportion to the work. Planning first asks whether a measurement is needed at all: a result that already exists (an earlier plan, a log, the user's results) is the `**Baseline:**`, and nothing is measured before the first try. A search ran hours of baseline runs before its first change, on numbers the project already had.
+- New required `**Quick metric:**`: when the full metric is slower than making a change, the tries run on a smaller set (the cases that failed before plus a few that pass). Measuring grows with progress: minutes at the start, a wider set only when gains show. The full metric only confirms a quick gain that meets the target (`search_log.py --confirm`, which uses no try) and runs once at the end; repeated runs and the hold-out only at the end. Time spent measuring is never a reason to give up.
+- `rubber-duck` flags measuring out of proportion as Blocking.
+
 ## 2.25.0 — 2026-11-03
 
 - Search milestones (`**Kind:** search`): a milestone that improves a number toward a target (a pass rate, a speed) within a budget of iterations, 50 by default, more only with the user's consent. Missing the target is accepted, never a stuck gate. Every other milestone is a proof milestone, as before.

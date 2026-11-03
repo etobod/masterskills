@@ -91,6 +91,8 @@ Most milestones are **proof** milestones: a command that must pass. When the goa
 ### M2 — best prompt for the classifier
 **Kind:** search
 **Metric:** `python -B eval/score.py` prints the pass rate of `eval/cases/`
+**Quick metric:** `python -B eval/score.py --failed` (the cases plan 041 failed, 2 min)
+**Baseline:** 64, plan 041's run of the same metric
 **Target:** >= 80
 **Budget:** 50
 **Give up:** no gain in 8 tries in a row
@@ -98,7 +100,7 @@ Most milestones are **proof** milestones: a command that must pass. When the goa
 **Hold-out:** `eval/holdout/`, scored at the start and the end only
 ```
 
-Each try is one change with a hypothesis from a fresh `searcher` agent; `search_log.py` decides keep or revert and keeps the log, so a search resumes after `/clear`. The budget is 50 tries by default and more only with your consent. The metric changes only when the `judge` agrees it was wrong, at most twice. The result reads `20 → 64 (target >= 80), stopped: budget`, with ideas for going further kept as a deferred item.
+Measuring stays in proportion to the work: a result the project already has is the baseline, tries run on a quick metric, and the full one only confirms a gain that meets the target and runs once at the end. Each try is one change with a hypothesis from a fresh `searcher` agent; `search_log.py` decides keep or revert and keeps the log, so a search resumes after `/clear`. The budget is 50 tries by default and more only with your consent. The metric changes only when the `judge` agrees it was wrong, at most twice. The result reads `64 → 78 (target >= 80), stopped: budget`, with ideas for going further kept as a deferred item.
 
 Everything the workflow writes stays in `loc/`, ignored by git with one line:
 

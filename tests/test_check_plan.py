@@ -332,6 +332,8 @@ class CheckPlanTest(unittest.TestCase):
     SEARCH = ("### M1 — najlepsze polecenie\n"
               "**Kind:** search\n"
               "**Metric:** `python -B score.py` prints the pass rate\n"
+              "**Quick metric:** same as Metric, 40 cases take seconds\n"
+              "**Baseline:** 64, plan 006 ran the same metric on this code\n"
               "**Target:** >= 80\n"
               "**Budget:** {budget}\n"
               "**Give up:** no gain in 8 tries in a row\n"
@@ -350,11 +352,13 @@ class CheckPlanTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
     def test_search_milestone_needs_its_fields(self):
-        text = self.search().replace("**Hold-out:** none, 40 cases only\n", "").replace("**Target:** >= 80",
-                                                                                        "**Target:** 80%")
+        text = (self.search().replace("**Hold-out:** none, 40 cases only\n", "")
+                .replace("**Target:** >= 80", "**Target:** 80%")
+                .replace("**Quick metric:** same as Metric, 40 cases take seconds\n", ""))
         code, out = self.run_check(text)
         self.assertEqual(code, 1)
         self.assertIn("**Hold-out:**", self.problems(out))
+        self.assertIn("**Quick metric:**", self.problems(out))
         self.assertIn("`>= <number>`", self.problems(out))
 
     def test_search_budget_over_50_needs_the_user(self):

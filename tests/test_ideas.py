@@ -146,6 +146,14 @@ class SearchMilestoneTest(unittest.TestCase):
         planning = read("skills/loc-planning/SKILL.md")
         self.assertIn("references/search.md", planning)
         self.assertIn("never a way out of a hard proof", planning)
+        self.assertIn("whether a measurement is needed at all", planning)
+
+    def test_measuring_stays_in_proportion(self):
+        reference = read("skills/loc-orchestrate/references/search.md")
+        for part in ("Is the number already known?", "**Baseline:**", "**Quick metric:**", "--confirm",
+                     "nothing is measured before the first try", "Measuring grows with progress", "time spent measuring is never a reason"):
+            self.assertIn(part, reference)
+        self.assertIn("measuring out of proportion", read("agents/rubber-duck.md"))
         self.assertIn("**Kind:** search", read("templates/loc/inbox/plan.md"))
 
     def test_kind_is_proof_or_search_never_traditional(self):
@@ -157,7 +165,7 @@ class SearchMilestoneTest(unittest.TestCase):
         searcher = read("agents/searcher.md")
         self.assertIn("tools: Read, Grep, Glob, Edit, Write", front(searcher))
         self.assertIn("Never touch the metric", searcher)
-        self.assertIn("never whether it will reach the target", read("agents/rubber-duck.md"))
+        self.assertIn("never whether it reaches the target", read("agents/rubber-duck.md"))
         self.assertIn("metric, cases, hold-out or guard", read("agents/judge.md"))
 
 

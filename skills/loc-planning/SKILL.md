@@ -77,7 +77,7 @@ The file comes from the template with all sections. Fill them in English:
 
 ### Search milestones
 
-A milestone is a **proof** milestone unless the requirement is a number to improve with an unknown ceiling (a pass rate, a speed), or the user or brainstorm asked for a search; never a way out of a hard proof. Unsure: the `architect` (Decide). A search milestone (`**Kind:** search`, its fields, the budget, `**Leads:**` from the `researcher`): `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/search.md`.
+A milestone is a **proof** milestone unless the requirement is a number to improve with an unknown ceiling (a pass rate, a speed), or the user or brainstorm asked for a search; never a way out of a hard proof. Unsure: the `architect` (Decide). First ask whether a measurement is needed at all: a result that already exists is the baseline. A search milestone (`**Kind:** search`, its fields, the budget, `**Leads:**` from the `researcher`): `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/search.md`.
 
 ### Tests in the plan
 
