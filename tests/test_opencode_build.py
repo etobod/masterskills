@@ -101,6 +101,19 @@ class OpenCodeBuildTest(unittest.TestCase):
         base = out.resolve().as_posix()
         self.assertIn(f'    "{base}/masterskills/**": allow', qa)
 
+    def test_date_runs_in_powershell_too(self):
+        # OpenCode on Windows runs commands in PowerShell, where `date "+%Y-%m-%d"` fails.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        built = [p.read_text(encoding="utf-8") for p in out.rglob("*.md")]
+        self.assertFalse([t for t in built if 'date "+' in t])
+        state = (out / "skills" / "loc-orchestrate" / "references" / "state.md").read_text(encoding="utf-8")
+        command = re.search(r"`(\S+ -c \"import time; print\(time\.strftime\('%Y-%m-%d %H:%M'\)\)\")`", state)
+        self.assertTrue(command, "state.md takes the time from Python")
+        python, code = command.group(1).split(" -c ", 1)
+        result = subprocess.run([python, "-c", code.strip('"')], capture_output=True, text=True)
+        self.assertRegex(result.stdout.strip(), r"^\d{4}-\d\d-\d\d \d\d:\d\d$")
+
     def test_code_review_is_an_agent(self):
         # Claude Code's code-review skill is built in; OpenCode gets an agent instead.
         out = self.scratch()
