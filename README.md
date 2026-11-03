@@ -208,6 +208,18 @@ A deny from a guard wins over an allow. A managed setting that allows only manag
 
 `opencode/build.py` translates the plugin for [OpenCode](https://opencode.ai) at install time: skills, a command per skill, agents with permissions, and the hooks as an OpenCode plugin. On Windows, clone the repository and run `opencode-install.bat`; elsewhere run `python opencode/build.py --install`. Restart OpenCode afterwards.
 
+**Slow models: raise the request timeout.** OpenCode cuts a single model request after 5 minutes by default. A reasoning model can think longer than that inside a review agent; the agent then returns an empty answer, and the gate counts it as a lost report and asks again. Give the provider you use a longer timeout in `~/.config/opencode/opencode.json` (milliseconds; `false` turns it off), then restart OpenCode:
+
+```json
+{
+  "provider": {
+    "opencode-go": { "options": { "timeout": 900000 } }
+  }
+}
+```
+
+Use your provider's id: the part before `/` in your `model` (`opencode-go/deepseek-v4.1-flash` → `opencode-go`). The install never changes this value.
+
 ## License
 
 [MIT](LICENSE)
