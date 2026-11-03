@@ -101,6 +101,23 @@ class SearchLogTest(unittest.TestCase):
         self.assertTrue(any("Metric" in issue for issue in out["issues"]))
         self.assertTrue(any("baseline" in issue for issue in out["issues"]))
 
+    def test_quick_metric_needs_the_full_one_to_stop_at_the_target(self):
+        self.run_log("--start", "--metric", "python score.py", "--quick", "python score.py --failed-only",
+                     "--baseline", "20", "--target", ">= 80", "--budget", "10", "--give-up", "5")
+        code, out = self.add("85")
+        self.assertEqual((out["keep"], out["stop"], out["confirm"]), (True, None, True))
+        self.assertEqual(self.run_log("--confirm", "--full", "70")[1]["stop"], None)
+        code, out = self.add("90")
+        self.assertEqual(out["iteration"], 2, "a confirmation is not a try")
+        self.assertEqual(self.run_log("--confirm", "--full", "82")[1]["stop"], "target")
+        self.assertEqual(self.run_log("--check"), (0, "ok"))
+        self.assertIn("**Quick metric:**", self.log.read_text(encoding="utf-8"))
+
+    def test_confirm_needs_a_quick_metric(self):
+        self.start()
+        self.assertEqual(self.run_log("--confirm", "--full", "90")[0], 1)
+        self.assertFalse(self.add("30")[1]["confirm"])
+
     def test_start_refuses_an_existing_log_and_a_bad_target(self):
         self.start()
         self.assertEqual(self.start()[0], 1)

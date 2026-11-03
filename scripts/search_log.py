@@ -3,11 +3,18 @@
 
 The orchestrator measures; this script decides, so a model never judges its own score.
 
-  --start --log <path> --metric "<command>" --baseline <x> --target ">= 80" --budget <n> --give-up <n>
-      creates the log; prints {"best", "stop"} (stop "target" when the baseline already meets it)
+  --start --log <path> --metric "<command>" [--quick "<command>"] --baseline <x> --target ">= 80"
+          --budget <n> --give-up <n>
+      creates the log; prints {"best", "stop"} (stop "target" when the baseline already meets it).
+      With --quick, the baseline and every try are quick scores, and a quick score never ends the
+      search by itself: the full metric confirms it.
   --add --log <path> --score <x> --hypothesis "<idea>" --change "<what changed>"
-      records a try; prints {"iteration", "keep", "best", "stop"}. `keep` only when the score beats
-      the best so far in the target's direction; `stop` is "target", "budget", "give-up" or null.
+      records a try; prints {"iteration", "keep", "best", "stop", "confirm"}. `keep` only when the
+      score beats the best so far in the target's direction; `stop` is "target", "budget",
+      "give-up" or null; `confirm` is true when a kept quick score meets the target.
+  --confirm --log <path> --full <x>
+      records the full metric of the kept change; meeting the target stops the search ("target"),
+      otherwise it goes on. Not a try: it uses no iteration. Prints {"stop"}.
   --metric-change --log <path> --reason "<why>" --baseline <x> --best <x>
       records a metric change the judge approved, with the baseline and best measured again;
       at most 2 per search, a third prints {"ok": false, "question": true} and exits 1.
@@ -71,6 +78,8 @@ def state(log: dict) -> dict:
     higher, _ = target(log["fields"]["Target"])
     best, tries, streak, changes = None, 0, 0, 0
     for row in log["rows"]:
+        if row["kept"].startswith("full"):
+            continue
         if row["kept"] in ("baseline", "metric change"):
             best, streak = number(row["score"]), 0
             changes += row["kept"] == "metric change"
@@ -107,15 +116,17 @@ def start(args) -> int:
         return fail("budget and give-up are at least 1")
     path.parent.mkdir(parents=True, exist_ok=True)
     baseline = number(args.baseline)
+    quick = f"**Quick metric:** `{args.quick}`\n" if args.quick else ""
     path.write_text(
-        f"# Search log\n\n**Metric:** `{args.metric}`\n**Target:** {args.target}\n**Budget:** {args.budget}\n"
+        f"# Search log\n\n**Metric:** `{args.metric}`\n{quick}**Target:** {args.target}\n**Budget:** {args.budget}\n"
         f"**Give up:** {args.give_up}\n\n{HEADER}| 0 | {baseline:g} | baseline | - | - |\n",
         encoding="utf-8", newline="\n")
     higher, goal = target(args.target)
-    stop = "target" if reached(baseline, higher, goal) else None
+    stop = "target" if reached(baseline, higher, goal) and not args.quick else None
     if stop:
         append(path, "\n**Stopped:** target\n")
-    print(json.dumps({"best": baseline, "stop": stop}))
+    print(json.dumps({"best": baseline, "stop": stop,
+                      "confirm": bool(args.quick) and reached(baseline, higher, goal)}))
     return 0
 
 
@@ -133,8 +144,9 @@ def add(args) -> int:
                  f"{clean(args.change)} |\n")
     best = score if keep else now["best"]
     streak = 0 if keep else now["streak"] + 1
-    stop = None
-    if keep and reached(best, higher, goal):
+    stop, quick = None, "Quick metric" in log["fields"]
+    confirm = keep and quick and reached(best, higher, goal)
+    if keep and not quick and reached(best, higher, goal):
         stop = "target"
     elif iteration >= int(log["fields"]["Budget"]):
         stop = "budget"
@@ -142,7 +154,25 @@ def add(args) -> int:
         stop = "give-up"
     if stop:
         append(path, f"\n**Stopped:** {stop}\n")
-    print(json.dumps({"iteration": iteration, "keep": keep, "best": best, "stop": stop}))
+    print(json.dumps({"iteration": iteration, "keep": keep, "best": best, "stop": stop, "confirm": confirm}))
+    return 0
+
+
+def confirm(args) -> int:
+    path = Path(args.log)
+    log = read(path)
+    if log["stopped"]:
+        return fail(f"the search stopped: {log['stopped']}")
+    if "Quick metric" not in log["fields"]:
+        return fail("no quick metric: the score of every try is already the full one")
+    full = number(args.full)
+    higher, goal = target(log["fields"]["Target"])
+    met = reached(full, higher, goal)
+    append(path, f"| c | {full:g} | {'full: target met' if met else 'full: below target'} | full metric | - |\n")
+    stop = "target" if met else None
+    if stop:
+        append(path, "\n**Stopped:** target\n")
+    print(json.dumps({"stop": stop}))
     return 0
 
 
@@ -184,7 +214,7 @@ def check(args) -> int:
         issues.append("the first row is the baseline")
     expected = 1
     for row in log["rows"][1:]:
-        if row["kept"] == "metric change":
+        if row["kept"] == "metric change" or row["kept"].startswith("full"):
             continue
         if row["kept"] not in ("kept", "reverted"):
             issues.append(f"row {row['n']}: kept is 'kept' or 'reverted'")
@@ -206,10 +236,12 @@ def check(args) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     action = parser.add_mutually_exclusive_group(required=True)
-    for name in ("start", "add", "metric-change", "stop", "check"):
+    for name in ("start", "add", "confirm", "metric-change", "stop", "check"):
         action.add_argument(f"--{name}", action="store_true")
     parser.add_argument("--log", required=True)
     parser.add_argument("--metric")
+    parser.add_argument("--quick")
+    parser.add_argument("--full")
     parser.add_argument("--baseline")
     parser.add_argument("--target")
     parser.add_argument("--budget", type=int)
@@ -220,7 +252,7 @@ def main() -> int:
     parser.add_argument("--best")
     parser.add_argument("--reason", default="")
     args = parser.parse_args()
-    needed = {"start": ("metric", "baseline", "target", "budget", "give_up"), "add": ("score",),
+    needed = {"start": ("metric", "baseline", "target", "budget", "give_up"), "add": ("score",), "confirm": ("full",),
               "metric_change": ("reason", "baseline", "best"), "stop": ("reason",), "check": ()}
     name = next(key for key in needed if getattr(args, key))
     missing = [key for key in needed[name] if getattr(args, key) in (None, "")]
@@ -229,7 +261,7 @@ def main() -> int:
     if name != "start" and name != "check" and not Path(args.log).is_file():
         return fail(f"no log at {args.log}; start it with --start")
     try:
-        return {"start": start, "add": add, "metric_change": metric_change, "stop": stop, "check": check}[name](args)
+        return {"start": start, "add": add, "confirm": confirm, "metric_change": metric_change, "stop": stop, "check": check}[name](args)
     except ValueError as error:
         return fail(f"not a number: {error}")
 
