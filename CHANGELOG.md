@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.25.4 — 2026-11-03
+
+- OpenCode: the install denies reading the agent definitions (`agents/**` in the config directory). A session read `rubber-duck.md` before calling it and stopped at a permission prompt; an agent is called, never read.
+
 ## 2.25.3 — 2026-11-03
 
 - Agents never read the plugin's skills: their rules are in their own definition. A `rubber-duck` spent its time re-reading `loc-planning` and `loc-orchestrate` while judging a plan. In OpenCode the generator denies the skills directory to every agent without the `Skill` tool (only `qa` keeps it).

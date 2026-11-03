@@ -204,7 +204,8 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertEqual(data["instructions"], ["A.md", "CLAUDE.md"])
         base = config.resolve().as_posix()
         self.assertEqual(data["permission"], {"bash": "ask", "external_directory": {
-            "D:/data/**": "deny", f"{base}/masterskills/**": "allow", f"{base}/skills/**": "allow"}})
+            "D:/data/**": "deny", f"{base}/masterskills/**": "allow", f"{base}/skills/**": "allow",
+            f"{base}/agents/**": "deny"}})
         version = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
         self.assertIn(f"masterskills {version}", result.stdout)
         self.assertIn("Restart OpenCode", result.stdout)

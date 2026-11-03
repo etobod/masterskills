@@ -204,12 +204,13 @@ def build(out: Path) -> str:
 def configure(out: Path) -> list:
     """Add to opencode.json what every project needs, leaving the user's values alone:
     the project's CLAUDE.md in `instructions` (OpenCode skips it when an AGENTS.md
-    exists) and reading the plugin's own files without a prompt. Also removes the
+    exists), reading the plugin's own files without a prompt, and never reading agent definitions. Also removes the
     core rules entry 1.13.0 added: the plugin now puts them in the system prompt.
     Returns what could not be added, for the user to add by hand."""
     config = out / "opencode.json"
     base = out.resolve().as_posix()
-    allow = {f"{base}/masterskills/**": "allow", f"{base}/skills/**": "allow"}
+    # An agent is called, never read: its definition is for OpenCode, not for the session.
+    allow = {f"{base}/masterskills/**": "allow", f"{base}/skills/**": "allow", f"{base}/agents/**": "deny"}
     manual = ['"instructions": ["CLAUDE.md"]',
               '"permission": {"external_directory": ' + json.dumps(allow) + "}"]
     data = {"$schema": "https://opencode.ai/config.json"}
