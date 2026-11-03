@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.25.3 — 2026-11-03
+
+- Agents never read the plugin's skills: their rules are in their own definition. A `rubber-duck` spent its time re-reading `loc-planning` and `loc-orchestrate` while judging a plan. In OpenCode the generator denies the skills directory to every agent without the `Skill` tool (only `qa` keeps it).
+
 ## 2.25.2 — 2026-11-03
 
 - An agent's empty answer is a lost report, never "no findings": the session asks that same agent once for its report (never a new review); still empty fails the gate's round. A `rubber-duck` wrote 16 findings only in its reasoning and returned nothing, and the plan gate passed as if the plan were clean. Agents already end with "No findings." when there are none, so a correct empty review never triggers the question.

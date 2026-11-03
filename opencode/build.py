@@ -140,8 +140,10 @@ def agent(source: Path, out: Path) -> str:
     rules = "".join(f"  {key}: allow\n" for key in allowed)
     # "*" would also cover external_directory; keep the plugin's own files readable.
     base = out.resolve().as_posix()
+    # Only an agent that runs a skill reads the skills; the others have their rules in their own file.
+    skills = "allow" if "Skill" in tools else "deny"
     rules += (f"  external_directory:\n    \"{base}/masterskills/**\": allow\n"
-              f"    \"{base}/skills/**\": allow\n")
+              f"    \"{base}/skills/**\": {skills}\n")
     head = (f"---\ndescription: {json.dumps(fields.get('description', ''), ensure_ascii=False)}\n"
             f"mode: subagent\npermission:\n  \"*\": deny\n{rules}  edit: {edit}\n  bash: {bash}\n---\n")
     return head + translate(body, out)

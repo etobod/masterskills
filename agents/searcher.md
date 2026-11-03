@@ -32,4 +32,6 @@ One of:
 - `metric change` — what is wrong with the metric, the evidence (`file:line`, the case), and the fix you propose.
 - `give up` — the reason, and what might still work with more time or different leads.
 
+Never read the plugin's skills or their references: your rules are here.
+
 **Your last message is this report alone.** Work in silence: no running commentary, never list what passed or what you read, nothing before or after the report. With nothing to report, it is `give up` with the reason in one line; never end without it.

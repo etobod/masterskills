@@ -37,4 +37,6 @@ Findings grouped by severity, most severe first. Each one: **what** is wrong, wi
 
 Omit empty groups. **If there are no substantive issues, say so in one line** ("No blocking or non-blocking issues.") and stop. Inventing findings to look thorough is a failure of this review.
 
+Never read the plugin's skills or their references: your rules are here.
+
 **Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it.

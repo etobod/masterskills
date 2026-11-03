@@ -100,6 +100,12 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.assertIn("  skill: allow", qa)
         base = out.resolve().as_posix()
         self.assertIn(f'    "{base}/masterskills/**": allow', qa)
+        self.assertIn(f'    "{base}/skills/**": allow', qa)
+        duck = front((out / "agents" / "rubber-duck.md").read_text(encoding="utf-8")).splitlines()
+        self.assertIn(f'    "{base}/skills/**": deny', duck, "an agent without Skill never reads the skills")
+        for path in (ROOT / "agents").glob("*.md"):
+            if path.name != "qa.md":
+                self.assertIn("Never read the plugin's skills", path.read_text(encoding="utf-8"), path.name)
 
     def test_date_runs_in_powershell_too(self):
         # OpenCode on Windows runs commands in PowerShell, where `date "+%Y-%m-%d"` fails.
