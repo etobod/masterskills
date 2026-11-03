@@ -127,6 +127,20 @@ class CheckStateTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unknown gate", "\n".join(out["problems"]))
 
+    def test_search_gate_names_its_log(self):
+        log = "loc/state/007/search-M1.md"
+        running = {**state({"M1/search": {"rounds": 1, "passed": False, "stuck": None, "log": log}}),
+                   "phase": "search"}
+        self.assertEqual(self.run_check(running)[0], 0, self.run_check(running)[1])
+        passed = state({"M1/search": {"rounds": 1, "passed": True, "stuck": None, "log": log}})
+        code, out = self.run_check(passed)
+        self.assertEqual(code, 1)
+        self.assertIn("does not exist", "\n".join(out["problems"]))
+        self.assertEqual(self.run_check(passed, files=(log,))[0], 0)
+        code, out = self.run_check(state({"M1/search": {"rounds": 1, "passed": False, "stuck": None}}))
+        self.assertEqual(code, 1)
+        self.assertIn("search-M1.md", "\n".join(out["problems"]))
+
     def test_red_gate_of_a_missing_milestone_is_rejected(self):
         code, out = self.run_check(state({"M2/red": {"rounds": 0, "passed": False, "stuck": None}}))
         self.assertEqual(code, 1)

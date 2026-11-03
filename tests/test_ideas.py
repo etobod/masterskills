@@ -27,10 +27,10 @@ def measure():
 class BudgetTest(unittest.TestCase):
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
-        self.assertEqual(overrides["skills/loc-orchestrate/SKILL.md"], 1300)
+        self.assertEqual(overrides["skills/loc-orchestrate/SKILL.md"], 1350)
         self.assertEqual(overrides["skills/loc-review/SKILL.md"], 900)
         self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
-        self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2650)
+        self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2720)
         self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
         self.assertEqual(overrides["agents/judge.md"], 650)
         self.assertEqual(overrides["agents/rubber-duck.md"], 650)
@@ -132,6 +132,33 @@ class AgentAnswerTest(unittest.TestCase):
 
     def test_agent_budget_is_600(self):
         self.assertEqual(measure().LIMITS["agent"], 600)
+
+
+class SearchMilestoneTest(unittest.TestCase):
+    """A search milestone improves a number toward a target; missing it is accepted, never stuck."""
+
+    def test_skills_point_to_the_search_reference(self):
+        reference = read("skills/loc-orchestrate/references/search.md")
+        for part in ("**Kind:** search", "search_log.py --start", "search_log.py --add", "--metric-change",
+                     "`searcher`", "`judge`", "Could go further", "`deferred`", "never stuck"):
+            self.assertIn(part, reference)
+        self.assertIn("references/search.md", read("skills/loc-orchestrate/SKILL.md"))
+        planning = read("skills/loc-planning/SKILL.md")
+        self.assertIn("references/search.md", planning)
+        self.assertIn("never a way out of a hard proof", planning)
+        self.assertIn("**Kind:** search", read("templates/loc/inbox/plan.md"))
+
+    def test_kind_is_proof_or_search_never_traditional(self):
+        for rel in ("skills/loc-orchestrate/references/search.md", "skills/loc-planning/SKILL.md",
+                    "agents/searcher.md", "agents/rubber-duck.md"):
+            self.assertNotIn("traditional", read(rel).lower(), rel)
+
+    def test_agents_know_the_search(self):
+        searcher = read("agents/searcher.md")
+        self.assertIn("tools: Read, Grep, Glob, Edit, Write", front(searcher))
+        self.assertIn("Never touch the metric", searcher)
+        self.assertIn("never whether it will reach the target", read("agents/rubber-duck.md"))
+        self.assertIn("metric, cases, hold-out or guard", read("agents/judge.md"))
 
 
 if __name__ == "__main__":

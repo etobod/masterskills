@@ -27,6 +27,7 @@
 <!-- A milestone that changes no code: instead of Criteria, `**No tests:** <reason>`. -->
 **Performer:** auto
 **Proof:** `<command>` → `<expected output>`
+<!-- A search milestone (a number to improve, missing the target accepted): `**Kind:** search` and its fields instead of Criteria, see skills/loc-orchestrate/references/search.md. -->
 <!-- Optional, only for what no command can see (look, feel, a real device), checked after the proof: `**Performer:** user (blocking)` or `user (deferrable)` and `**Manual check:** <what the user looks at>`. -->
 
 ## Risks and decisions

@@ -24,6 +24,10 @@ Checks, in order:
     `## Commands`, since a stub file alone proves nothing runs;
   - `**Performer:**`, when present, is `auto`, `agent`, or `user` with
     `(blocking)` or `(deferrable)`;
+  - `**Kind:**`, when present, is `proof` (the default) or `search`; a search milestone
+    has `**Metric:**`, `**Target:**` (`>= <n>` or `<= <n>`), `**Budget:**` (a number; over 50
+    only with `user approved <date>`), `**Give up:**`, `**May change:**`, `**Measure:**` and
+    `**Hold-out:**`, needs no criteria, and its proof is `search_log.py --check` → `ok`;
   - a criterion's test is not a shell check (`grep`, `test -f`, `open`...) and
     names a test (`test` or `spec` in it), not a source file;
   - a proof (any performer but `agent`) reads `` `<command>` → `<output>` `` and does not just
@@ -81,6 +85,13 @@ CRITERION = re.compile(r"^- (K\d+)( \(behaviour\))?: (?P<what>.+?)(?: → (?P<te
 PERFORMER = re.compile(r"^\*\*Performer:\*\*\s*(?P<value>.*?)\s*$")
 PERFORMERS = re.compile(r"^(auto|agent|user \((blocking|deferrable)\))$")
 MANUAL_CHECK = re.compile(r"^\*\*Manual check:\*\*")
+KIND = re.compile(r"^\*\*Kind:\*\*\s*(?P<value>.*?)\s*$")
+SEARCH_FIELDS = ["Metric", "Target", "Budget", "Give up", "May change", "Measure", "Hold-out"]
+SEARCH_FIELD = re.compile(r"^\*\*(?P<key>" + "|".join(SEARCH_FIELDS) + r"):\*\*\s*(?P<value>.*?)\s*$")
+SEARCH_TARGET = re.compile(r"^`?\s*(>=|<=|≥|≤)\s*-?\d+(\.\d+)?\s*%?\s*`?$")
+SEARCH_BUDGET = re.compile(r"^(?P<n>\d+)\b(?P<rest>.*)$")
+BUDGET_LIMIT = 50
+USER_APPROVED = re.compile(r"user approved \d{4}-\d{2}-\d{2}")
 NO_TESTS = re.compile(r"^\*\*No tests:\*\*\s*(?P<reason>.*?)\s*$")
 SUITE = "TEST-PLAN.md"
 # A criterion's "test" that is really a shell check: it proves a word or a file exists, not behaviour.
@@ -162,6 +173,12 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
     """criteria: [(line number, text)]; performer: (line number, value) or None;
     tested: {"criteria", "no_tests" (reason or None), "suite"} seen in the milestone."""
     user = performer is not None and performer[1].startswith("user")
+    kind = tested.get("kind")
+    if kind is not None and kind[1] not in ("proof", "search"):
+        issues.append({"line": kind[0], "problem": f"{name}: **Kind:** is proof or search"})
+    if kind is not None and kind[1] == "search":
+        check_search(name, tested, issues)
+        return
     if tested["no_tests"] == "":
         issues.append({"line": 0, "problem": f"{name}: **No tests:** needs a reason, e.g. 'documents only'"})
     elif not (tested["criteria"] or tested["no_tests"] or tested["suite"]):
@@ -214,6 +231,33 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
         elif not TEST_NAME.search(test):
             issues.append({"line": number, "problem": f"{name}: criterion {match.group(1)}: {test} names no "
                            "test; give the test file and the test's name (`tests/app.test.js::polish greeting`)"})
+
+
+def check_search(name: str, tested: dict, issues: list) -> None:
+    """A search milestone: its fields, its budget and a proof that checks the search log."""
+    fields = tested.get("fields", {})
+    for key in SEARCH_FIELDS:
+        if not fields.get(key, (0, ""))[1]:
+            issues.append({"line": 0, "problem": f"{name}: a search milestone needs **{key}:** "
+                           "(${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/search.md)"})
+    if fields.get("Target", (0, ""))[1] and not SEARCH_TARGET.match(fields["Target"][1]):
+        issues.append({"line": fields["Target"][0], "problem": f"{name}: **Target:** reads `>= <number>` "
+                       "or `<= <number>`, e.g. `>= 80`"})
+    budget = fields.get("Budget", (0, ""))
+    if budget[1]:
+        match = SEARCH_BUDGET.match(budget[1])
+        if not match or int(match.group("n")) < 1:
+            issues.append({"line": budget[0], "problem": f"{name}: **Budget:** is a number of iterations, "
+                           f"{BUDGET_LIMIT} by default"})
+        elif int(match.group("n")) > BUDGET_LIMIT and not USER_APPROVED.search(match.group("rest")):
+            issues.append({"line": budget[0], "problem": f"{name}: a budget over {BUDGET_LIMIT} needs the "
+                           "user's consent: '**Budget:** <n> — user approved <date>'"})
+    proof = tested.get("proof")
+    if proof and not ("search_log.py" in proof[1] and "--check" in proof[1]
+                      and CHECKABLE_PROOF.match(proof[1])):
+        issues.append({"line": proof[0], "problem": f"{name}: a search milestone's proof checks its log: "
+                       "'**Proof:** `sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" scripts/search_log.py --check "
+                       "--log loc/state/<NNN>/search-M<n>.md` → `ok`'"})
 
 
 PROJECT = None  # set by a caller that checks plans of another project (migrate.py)
@@ -386,6 +430,13 @@ def check(text: str) -> dict:
             criteria.append((number, line))
         elif milestone and MANUAL_CHECK.match(line):
             tested["manual"] = number
+            in_criteria = False
+        elif milestone and KIND.match(line):
+            tested["kind"] = (number, KIND.match(line).group("value"))
+            in_criteria = False
+        elif milestone and SEARCH_FIELD.match(line):
+            field = SEARCH_FIELD.match(line)
+            tested.setdefault("fields", {})[field.group("key")] = (number, field.group("value"))
             in_criteria = False
         elif milestone and PERFORMER.match(line):
             performer = (number, PERFORMER.match(line).group("value"))

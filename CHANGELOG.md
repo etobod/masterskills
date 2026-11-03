@@ -2,6 +2,14 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.25.0 — 2026-11-03
+
+- Search milestones (`**Kind:** search`): a milestone that improves a number toward a target (a pass rate, a speed) within a budget of iterations, 50 by default, more only with the user's consent. Missing the target is accepted, never a stuck gate. Every other milestone is a proof milestone, as before.
+- `loc-planning` picks the kind by one test: a search only when the requirement is a number to improve or the user asked for one, never as a way out of a hard proof. The plan sets the metric, target, stop rule, how a result is measured, a hold-out set and leads from the `researcher`; `check_plan.py` checks those fields.
+- `loc-orchestrate` runs the loop from `references/search.md`: a fresh `searcher` agent per try, the new `search_log.py` decides keep, revert and stop and keeps the log a resumed run continues from. Only a better result is committed; the search stops at the target, never past it. A metric change needs the `judge`, at most two. The summary gives the start and best score, the stop reason and how it could go further, also as a `deferred` file.
+- `rubber-duck` judges only a search's preparation and checks the kind both ways; `judge` keeps review fixes away from the metric, cases, hold-out and guard. `check_state.py` knows the `search` phase and the `M<n>/search` gate.
+- Budgets raised: `loc-planning` `SKILL.md` 2720 words, `loc-orchestrate` `SKILL.md` 1350.
+
 ## 2.24.2 — 2026-11-03
 
 - OpenCode build: `date "+%Y-%m-%d"` in the skills becomes a Python one-liner, since OpenCode on Windows runs commands in PowerShell, where `date` fails and every dated step cost a retry.
