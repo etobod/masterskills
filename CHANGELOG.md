@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.25.5 — 2026-11-03
+
+- OpenCode: the director's course goes on. OpenCode has no Stop event, so the hooks plugin runs the Stop hook when the main session goes idle and sends its reason as the next message, as Claude Code does when it blocks the end of a turn. After one push the next idle counts as `stop_hook_active`, so a session waiting for an agent is not pushed in a loop; agents' sessions are never pushed. A course in OpenCode ended after one plan's progress report with "Resume: /loc-director".
+
 ## 2.25.4 — 2026-11-03
 
 - OpenCode: the install denies reading the agent definitions (`agents/**` in the config directory). A session read `rubber-duck.md` before calling it and stopped at a permission prompt; an agent is called, never read.

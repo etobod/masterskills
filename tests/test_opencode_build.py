@@ -168,6 +168,41 @@ class OpenCodeBuildTest(unittest.TestCase):
         hooks = json.loads((out / "masterskills" / "hooks" / "hooks.json").read_text(encoding="utf-8"))
         self.assertIn("PreToolUse", hooks["hooks"])
 
+    @unittest.skipUnless(shutil.which("node"), "node is not installed")
+    def test_the_director_course_goes_on_when_the_main_session_goes_idle(self):
+        # Claude Code's Stop hook: OpenCode has no Stop event, so the plugin runs it on session.idle.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        project = self.scratch()
+        (project / "loc").mkdir()
+        (project / "loc" / "PRD.md").write_text("# PRD\n\n## Goal\nGreet people.\n", encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
+        subprocess.run([sys.executable, "-B", str(ROOT / "scripts" / "course.py"), "start", "--limit", "goal",
+                        "--agreed", "x", "--item", "plan 002", "--project", str(project)],
+                       check=True, capture_output=True, env=env)
+        driver = out / "driver.mjs"
+        driver.write_text("""
+import { pathToFileURL } from "node:url"
+const { Masterskills } = await import(pathToFileURL(process.argv[2]).href)
+const sent = []
+const client = { session: {
+  get: async ({ path }) => ({ data: { id: path.id, parentID: path.id === "agent" ? "main" : undefined } }),
+  promptAsync: async ({ path, body }) => { sent.push([path.id, body.parts[0].text]) },
+} }
+const plugin = await Masterskills({ directory: process.argv[3], client })
+const idle = async (id) => { await plugin.event({ event: { type: "session.idle", properties: { sessionID: id } } }); return sent.length }
+const counts = [await idle("main"), await idle("main"), await idle("main"), await idle("agent")]
+console.log(JSON.stringify({ counts, sent }))
+""", encoding="utf-8")
+        result = subprocess.run(["node", str(driver), str(out / "plugins" / "masterskills.ts"), str(project)],
+                                capture_output=True, text=True, encoding="utf-8", env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout.strip().splitlines()[-1])
+        # Pushed once; the next idle is stop_hook_active (waiting), the one after it is a new turn; agents never.
+        self.assertEqual(report["counts"], [1, 1, 2, 2])
+        self.assertEqual(report["sent"][0][0], "main")
+        self.assertIn("director's course", report["sent"][0][1])
+
     def test_script_commands_run_without_sh(self):
         # OpenCode on Windows runs commands in PowerShell, which has no `sh`.
         out = self.scratch()
