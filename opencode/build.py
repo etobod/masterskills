@@ -21,6 +21,8 @@ becomes `<python> -B "<absolute path>"`: OpenCode on Windows runs commands in
 PowerShell, which has no `sh`. `<python>` is the first of python3, python, py
 that runs Python 3 at build time, as `py.sh` would choose.
 
+`date "+<format>"` becomes `<python> -c "import time; ..."` for the same reason.
+
 `${CLAUDE_PLUGIN_ROOT}` in Markdown becomes an absolute path, since OpenCode has
 no such variable, and the `masterskills:` prefix of skill and agent names goes.
 
@@ -51,6 +53,7 @@ RULES = "masterskills/rules/core.md"
 NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 SCRIPT = re.compile(r'sh "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/py\.sh" (\S+\.py)')
 CODE_REVIEW = re.compile(r'Skill\(skill: "code-review", args: ("[^"]*")\)')
+DATE = re.compile(r'\bdate "\+([%A-Za-z: -]+)"')
 PYTHONS = ("python3", "python", "py")
 
 
@@ -90,6 +93,8 @@ def translate(text: str, out: Path) -> str:
     text = text.replace(' --session "${CLAUDE_SESSION_ID}"', "")
     # Claude Code's code-review skill is built in; OpenCode gets the agent in opencode/agents/.
     text = CODE_REVIEW.sub(lambda m: f'task(subagent_type: "code-review", prompt: {m.group(1)})', text)
+    # `date "+<format>"` fails in PowerShell, where OpenCode on Windows runs commands.
+    text = DATE.sub(lambda m: f'{find_python()} -c "import time; print(time.strftime(\'{m.group(1)}\'))"', text)
     # OpenCode's tool for a multiple-choice question is called `question`.
     text = text.replace("`AskUserQuestion`", "the `question` tool")
     return re.sub(r"\bmasterskills:(?=[a-z])", "", text)

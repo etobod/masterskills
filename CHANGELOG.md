@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.24.2 — 2026-11-03
+
+- OpenCode build: `date "+%Y-%m-%d"` in the skills becomes a Python one-liner, since OpenCode on Windows runs commands in PowerShell, where `date` fails and every dated step cost a retry.
+
 ## 2.24.1 — 2026-11-03
 
 - OpenCode build: an agent gets only the tools its `tools:` line lists, as in Claude Code. Everything else is denied (`"*": deny`), so a reviewer no longer fetches web pages or calls MCP servers; the plugin's own files stay readable.
