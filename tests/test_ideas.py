@@ -111,6 +111,16 @@ class LeanReviewTest(unittest.TestCase):
             self.assertIn("once per round", text)
             self.assertIn("never a relaunch", text)
 
+    def test_an_empty_agent_answer_is_a_lost_report(self):
+        gate = self.read("skills/loc-planning/SKILL.md").split("## 6. Gate", 1)[1].split("\n## ", 1)[0]
+        review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
+        step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
+                 if line.startswith("5. **Code-review gate**")][0]
+        for text in (gate, review, step5):
+            self.assertIn("empty answer is a lost report, never no findings", text)
+            self.assertIn("ask that same agent once", text)
+            self.assertIn("still empty fails the round", text)
+
     def test_final_code_review_skips_reviewed_milestones(self):
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
         self.assertIn("Orchestrated", review)

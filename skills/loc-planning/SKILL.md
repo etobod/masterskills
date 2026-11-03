@@ -102,7 +102,7 @@ A criterion says **what the code must do**, never "a test exists" or "it works":
 - A criterion's test is never a shell check (`grep`, `test -f`, `open`): those prove a word or a file exists, not behaviour.
 - A test runs the project's code, never its own copy of it: a copy passes whatever the code does. Code inside a page is tested by loading the page's `<script>` (Node: `readFileSync` and `vm`), not by pasting functions into the test.
 
-**No test suite yet** (no test command in `CLAUDE.md` `Commands`, no `loc/TEST-PLAN.md`): the plan starts with **M1 — test suite**: the framework, the test directory and the command, added to `Commands`; one smoke test, proof: the command → `1 passed` (or the framework's equivalent); `loc/TEST-PLAN.md` copied from `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md` with sections (a) and (e) filled in. Write that path exactly so, never expanded: the plan must work on another machine. To see the template, read it at that path; do not search the disk. M1 needs no `**Criteria:**`. Planning writes only the plan and inbox files: never create `loc/TEST-PLAN.md` or a test to satisfy the gate. No obvious framework (one HTML page, a script, "zero dependencies"): keep the logic in pure functions and test them with the language's built-in runner (`node --test`, `python -m unittest`); what can only be seen gets a user performer.
+**No test suite yet** (no test command in `CLAUDE.md` `Commands`, no `loc/TEST-PLAN.md`): the plan starts with **M1 — test suite**: the framework, the test directory and the command, added to `Commands`; one smoke test, proof: the command → `1 passed` (or the framework's equivalent); `loc/TEST-PLAN.md` copied from `${CLAUDE_PLUGIN_ROOT}/templates/loc/TEST-PLAN.md` with sections (a) and (e) filled in. Write that path unexpanded, so the plan works on another machine. Read the template there; never search the disk. M1 needs no `**Criteria:**`. Planning writes only the plan and inbox files: never create `loc/TEST-PLAN.md` or a test to satisfy the gate. No obvious framework (one HTML page, a script, "zero dependencies"): keep the logic in pure functions and test them with the language's built-in runner (`node --test`, `python -m unittest`); what can only be seen gets a user performer.
 
 `loc/TEST-PLAN.md` is the project's test contract and changes only through a milestone: when the plan adds something new to the product, one milestone extends section (b) (tests only).
 
@@ -128,13 +128,13 @@ Fixtures committed to git are written by hand. Data recorded from real runs goes
 Each round, recorded as one line in `## Plan gate`:
 
 1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge.
-2. The `rubber-duck` agent with **what was asked** (the input file, or the PRD fragment or text) and **what was produced** (the plan path); ask it also whether a milestone does several independent things, and whether the plan contradicts a `D-NN` of `loc/PRD.md` without saying it replaces it (blocking). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
+2. The `rubber-duck` agent with **what was asked** (the input) and **what was produced** (the plan path); ask it also whether a milestone does several independent things, and whether the plan contradicts a `D-NN` of `loc/PRD.md` without saying it replaces it (blocking). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
 
-The round passes when the script exits `0` and the critic reports nothing blocking. After a failed third round, no fourth: a `stuck` file and the `architect` agent's Triage decide what follows (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`, `## Plan gate`).
+The round passes when the script exits `0` and the critic reports nothing blocking. An agent's empty answer is a lost report, never no findings: ask that same agent once for it, never a relaunch; still empty fails the round. After a failed third round, no fourth: a `stuck` file and the `architect` agent's Triage decide what follows (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`, `## Plan gate`).
 
 ## 7. Close the input
 
-Also after a plan that did not pass the gate, so the next attempt starts from the plan and the `stuck` file (whose `**Source:**` names the plan). Take the date with `date "+%Y-%m-%d"`; never from memory. Move files with `mv` (`loc/` is not in git). Nothing is ever deleted.
+Also after a plan that did not pass the gate, so the next attempt starts from the plan and the `stuck` file. Take the date with `date "+%Y-%m-%d"`; never from memory. Move files with `mv` (`loc/` is not in git). Nothing is ever deleted.
 
 **Input file in `loc/inbox/`** (`brainstorm`, `review`, `deferred`, `stuck`, answered `question`):
 

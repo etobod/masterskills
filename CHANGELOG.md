@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.25.2 — 2026-11-03
+
+- An agent's empty answer is a lost report, never "no findings": the session asks that same agent once for its report (never a new review); still empty fails the gate's round. A `rubber-duck` wrote 16 findings only in its reasoning and returned nothing, and the plan gate passed as if the plan were clean. Agents already end with "No findings." when there are none, so a correct empty review never triggers the question.
+
 ## 2.25.1 — 2026-11-03
 
 - Search milestones measure in proportion to the work. Planning first asks whether a measurement is needed at all: a result that already exists (an earlier plan, a log, the user's results) is the `**Baseline:**`, and nothing is measured before the first try. A search ran hours of baseline runs before its first change, on numbers the project already had.

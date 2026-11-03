@@ -12,7 +12,7 @@ An independent look at a finished change: does it do what was asked, and is it c
 
 Parse `$ARGUMENTS`:
 
-- **Level**: `low`, `medium`, `high` or `max`; default `medium`. **`ultra` is recognised and dropped, never forwarded**: it sends the code to the cloud. Say so in one line and use `medium`.
+- **Level**: `low`, `medium`, `high` or `max`; default `medium`. **`ultra` is recognised and dropped, never forwarded**: it sends the code to the cloud. Say so; use `medium`.
 - **`plan <NNN>`, called by `loc-orchestrate`** → **orchestrated mode**. Requirements: the plan file. Scope: from `milestones[0].start` in `loc/state/<NNN>.json` to a fresh snapshot. Gate: `final-review` in that state file.
 - **Anything else** → **standalone mode**, report only, no edits. Requirements: what the user named (a plan, an inbox file, their words); if nothing, "the change is correct and consistent with the project's rules". Scope: the git range given (`a..b`), else the named paths from `HEAD` (`--paths`), else everything uncommitted from `HEAD`.
 
@@ -28,7 +28,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 ## 2. Review, in parallel
 
-Start them in the same step, each once per round: an empty or unreadable answer means no findings, never a relaunch.
+Start them in the same step, each once per round. An agent's empty answer is a lost report, never no findings: ask that same agent once for it, never a relaunch; still empty fails the round.
 
 - **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `loc/PATTERNS.md`."
 - **`Skill(skill: "code-review", args: "<changed files> <level> — also flag new code the project, its standard library, platform or dependencies already provide")`**: always the explicit files and level (it otherwise reuses the last one). Orchestrated (milestones already reviewed), append "; review only how the milestones work together and what changed after the last milestone's `end`" with that snapshot hash.
@@ -54,10 +54,10 @@ With findings: create the file and fill `## Scope` (range, files, requirements) 
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type review --slug "<scope>" --title "<what was reviewed>" --source "<range or plan>" --by loc-review
 ```
 
-Fix nothing. The file has no `U` (not the user's): `loc-planning` weighs it with the `judge` and plans each `fix`; only an architect escalation reaches the user. With no findings, or only Unrealistic ones, create no file; list them in the report.
+Fix nothing. The file has no `U`: `loc-planning` weighs it with the `judge` and plans each `fix`; only an architect escalation reaches the user. With no findings, or only Unrealistic ones, create no file; list them in the report.
 
 ## 6. Report
 
-First, a command that failed during the review and worked another way goes to `loc/PATTERNS.md` (rule 10), if it is not there yet.
+First, a command that failed and worked another way goes to `loc/PATTERNS.md` (rule 10).
 
 Briefly, in the user's language: scope and level; findings by severity (or "no findings"); in orchestrated mode the rounds and what was fixed; the `review` or `stuck` file, if one was created.
