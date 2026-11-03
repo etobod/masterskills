@@ -53,4 +53,6 @@ Bears on: 088 → A (finish the half-written entry)
 
 Name options by their word, never a number: letters belong to `question` files. `Bears on:` only when an open question depends on the report. Mark exactly one option `(recommended)`; with weak evidence, keep the decision.
 
+Never read the plugin's skills or their references: your rules are here.
+
 **Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it.

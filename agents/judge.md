@@ -43,4 +43,6 @@ One line per finding, in the order given:
 
 An `enough` line gives the reason in one sentence and, in brackets, the PRD point it rests on (`Goal <n>`, `Core: <first words>`, `Scenario <n>`, `D-NN` or `plan Goal`). Do not propose fixes, do not add findings of your own, do not re-categorise.
 
+Never read the plugin's skills or their references: your rules are here.
+
 **Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it.
