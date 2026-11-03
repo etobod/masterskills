@@ -114,13 +114,31 @@ def command(source: Path) -> str:
     return head + f"---\nLoad the `{fields['name']}` skill with the skill tool and follow it.\n\n$ARGUMENTS\n"
 
 
+# Claude Code tool name -> the OpenCode permission keys it needs.
+TOOL_PERMISSIONS = {
+    "Read": ("read",),
+    "Grep": ("grep",),
+    "Glob": ("glob", "list"),
+    "Skill": ("skill",),
+    "WebFetch": ("webfetch",),
+    "WebSearch": ("websearch",),
+}
+
+
 def agent(source: Path, out: Path) -> str:
     fields, body = front_matter(source.read_text(encoding="utf-8"))
     tools = {tool.strip() for tool in fields.get("tools", "").split(",")}
     edit = "allow" if tools & {"Write", "Edit"} else "deny"
     bash = "allow" if "Bash" in tools else "deny"
+    # As in Claude Code, a tool not listed is denied: no web and no MCP server.
+    allowed = sorted({key for tool in tools for key in TOOL_PERMISSIONS.get(tool, ())})
+    rules = "".join(f"  {key}: allow\n" for key in allowed)
+    # "*" would also cover external_directory; keep the plugin's own files readable.
+    base = out.resolve().as_posix()
+    rules += (f"  external_directory:\n    \"{base}/masterskills/**\": allow\n"
+              f"    \"{base}/skills/**\": allow\n")
     head = (f"---\ndescription: {json.dumps(fields.get('description', ''), ensure_ascii=False)}\n"
-            f"mode: subagent\npermission:\n  edit: {edit}\n  bash: {bash}\n---\n")
+            f"mode: subagent\npermission:\n  \"*\": deny\n{rules}  edit: {edit}\n  bash: {bash}\n---\n")
     return head + translate(body, out)
 
 

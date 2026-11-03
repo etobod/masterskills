@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.24.1 — 2026-11-03
+
+- OpenCode build: an agent gets only the tools its `tools:` line lists, as in Claude Code. Everything else is denied (`"*": deny`), so a reviewer no longer fetches web pages or calls MCP servers; the plugin's own files stay readable.
+
 ## 2.24.0 — 2026-11-03
 
 - `loc-review` and `loc-orchestrate`: each reviewer (`rubber-duck`, `code-review`) runs once per round; an empty or unreadable answer counts as no findings, never a relaunch. A model that could not read a long answer started the same reviewer three times.
