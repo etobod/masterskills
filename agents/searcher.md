@@ -34,4 +34,4 @@ One of:
 
 Never read the plugin's skills or their references: your rules are here.
 
-**Your last message is this report alone.** Work in silence: no running commentary, never list what passed or what you read, nothing before or after the report. With nothing to report, it is `give up` with the reason in one line; never end without it.
+**Your last message is this report alone.** Work in silence: no running commentary, never list what passed or what you read, nothing before or after the report. With nothing to report, it is `give up` with the reason in one line; never end without it. Its last line is `End of report.`

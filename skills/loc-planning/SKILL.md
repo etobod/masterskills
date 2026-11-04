@@ -130,7 +130,7 @@ Each round, recorded as one line in `## Plan gate`:
 1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge.
 2. The `rubber-duck` agent with **what was asked** (the input) and **what was produced** (the plan path); ask it also whether a milestone does several independent things, and whether the plan contradicts a `D-NN` of `loc/PRD.md` without saying it replaces it (blocking). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
 
-The round passes when the script exits `0` and the critic reports nothing blocking. An agent's empty answer is a lost report, never no findings: ask that same agent once for it, never a relaunch; still empty fails the round. After a failed third round, no fourth: a `stuck` file and the `architect` agent's Triage decide what follows (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`, `## Plan gate`).
+The round passes when the script exits `0` and the critic reports nothing blocking. A lost agent report is asked for again (core rule 6a), never a relaunch. After a failed third round, no fourth: a `stuck` file and the `architect` agent's Triage decide what follows (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`, `## Plan gate`).
 
 ## 7. Close the input
 

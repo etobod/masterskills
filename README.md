@@ -26,7 +26,7 @@ and they ask you only what they cannot decide.
 - **Search when there is no pass/fail.** A milestone can improve a number toward a target instead (a prompt's pass rate, a run time): a fresh agent tries one idea at a time, only a better score is kept, and the search stops at the target, at its budget or when ideas run out. Missing the target is an accepted result, not a failure.
 - **Bugs fixed at the cause.** `loc-debug` reproduces a bug with a command, pins it with a failing test and tests hypotheses before changing any code.
 - **Memory that survives `/clear`.** Ideas, decisions, plans, open questions and lessons live in `loc/` inside your project, and every session starts with what is open.
-- **Small by contract.** About 470 words of rules are always loaded; each skill loads only when it is used. Word budgets are enforced by the test suite, not promised.
+- **Small by contract.** About 525 words of rules are always loaded; each skill loads only when it is used. Word budgets are enforced by the test suite, not promised.
 - **Answers with a picture.** Ask "how does saving an entry work?" and get a diagram drawn from the code, with `file:line` on every box and `?` on what was inferred, kept up to date in `loc/diagrams/`.
 
 ## Install
@@ -164,7 +164,7 @@ Both cover the road from an idea through a plan and test-driven development to r
 
 | | masterskills |
 |---|---|
-| **Context** | ~470 words of rules always loaded; a skill loads only when used. Budgets are checked by the test suite: a skill core ≤ 800 words, an agent ≤ 600 |
+| **Context** | ~525 words of rules always loaded; a skill loads only when used. Budgets are checked by the test suite: a skill core ≤ 800 words, an agent ≤ 600 |
 | **Interruptions** | The `architect` decides what you need not; your questions wait in files with a recommended option while work continues; `loc-director` runs a course overnight |
 | **Review loops** | At most three rounds per gate, then recorded and carried on; the `judge` stops fixes the project does not need |
 | **Tests you can trust** | A red gate that must fail on an assertion; tests written blind by `test-author`; QA compares the final tests with the plan's starting copy |

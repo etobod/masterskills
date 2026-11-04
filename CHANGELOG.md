@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.26.0 — 2026-11-04
+
+- A checksum on agent reports (core rule 6a). Every agent ends its report with `End of report.`; the reviewers (`rubber-duck`, `judge`, OpenCode's `code-review`) also start it with `Findings: <n>`. An empty answer, a missing end line or fewer findings than announced (for the `judge`, than it was given) is a lost report: the session asks that same agent again, up to 3 times instead of once, and only then fails the round. A judge's answer was cut after the first of eleven verdicts; the empty-answer rule did not see it.
+- Budgets: rules 525 words (was 470), `rubber-duck` and `judge` 670 (was 650).
+
 ## 2.25.5 — 2026-11-03
 
 - OpenCode: the director's course goes on. OpenCode has no Stop event, so the hooks plugin runs the Stop hook when the main session goes idle and sends its reason as the next message, as Claude Code does when it blocks the end of a turn. After one push the next idle counts as `stop_hook_active`, so a session waiting for an agent is not pushed in a loop; agents' sessions are never pushed. A course in OpenCode ended after one plan's progress report with "Resume: /loc-director".

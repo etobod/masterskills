@@ -32,8 +32,8 @@ class BudgetTest(unittest.TestCase):
         self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
         self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2720)
         self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
-        self.assertEqual(overrides["agents/judge.md"], 650)
-        self.assertEqual(overrides["agents/rubber-duck.md"], 650)
+        self.assertEqual(overrides["agents/judge.md"], 670)
+        self.assertEqual(overrides["agents/rubber-duck.md"], 670)
 
 
 class LadderTest(unittest.TestCase):
@@ -117,9 +117,12 @@ class LeanReviewTest(unittest.TestCase):
         step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
                  if line.startswith("5. **Code-review gate**")][0]
         for text in (gate, review, step5):
-            self.assertIn("empty answer is a lost report, never no findings", text)
-            self.assertIn("ask that same agent once", text)
-            self.assertIn("still empty fails the round", text)
+            self.assertIn("lost agent report is asked for again (core rule 6a)", text)
+        rule = read("rules/core.md").split("6a. ", 1)[1].split("\n7. ", 1)[0]
+        for part in ("`Findings: <n>`", "`End of report.`", "empty answer", "no end line",
+                     "fewer findings than announced", "`judge`", "never clean",
+                     "same agent again, up to 3 times", "never a relaunch", "still lost fails the round"):
+            self.assertIn(part, rule)
 
     def test_final_code_review_skips_reviewed_milestones(self):
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
@@ -137,8 +140,13 @@ class AgentAnswerTest(unittest.TestCase):
         for path in files:
             text = path.read_text(encoding="utf-8")
             for part in ("last message is this report alone", "no running commentary",
-                         "never list what passed", "With nothing to report", "never end without it"):
+                         "never list what passed", "With nothing to report", "never end without it",
+                         "Its last line is `End of report.`"):
                 self.assertIn(part, text, path.name)
+
+    def test_reviewers_announce_how_many_findings(self):
+        for rel in ("agents/rubber-duck.md", "agents/judge.md", "opencode/agents/code-review.md"):
+            self.assertIn("Its first line is `Findings: <n>`, how many it lists.", read(rel), rel)
 
     def test_agent_budget_is_600(self):
         self.assertEqual(measure().LIMITS["agent"], 600)
