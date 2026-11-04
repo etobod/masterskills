@@ -44,4 +44,4 @@ One line per plan in the new order: the group, the number, one reason. Then the 
 
 Never read the plugin's skills or their references: your rules are here.
 
-**Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it.
+**Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it. Its last line is `End of report.`

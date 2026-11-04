@@ -28,7 +28,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 ## 2. Review, in parallel
 
-Start them in the same step, each once per round. An agent's empty answer is a lost report, never no findings: ask that same agent once for it, never a relaunch; still empty fails the round.
+Start them in the same step, each once per round. A lost agent report is asked for again (core rule 6a), never a relaunch.
 
 - **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `loc/PATTERNS.md`."
 - **`Skill(skill: "code-review", args: "<changed files> <level> — also flag new code the project, its standard library, platform or dependencies already provide")`**: always the explicit files and level (it otherwise reuses the last one). Orchestrated (milestones already reviewed), append "; review only how the milestones work together and what changed after the last milestone's `end`" with that snapshot hash.
