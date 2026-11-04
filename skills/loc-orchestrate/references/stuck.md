@@ -44,9 +44,10 @@ After the final review, check each point of `**Remains:**` in the plan's `## Stu
 
 Triage runs when the final review went stuck, **or** when a point of `## Stuck gates` is still open after the closing check, even though the final review passed. Call the `architect` agent in Triage mode with the plan's `## Stuck gates`, the stuck file's `## final-review` section if any, the plan path, `loc/PRD.md` and `CLAUDE.md`. Append its verdict to the `final-review` gate's `triage` list and write it with its reason in each `**Architect (Triage):**`, then:
 
-- **retry**: call `loc-review` again for rounds 4–6 (once per plan), with the open points as findings to fix. It adds a `## final-review (rounds 4–6)` section; when that fails too, call the architect again: now only `plan` or `ask`.
+- **retry**: call `loc-review` again for rounds 4–6 (once per plan), with the open points as findings to fix. It adds a `## final-review (rounds 4–6)` section; when that fails too, call the architect again: now only `plan`, `search` or `ask`.
 - **plan**: the open points become work for the next planning:
   `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<plan topic> leftovers" --title "<plan> — leftovers" --source "<plan path>" --what "<each point with file:line>" --why "<the architect's reason>" --when "the next loc-planning" --by "loc-orchestrate (architect: plan)"`
+- **search**: as plan, `--slug "<plan topic> search"`, `--by "loc-orchestrate (architect: search)"`, and `--what` is a search milestone draft (`references/search.md`): `**Kind:** search`, the architect's metric command and target, `**May change:**` its files, `**Budget:** 20`.
 - **ask**: only what the architect called beyond its competence: `next_number.py --type question --title "Plan <NNN>: <topic>" --source "<plan path>" --by "architect (Triage)"`, in the user's language: what is at stake with `file:line`, the architect's options with the recommended one first, and its reason.
 
 Name the new file in `**Next:**` (stuck file), the plan's `## Resolution` and the report. The plan then closes as usual.

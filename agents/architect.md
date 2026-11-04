@@ -37,9 +37,10 @@ You get what stuck gates left after round 3 (or 6): a plan's `## Stuck gates`, a
 
 - **retry**: 3 more rounds, once: the findings shrank each round and what remains fits the plan.
 - **plan**: what remains is work beyond the plan, the rounds went in circles, or a decision must change first.
+- **search**: what remains is a number short of its target, printed by a command: a search plan, 20 tries. Name the command, target and files to change. Never for a finding without such a number, never for a plan gate.
 - **ask**: only beyond your competence. Say what is at stake.
 
-After round 6: only **plan** or **ask**.
+After round 6: only **plan**, **search** or **ask**.
 
 ## Report
 

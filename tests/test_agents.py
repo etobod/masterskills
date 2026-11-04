@@ -69,10 +69,22 @@ class DecisionSkillsTest(unittest.TestCase):
     def test_final_review_goes_to_triage(self):
         architect = read("agents/architect.md")
         self.assertIn("## Triage", architect)
-        for verdict in ("**retry**", "**plan**", "**ask**"):
+        for verdict in ("**retry**", "**plan**", "**search**", "**ask**"):
             self.assertIn(verdict, architect)
+        # A search plan only climbs a number: never a finding without one, never a plan gate.
+        search = [line for line in architect.splitlines() if line.startswith("- **search**")][0]
+        for part in ("printed by a command", "20 tries", "Never for a finding without such a number",
+                     "never for a plan gate"):
+            self.assertIn(part, search)
+        self.assertIn("After round 6: only **plan**, **search** or **ask**.", architect)
         stuck = read("skills/loc-orchestrate/references/stuck.md")
         self.assertIn("## Triage", stuck)
+        triage = stuck.split("## Triage", 1)[1]
+        for part in ("- **search**: as plan", "`**Kind:** search`", "`**Budget:** 20`", "(architect: search)",
+                     "now only `plan`, `search` or `ask`"):
+            self.assertIn(part, triage)
+        self.assertNotIn("search", stuck.split("## Plan gate", 1)[1].split("\n## ", 1)[0])
+        self.assertIn("20 from a Triage `search`", read("skills/loc-orchestrate/references/search.md"))
         self.assertIn("--type deferred", stuck)
         self.assertIn("--type question", stuck)
         self.assertIn("`triage`", read("skills/loc-orchestrate/SKILL.md"))
