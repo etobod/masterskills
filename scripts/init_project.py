@@ -14,7 +14,8 @@ exists: `claude.bat` resumes the Claude Code session given by `--session`
 (plus `open-code.bat` when the OpenCode build is installed on this machine);
 `open-code.bat` (plugin built for OpenCode, which records its source
 repository in `SOURCE`) updates the plugin from that repository and starts
-OpenCode.
+OpenCode. A launcher it creates names this machine's paths or session, so
+it also goes into `.gitignore`.
 
 `empty` lists the sections that hold nothing but the template's comment or
 `<placeholder>`: the ones `loc-init` may fill from a brainstorm.
@@ -68,7 +69,7 @@ OPENCODE_BAT = """@rem Updates masterskills for OpenCode, then starts OpenCode i
 @cd /d "%~dp0"
 @call "{installer}"
 @cd /d "%~dp0"
-@opencode %*
+@call opencode %*
 @exit /b %ERRORLEVEL%
 """
 
@@ -143,6 +144,17 @@ def write_launcher(project: Path, report: dict, name: str, text) -> None:
     else:
         write(project / name, text.replace("\n", "\r\n"))
         report["created"].append(name)
+        ignore(project, report, name)
+
+
+def ignore(project: Path, report: dict, name: str) -> None:
+    """A launcher this script made is personal (a path or a session of this machine): keep it out of git."""
+    path = project / ".gitignore"
+    text = path.read_bytes().decode("utf-8") if path.exists() else ""
+    if any(line.strip().lstrip("/") == name for line in text.splitlines()):
+        return
+    append(path, text, f"# masterskills: launcher for this machine, never in git\n{name}\n")
+    report["updated"].append({"path": ".gitignore", "added": [name]})
 
 
 def claude_sections() -> list:
