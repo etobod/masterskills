@@ -227,6 +227,10 @@ class CheckStateTest(unittest.TestCase):
             self.assertEqual(code, 0, (rounds, out))
         code, out = check({"rounds": 6, "passed": False, "stuck": stuck, "triage": ["retry", "ask"]}, "journal")
         self.assertEqual(code, 0, out)
+        # A search plan ends the triage like plan or ask, also after round 6.
+        for triage in (["search"], ["retry", "search"]):
+            code, out = check({"rounds": 3 * len(triage), "passed": False, "stuck": stuck, "triage": triage}, "journal")
+            self.assertEqual(code, 0, (triage, out))
         for gate, phase, name in (
                 ({"rounds": 7, "passed": False, "stuck": stuck, "triage": ["retry"]}, "final-review", "final-review"),
                 ({"rounds": 4, "passed": False, "stuck": stuck}, "final-review", "final-review"),

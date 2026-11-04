@@ -23,7 +23,7 @@ A search only for a number to improve with an unknown ceiling (a pass rate, a ru
 ```
 
 - **Metric**: a command that prints one number. `Target`: `>= <n>` or `<= <n>`.
-- **Budget**: 50 by default, less when 50 is clearly too many; over 50 only with the user's consent (`**Budget:** 80 — user approved <date>`).
+- **Budget**: 50 by default (20 from a Triage `search`), less when 50 is clearly too many; over 50 only with the user's consent (`**Budget:** 80 — user approved <date>`).
 - **Hold-out**: cases the search never sees, or `none` with the reason. Optional **Guard**: a command that must keep passing. **Leads**: from the `researcher` agent. No `**Criteria:**`.
 
 ### Measure in proportion to the work

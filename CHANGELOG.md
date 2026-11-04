@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.27.0 — 2026-11-04
+
+- The architect's Triage has a fourth verdict, `search`: when what a stuck gate left is a number short of its target with a command that prints it (a proof threshold, a time, a pass rate), the open point becomes a `deferred` file holding a search milestone draft (`**Kind:** search`, the metric and target, the files it may change, `**Budget:** 20`), which the next planning turns into a plan with its own review and gate. Never for a finding without such a number and never for a plan gate; allowed after round 6, since it is a new plan. `check_state.py` accepts `search` as a verdict that ends the triage.
+
 ## 2.26.1 — 2026-11-04
 
 - `loc-init` puts a launcher it creates (`claude.bat`, `open-code.bat`) into the project's `.gitignore`: it names this machine's installer path or session, and a clone elsewhere got it with the path baked in. A launcher the user already had is left alone and never ignored.

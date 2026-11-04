@@ -30,11 +30,11 @@
 Gate rules: at most 3 rounds. A milestone or QA gate that used 3 rounds without
 passing has `"stuck": "plan"` and a `### M<n> <gate>` (or `### qa`) heading under
 the plan's `## Stuck gates`; an open `**Remains:**` point there needs a final
-triage of plan or ask. A stuck final review names its `stuck` file, which must
+triage of plan, search or ask. A stuck final review names its `stuck` file, which must
 exist in `loc/inbox/` or `loc/inbox/done/` (an older run's milestone may too).
 Only `final-review` has `triage`: the architect's verdicts after a stuck final
-review, in order, each `retry`, `plan` or `ask`. One `retry` allows rounds 4-6;
-`journal` and `done` need a stuck final review's last verdict to be `plan` or `ask`.
+review, in order, each `retry`, `plan`, `search` or `ask`. One `retry` allows rounds 4-6;
+`journal` and `done` need a stuck final review's last verdict to be `plan`, `search` or `ask`.
 A `M<n>/search` gate (a search milestone) names its iteration log in `log`,
 `loc/state/<NNN>/search-M<n>.md`, which exists once the gate passed; missing
 the target is not a failure, so it passes whenever the search stopped.
@@ -77,7 +77,8 @@ MODES = {"inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "search", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
-TRIAGE = {"retry", "plan", "ask"}
+TRIAGE = {"retry", "plan", "search", "ask"}
+FINAL = ("plan", "search", "ask")  # a verdict that ends the triage
 VERDICTS = {"confirmed", "needs_validation", "rejected"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
@@ -289,12 +290,12 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
     final = gates.get("final-review")
     if not finished_gate(final):
         problems.append("gates.final-review: journal and done need a final review that passed or went stuck")
-    elif final.get("passed") is not True and (final.get("triage") or ["retry"])[-1] not in ("plan", "ask"):
+    elif final.get("passed") is not True and (final.get("triage") or ["retry"])[-1] not in FINAL:
         problems.append("gates.final-review.triage: a stuck final review needs the architect's last verdict, "
-                        "plan or ask (references/stuck.md)")
-    elif open_points(project, plan) and (final.get("triage") or ["retry"])[-1] not in ("plan", "ask"):
+                        "plan, search or ask (references/stuck.md)")
+    elif open_points(project, plan) and (final.get("triage") or ["retry"])[-1] not in FINAL:
         problems.append("gates.final-review.triage: ## Stuck gates of the plan still has an open point; "
-                        "the architect's triage must end in plan or ask (references/stuck.md)")
+                        "the architect's triage must end in plan, search or ask (references/stuck.md)")
     status = STATUS.search(plan_text(project, plan))
     if data.get("phase") == "done" and not (status and CLOSED.match(status.group(1))):
         problems.append("plan: phase done but the plan's **Status:** is not 'done <date>' "
