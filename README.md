@@ -20,6 +20,7 @@ and they ask you only what they cannot decide.
 ## Why masterskills
 
 - **Plans that can fail.** Every milestone ends with a proof: a command and its expected result. Tests come first, written by an agent that never reads the implementation, and they must fail on an assertion before any code is written.
+- **No lost reports.** Every agent ends its report with `End of report.`, and the reviewers start it with the number of findings. A cut, empty or short report is asked for again, up to three times, so a slow model's half answer never passes as "nothing found".
 - **Decisions without interruptions.** The `architect` settles what you need not decide. What only you can decide becomes a question file with a recommended option, and the work goes on with that option meanwhile.
 - **Reviews that end.** Every gate gets at most three rounds. The `judge` weighs each finding against what the project is for (`fix`, `enough`, or `challenges D-07`), so review does not turn into polishing. Each finding is first checked against the code: one the code contradicts is dropped with a reason, one it cannot settle reaches the judge marked unconfirmed.
 - **Less code.** Before writing code, the team checks whether it needs to exist: already in the project, the standard library, the platform or an installed dependency. Validation, error handling, security and accessibility are never cut.
@@ -101,6 +102,8 @@ Most milestones are **proof** milestones: a command that must pass. When the goa
 ```
 
 Measuring stays in proportion to the work: a result the project already has is the baseline, tries run on a quick metric, and the full one only confirms a gain that meets the target and runs once at the end. Each try is one change with a hypothesis from a fresh `searcher` agent; `search_log.py` decides keep or revert and keeps the log, so a search resumes after `/clear`. The budget is 50 tries by default and more only with your consent. The metric changes only when the `judge` agrees it was wrong, at most twice. The result reads `64 → 78 (target >= 80), stopped: budget`, with ideas for going further kept as a deferred item.
+
+A search also follows a stuck gate: when what a gate could not fix in its rounds is a number short of its target (a proof threshold, a time, a pass rate), the `architect` can order a search plan of 20 tries instead of asking you.
 
 Everything the workflow writes stays in `loc/`, ignored by git with one line:
 
