@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.26.1 — 2026-11-04
+
+- `loc-init` puts a launcher it creates (`claude.bat`, `open-code.bat`) into the project's `.gitignore`: it names this machine's installer path or session, and a clone elsewhere got it with the path baked in. A launcher the user already had is left alone and never ignored.
+- `open-code.bat` starts OpenCode with `call`: installed through npm, `opencode` is `opencode.cmd`, and a batch file run without `call` never returns, so the exit line did not run. Existing launchers are not changed.
+
 ## 2.26.0 — 2026-11-04
 
 - A checksum on agent reports (core rule 6a). Every agent ends its report with `End of report.`; the reviewers (`rubber-duck`, `judge`, OpenCode's `code-review`) also start it with `Findings: <n>`. An empty answer, a missing end line or fewer findings than announced (for the `judge`, than it was given) is a lost report: the session asks that same agent again, up to 3 times instead of once, and only then fails the round. A judge's answer was cut after the first of eleven verdicts; the empty-answer rule did not see it.

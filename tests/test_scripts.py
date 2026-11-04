@@ -232,6 +232,10 @@ class LauncherTest(unittest.TestCase):
         self.assertNotIn(b'"CLAUDE=claude"', data)
         self.assertIn(b"where claude.exe", data)
         self.assertFalse((self.project / "open-code.bat").exists())
+        # The session id belongs to this machine: the launcher stays out of git, once.
+        ignored = (self.project / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(ignored.count("claude.bat"), 1)
+        self.assertNotIn("open-code.bat", ignored)
         again = self.init("--session", "11111111-2222-3333-4444-555555555555")
         self.assertIn("claude.bat", again["existing"])
         self.assertEqual((self.project / "claude.bat").read_bytes(), data)
@@ -252,6 +256,8 @@ class LauncherTest(unittest.TestCase):
         self.assertIn(b"--resume abc-1 %*", data)
         self.assertIn(b"where claude.exe", data)
         self.assertNotIn(b'"CLAUDE=claude"', data)
+        # A launcher the user had is theirs: it is never put into .gitignore.
+        self.assertNotIn("claude.bat", (self.project / ".gitignore").read_text(encoding="utf-8"))
         own = b"@claude --resume mine\r\n"
         (self.project / "claude.bat").write_bytes(own)
         self.assertIn("claude.bat", self.init("--session", self.SESSION)["existing"])
@@ -288,7 +294,12 @@ class LauncherTest(unittest.TestCase):
         self.assertFalse((self.project / "claude.bat").exists())
         text = (self.project / "open-code.bat").read_text(encoding="utf-8")
         self.assertIn(f'call "{ROOT / "opencode-install.bat"}"', text)
-        self.assertIn("opencode %*", text)
+        # opencode may be opencode.cmd (npm): without `call` the exit line never runs.
+        self.assertIn("@call opencode %*", text)
+        ignored = lambda: (self.project / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(ignored().count("open-code.bat"), 1)
+        self.assertIn("open-code.bat", self.init("--session", "x", scripts=build / "masterskills" / "scripts")["existing"])
+        self.assertEqual(ignored().count("open-code.bat"), 1)
 
 
 if __name__ == "__main__":
