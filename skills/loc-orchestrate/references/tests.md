@@ -47,7 +47,7 @@ Removing an assertion, loosening a condition, skipping a test or deleting one is
 
 ## Known defect
 
-A test for a defect that stays open uses the strict marker from TEST-PLAN (e) (e.g. `xfail(strict=True)`) with the path of a `deferred` file in its reason; create that file with `next_number.py --type deferred --by loc-orchestrate`. When the test starts passing, the suite goes red: remove the marker, close the `deferred`.
+A test for a defect that stays open uses the strict marker from TEST-PLAN (e) (e.g. `xfail(strict=True)`) with the path of a `deferred` file in its reason; create that file with `next_number.py --type deferred --title "<defect>" --what "<the defect, the test>" --why "<why not now>" --when "<when to fix>" --by loc-orchestrate`. When the test starts passing, the suite goes red: remove the marker, close the `deferred`.
 
 ## Fixtures
 

@@ -11,10 +11,11 @@ The orchestrator measures; this script decides, so a model never judges its own 
   --add --log <path> --score <x> --hypothesis "<idea>" --change "<what changed>"
       records a try; prints {"iteration", "keep", "best", "stop", "confirm"}. `keep` only when the
       score beats the best so far in the target's direction; `stop` is "target", "budget",
-      "give-up" or null; `confirm` is true when a kept quick score meets the target.
+      "give-up" or null; `confirm` is true when a kept quick score meets the target; `stop` then waits for `--confirm`.
   --confirm --log <path> --full <x>
       records the full metric of the kept change; meeting the target stops the search ("target"),
-      otherwise it goes on. Not a try: it uses no iteration. Prints {"stop"}.
+      otherwise it goes on, or stops ("budget") when that try was the last. Not a try: it uses
+      no iteration. Prints {"stop"}.
   --metric-change --log <path> --reason "<why>" --baseline <x> --best <x>
       records a metric change the judge approved, with the baseline and best measured again;
       at most 2 per search, a third prints {"ok": false, "question": true} and exits 1.
@@ -148,6 +149,8 @@ def add(args) -> int:
     confirm = keep and quick and reached(best, higher, goal)
     if keep and not quick and reached(best, higher, goal):
         stop = "target"
+    elif confirm:
+        stop = None  # the full metric decides first; `--confirm` stops on a used-up budget
     elif iteration >= int(log["fields"]["Budget"]):
         stop = "budget"
     elif streak >= int(log["fields"]["Give up"]):
@@ -169,9 +172,10 @@ def confirm(args) -> int:
     higher, goal = target(log["fields"]["Target"])
     met = reached(full, higher, goal)
     append(path, f"| c | {full:g} | {'full: target met' if met else 'full: below target'} | full metric | - |\n")
-    stop = "target" if met else None
+    used_up = state(log)["tries"] >= int(log["fields"]["Budget"])
+    stop = "target" if met else ("budget" if used_up else None)
     if stop:
-        append(path, "\n**Stopped:** target\n")
+        append(path, f"\n**Stopped:** {stop}\n")
     print(json.dumps({"stop": stop}))
     return 0
 

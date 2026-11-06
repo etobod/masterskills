@@ -19,8 +19,8 @@ Keeps the project's diary, `loc/MEMORY.md`: what was done, newest first, one sho
 | `Plan` | a plan was executed by hand (a plan run through orchestration writes its own entry) |
 | `Planning` | a plan was made by hand (`loc-planning` writes its own entry) |
 | `Review` | a review was done (`loc-review` on its own) |
-| `Poprawka` | a change outside any plan that actually changed something |
-| `Decyzja` | an important decision, e.g. an answered `question` that changes direction |
+| `Fix` | a change outside any plan that actually changed something |
+| `Decision` | an important decision, e.g. an answered `question` that changes direction |
 
 Nothing changed (a conversation, a question, a failed attempt that was undone): no entry; say so in one line.
 

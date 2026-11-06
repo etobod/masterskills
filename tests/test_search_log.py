@@ -113,6 +113,16 @@ class SearchLogTest(unittest.TestCase):
         self.assertEqual(self.run_log("--check"), (0, "ok"))
         self.assertIn("**Quick metric:**", self.log.read_text(encoding="utf-8"))
 
+    def test_a_kept_quick_try_on_the_last_iteration_is_still_confirmed(self):
+        self.run_log("--start", "--metric", "python score.py", "--quick", "python score.py --failed-only",
+                     "--baseline", "20", "--target", ">= 80", "--budget", "2", "--give-up", "5")
+        self.add("30")
+        code, out = self.add("85")
+        self.assertEqual((out["keep"], out["stop"], out["confirm"]), (True, None, True))
+        code, out = self.run_log("--confirm", "--full", "70")
+        self.assertEqual((code, out["stop"]), (0, "budget"))
+        self.assertEqual(self.run_log("--check"), (0, "ok"))
+
     def test_confirm_needs_a_quick_metric(self):
         self.start()
         self.assertEqual(self.run_log("--confirm", "--full", "90")[0], 1)

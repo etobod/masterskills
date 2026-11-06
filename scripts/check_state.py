@@ -14,7 +14,7 @@
         {"id": "M1", "status": "pending" | "in_progress" | "done" | "stuck",
          "start": "<snapshot hash>" | null, "end": "<snapshot hash>" | null}
       ],
-      "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "M1/search",
+      "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "M1/search", "M1/design",
                                                  # "qa", "final-review"
         "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ...",
                    "test_author": true},
@@ -57,7 +57,7 @@ The plan's `## Review notes` section, when present, holds review findings
 that are not fixed, one per line: `- suggestion (<gate>): <finding>` or
 `- unrealistic (<gate>): <finding> Who produces it: <answer, 3+ words>` or
 `- enough (<gate>): <finding> Reason: <the judge's reason, 3+ words>`, where
-<gate> is `M<n> code-review`, `final-review` or `planning` (judged by `loc-planning`).
+<gate> is `M<n> code-review`, `M<n> design`, `final-review` or `planning` (judged by `loc-planning`).
 
 Prints JSON {"state", "ok", "problems": [...]}. Exit 0 when valid, 1 when not,
 2 when the file cannot be read or is not JSON.
@@ -82,11 +82,11 @@ FINAL = ("plan", "search", "ask")  # a verdict that ends the triage
 VERDICTS = {"confirmed", "needs_validation", "rejected"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
-GATE = re.compile(r"^(M\d+)/(red|proof|code-review|search)$|^(qa|final-review)$")
+GATE = re.compile(r"^(M\d+)/(red|proof|code-review|search|design)$|^(qa|final-review)$")
 SEARCH_LOG = re.compile(r"^loc/state/\d{3,}/search-M\d+\.md$")
 STUCK = re.compile(r"^loc/inbox/(done/)?(\d{3,})-(U-)?stuck-[^/]+\.md$")
 NOTES = "Review notes"
-NOTE = re.compile(r"^- (suggestion|unrealistic|enough) \((M\d+ code-review|final-review|planning)\): (.+)$")
+NOTE = re.compile(r"^- (suggestion|unrealistic|enough) \((M\d+ (?:code-review|design)|final-review|planning)\): (.+)$")
 PRODUCER = re.compile(r"Who produces it:\s*(.+)$")
 REASON = re.compile(r"Reason:\s*(.+)$")
 DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-deferred-[^/]+\.md$")
@@ -137,7 +137,7 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
     for name, gate in gates.items():
         match = GATE.match(name)
         if not match:
-            problems.append(f"gates: unknown gate {name!r} (M<n>/red, M<n>/proof, M<n>/code-review, M<n>/search, qa, final-review)")
+            problems.append(f"gates: unknown gate {name!r} (M<n>/red, M<n>/proof, M<n>/code-review, M<n>/search, M<n>/design, qa, final-review)")
             continue
         if match.group(1) and match.group(1) not in ids:
             problems.append(f"gates.{name}: no such milestone")

@@ -7,7 +7,9 @@ first, plans of one group change different files and run in any order. A plan
 without a group (written before groups) comes first. Within a group, by number.
 
 Without options, prints the queue:
-    {"queue": [{"path", "number", "group", "running"}, ...]}
+    {"queue": [{"path", "number", "group", "running", "blocked"}, ...]}
+`blocked` is the plan's `**Status:**` when it cannot run as it is (`open — gate failed`,
+`open — QA failed`: it waits for `loc-planning`), else null; blocked plans come last.
 
 `--make-room G --keep NNN` raises by one the group of every open plan whose group is
 G or higher, except plan NNN and a plan with a state file not yet `done` (it is
@@ -28,6 +30,16 @@ import sys
 from pathlib import Path
 
 PLAN = re.compile(r"^(?P<number>\d{3,})-plan-(?:(?P<group>\d+)-)?(?P<rest>.+\.md)$")
+BLOCKED = re.compile(r"^\*\*Status:\*\*\s*(open — .+?)\s*$", re.MULTILINE)
+
+
+def blocked(path: Path):
+    """The plan's status when it waits for planning (`open — gate failed`), else None."""
+    try:
+        match = BLOCKED.search(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError):
+        return None
+    return match.group(1) if match else None
 
 
 def running(project: Path) -> set:
@@ -50,8 +62,10 @@ def queue(project: Path) -> list:
         if match:
             group = match.group("group")
             plans.append({"path": f"loc/inbox/{path.name}", "number": match.group("number"),
-                          "group": int(group) if group else None, "running": match.group("number") in active})
-    return sorted(plans, key=lambda p: (p["group"] is not None, p["group"] or 0, p["number"]))
+                          "group": int(group) if group else None, "running": match.group("number") in active,
+                          "blocked": blocked(path)})
+    return sorted(plans, key=lambda p: (p["blocked"] is not None, p["group"] is not None, p["group"] or 0,
+                                        p["number"]))
 
 
 def regroup(project: Path, groups: dict) -> list:

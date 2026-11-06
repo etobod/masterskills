@@ -34,7 +34,7 @@ Per gate, add it to `**Stuck gates:**` and write one section (`## final-review`,
 
 - **retry**: rounds 4–6, once; when they fail too, Triage again: only plan or ask.
 - **plan**: `**Status:**` → `open — gate failed`; the stuck file waits for the next planning, which starts from it.
-- **ask**: as plan, plus `next_number.py --type question --source "<stuck file>" --by "architect (Triage)"` with its options.
+- **ask**: as plan, plus `next_number.py --type question --title "<plan>: <what remains>" --source "<stuck file>" --by "architect (Triage)"` with its options.
 
 ## Closing what the plan resolved
 

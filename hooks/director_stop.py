@@ -4,7 +4,8 @@
 Reads loc/PRD.md `## Course` (`scripts/course.py`). While `**State:** open` and
 neither the time limit (`until <time>`, checked here, not by the model) nor the
 step cap is reached, it blocks the end of the turn, naming the next step. Steps
-are counted by `course.py done` (one finished item), not here, so waiting costs none. When this
+are counted by `course.py next` when a plan starts, not here, so waiting costs none;
+the cap is reached once the last counted plan is done (`done` resets `Next`). When this
 hook already made the model go on (`stop_hook_active`) and it stops again, the
 turn ends: it is waiting, e.g. for a background agent that resumes it. A reached limit sets `stopping — <reason>` and blocks once more
 for the stop report; the next stop closes the course. Without a PRD, a course,
@@ -22,7 +23,7 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
-from course import STEPS, TIME, UNTIL, fields, join, now, set_field, split  # noqa: E402
+from course import OPEN, STEPS, TIME, UNTIL, fields, join, now, set_field, split  # noqa: E402
 
 
 def command(script: str) -> str:
@@ -47,7 +48,8 @@ def decide(section: list, active: bool = False):
     limit = None
     if until and datetime.datetime.now() >= datetime.datetime.strptime(until[1], TIME):
         limit = "time limit"
-    elif done >= cap:
+    elif done > cap or (done >= cap and info.get("Next", OPEN).startswith(OPEN)):
+        # `next` counts a plan when it starts: the cap is reached once that plan is done.
         limit = "step cap"
     if limit:
         stop = command("scripts/course.py")

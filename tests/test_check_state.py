@@ -127,6 +127,14 @@ class CheckStateTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unknown gate", "\n".join(out["problems"]))
 
+    def test_design_gate_and_its_notes_are_valid(self):
+        # references/design.md records the light design review as M<n>/design, its notes as (M<n> design).
+        code, out = self.run_check(state({"M1/design": {"rounds": 1, "passed": True, "stuck": None}}))
+        self.assertEqual(code, 0, out)
+        plan = self.with_notes("- suggestion (M1 design): the header sits closer to the menu than to the text")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
+
     def test_search_gate_names_its_log(self):
         log = "loc/state/007/search-M1.md"
         running = {**state({"M1/search": {"rounds": 1, "passed": False, "stuck": None, "log": log}}),

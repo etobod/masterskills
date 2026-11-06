@@ -2,6 +2,21 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.29.0 — 2026-11-06
+
+Fixes from the first review of the whole plugin.
+
+- The light design gate `M<n>/design` and its notes `- suggestion (M<n> design): …` are valid in the state file and `## Review notes`; `state_check` reported "unknown gate" after every state write in a UI milestone. With `Screenshots: declined` the UI proof runs only the tokens check.
+- A director course with a step cap lets the last counted plan finish: Steps count when a plan starts, so the Stop hook blocked mid-plan.
+- Search milestones: with a quick metric the baseline is a quick score measured on the current code, not the full metric's; a kept quick try on the last iteration is still confirmed instead of stopping on budget; the best version is kept in `loc/state/<NNN>/search-best/`, not committed per try; the give-up command has its `--log`.
+- `commit_plan.py` commits the deletion of a renamed file, and records `none` when the plan's changes were already committed.
+- `next_number.py` makes the slug from the title when `--slug` is missing; every `deferred` command gives `--what`, `--why` and `--when`.
+- `plan_queue.py` marks a plan whose status is `open — gate failed` or `open — QA failed` as `blocked` and lists it last; `loc-orchestrate` without an argument skips it.
+- `loc-journal` uses the types `Fix` and `Decision` that `memory_index.py` accepts.
+- `state.md` matches `check_state.py` (the `stuck` value per gate, the triage verdict `search`); the `architect` reads the file named for Harvest.
+- Git output that is not UTF-8 (a cp1250 file) no longer leaves the review without a diff.
+- `ui_check.py`: the focus walk tells elements apart by identity, so two links with one class no longer end it early; a page that never goes idle (a websocket, polling) is checked after `load`, and an address that cannot open is a JSON error.
+
 ## 2.28.3 — 2026-11-06
 
 - The `judge` agent fixes a visible defect on a screen the plan changes (an element styled unlike its siblings, a broken layout, the direction ignored): in a plan about the look, the look is what the user gets. A judge had passed unstyled scenario buttons beside styled chips as `enough` because they still worked.

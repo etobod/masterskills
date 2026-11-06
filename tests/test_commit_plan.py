@@ -69,6 +69,27 @@ class CommitPlanTest(unittest.TestCase):
         self.assertEqual(self.git("status", "--porcelain"), "M notes.txt")
         self.assertEqual(self.state()["commit"], self.git("rev-parse", "HEAD"))
 
+    def test_a_renamed_file_commits_its_deletion(self):
+        self.write("old.py", "x = 1\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "chore: start")
+        self.start_plan()
+        (self.project / "old.py").rename(self.project / "new.py")
+        code, out = self.commit("--message", "refactor(app): rename old to new")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(sorted(out["files"]), ["new.py", "old.py"])
+        self.assertEqual(self.git("status", "--porcelain"), "")
+
+    def test_changes_already_committed_during_the_plan(self):
+        self.write("app.py", "x = 1\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "chore: start")
+        self.start_plan()
+        self.write("app.py", "x = 2\n")
+        self.git("commit", "-q", "-am", "feat(app): the user committed it")
+        code, out = self.commit("--message", "feat(app): change x")
+        self.assertEqual((code, out["commit"]), (0, "none"), out)
+
     def test_new_directory_needs_a_decision(self):
         self.write("app.py", "x = 1\n")
         self.write("src/kb/store.py", "s = 1\n")

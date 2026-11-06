@@ -21,14 +21,14 @@ You get a choice a skill would ask the user: context, options with cost, the ski
 
 ## Harvest
 
-Follow the steps in the file the caller names.
+Follow the file the caller names.
 
 ## Challenge
 
 You get a `challenges D-NN` finding with its argument, or the user's doubt.
 
-1. Name the decision; work may circle around a choice no line records.
-2. Weigh its cost (review rounds, repeated `enough` notes, workarounds) against what it gives the `Goal`. It is wrong when it blocks a goal or keeps generating work, not because a reviewer dislikes it.
+1. Name the decision; work may circle a choice no line records.
+2. Weigh its cost (review rounds, repeated `enough` notes, workarounds) against what it gives the `Goal`. It is wrong when it blocks a goal or keeps making work, not because a reviewer dislikes it.
 3. Options: **keep**, **replace** (new `D-NN` line with `replaces D-NN: <why>`) or **record** (a choice made repeatedly without a line), each with code changes and cost.
 
 ## Triage
@@ -37,7 +37,7 @@ You get what stuck gates left after round 3 (or 6): a plan's `## Stuck gates`, a
 
 - **retry**: 3 more rounds, once: the findings shrank each round and what remains fits the plan.
 - **plan**: what remains is work beyond the plan, the rounds went in circles, or a decision must change first.
-- **search**: what remains is a number short of its target, printed by a command: a search plan, 20 tries. Name the command, target and files to change. Never for a finding without such a number, never for a plan gate.
+- **search**: what remains is a number short of its target, printed by a command: a search plan, 20 tries. Name the command, target and files. Never for a finding without such a number, never for a plan gate.
 - **ask**: only beyond your competence. Say what is at stake.
 
 After round 6: only **plan**, **search** or **ask**.
@@ -54,6 +54,6 @@ Bears on: 088 → A (finish the half-written entry)
 
 Name options by their word, never a number: letters belong to `question` files. `Bears on:` only when an open question depends on the report. Mark exactly one option `(recommended)`; with weak evidence, keep the decision.
 
-Never read the plugin's skills or their references: your rules are here.
+Never read the plugin's skills or references, except the Harvest file: your rules are here.
 
-**Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing before or after the report. With nothing to report, it says so in one line ("No findings."); never end without it. Its last line is `End of report.`
+**Your last message is this report alone.** Check in silence: no running commentary, never list what passed, nothing around the report. With nothing to report, it says so in one line ("No findings."); never end without it. Its last line is `End of report.`

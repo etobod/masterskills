@@ -97,7 +97,9 @@ def main() -> int:
         print(json.dumps({"ok": False, "error": "milestones[0].start: no first snapshot in the state file"}))
         return 2
     try:
-        files = git(["diff", "--name-only", start, snapshot(project), "--", ".", ":!loc"], project).splitlines()
+        # --no-renames: a renamed file lists its old path too, so its deletion is committed.
+        files = git(["diff", "--name-only", "--no-renames", start, snapshot(project), "--", ".", ":!loc"],
+                    project).splitlines()
         new = new_directories(files, project)
         leave = {name.strip("/\\") for name in args.leave}
         undecided = sorted(set(new) - leave - {name.strip("/\\") for name in args.add})
@@ -114,6 +116,11 @@ def main() -> int:
             print(json.dumps({"ok": True, "commit": "none", "files": [], "left": left}))
             return 0
         git(["add", "-A", "--", *files], project)
+        if not git(["diff", "--cached", "--name-only", "--", *files], project).strip():
+            # Already committed during the plan (e.g. by the user): nothing left to commit.
+            record(state_path, data, "none")
+            print(json.dumps({"ok": True, "commit": "none", "files": [], "left": left}))
+            return 0
         git(["commit", "-q", "-m", message, "--", *files], project)
         commit = git(["rev-parse", "HEAD"], project)
     except (RuntimeError, OSError) as error:
