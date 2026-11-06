@@ -175,7 +175,12 @@ class StopHookTest(unittest.TestCase):
             self.assertIn("never ask", out["reason"])
         course(cwd, "next", "--text", "loc-orchestrate 084 (resumed)")
         course(cwd, "done", "--item", "plan 084")
-        course(cwd, "next", "--text", "loc-planning 087")
+        self.assertIn("**Next:** the first open item: plan 087", section(cwd),
+                      "a finished step is never shown as next")
+        self.assertIn("plan 087", json.loads(stop_hook(cwd).stdout)["reason"])
+        third = json.loads(course(cwd, "next", "--text", "loc-planning 087").stdout)
+        self.assertEqual(third["banner"],
+                         "-------- ended: plan 084 | starting: loc-planning 087 | plans 1 of 12 --------")
         self.assertIn("**Steps:** 1 of 12", section(cwd))
         course(cwd, "next", "--text", "loc-orchestrate 087")
         self.assertIn("**Steps:** 2 of 12", section(cwd))
