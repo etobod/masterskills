@@ -12,13 +12,15 @@ References: on
 Tokens: src/styles/tokens.css
 Widths: 375, 768, 1440
 Pages: index.html
+Scene views: none
 Design plugin: none
 ```
 
 - **Screenshots**: `on`, or `declined <date>` when the user refused the browser.
 - **References**: `on` (look at good pages on the same subject) or `off`.
-- **Tokens**: the one file that holds every colour, size and space; the first UI milestone creates it.
+- **Tokens**: the one file holding every colour, size and space; the first UI milestone creates it.
 - **Pages**: what to open, a file or a local address (`http://localhost:5173/`) with its start command.
+- **Scene views**: the project's own screenshot command for states an address cannot reach (a 3D scene, a state set through controls) and its output directory, or `none`.
 - **Design plugin**: an external design plugin and its review command, or `none`. It is an addition; the plugin's own agents always run.
 
 ## Filled by `loc-init`
@@ -42,7 +44,7 @@ With `References: on`, before the first UI milestone of a plan and when a brains
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/ui_check.py --url <address> --widths 1440,375 --out loc/tmp/design/references --name ref-<k>
 ```
 
-Then a note per reference, `loc/tmp/design/references/ref-<k>.md`: its address, the principles worth taking (the grid, the type pairing, the density) and what not to take. References give principles, never assets: no images, code, logos or text are copied. They stay for the next plans; a new subject replaces them.
+Then a note per reference, `loc/tmp/design/references/ref-<k>.md`: its address, the principles worth taking (the grid, the type pairing, the density) and what not to take. References give principles, never assets: no images, code, logos or text are copied. They stay for the next plans.
 
 ## A UI milestone
 
@@ -55,7 +57,7 @@ Then a note per reference, `loc/tmp/design/references/ref-<k>.md`: its address, 
    ```
 
    A defect (horizontal scroll, cut-off text, contrast below WCAG AA, no visible focus, a raw colour or size outside the tokens) is fixed like a failing test.
-3. **Screenshots**: `ui_check.py --url <page> --widths <Widths> --out loc/tmp/design/shots/<NNN> --name M<n>`.
+3. **Screenshots**: `ui_check.py --url <page> --widths <Widths> --out loc/tmp/design/shots/<NNN> --name M<n>`, and the `Scene views` command when the milestone changes such a state; both go to the critic and sheet.
 4. **Light review** (gate `M<n>/design`): the `design-critic` agent in `light` mode, with the screenshots, the direction, the tokens and the changed files. A Blocking finding goes back to the `designer` with the notes, then steps 2–4 again; at most 3 rounds (core rule 6). Notes go to the plan's `## Review notes` under `design (light)`.
 
 ## End of the plan

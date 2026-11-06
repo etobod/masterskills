@@ -112,6 +112,14 @@ class DesignFlowTest(unittest.TestCase):
         for part in ("Edit tool", "ui_check.py --detect", "Pages", "Tokens: none yet"):
             self.assertIn(part, filled)
 
+    def test_scene_views_reach_states_an_address_cannot(self):
+        text = read("skills/loc-orchestrate/references/design.md")
+        self.assertIn("Scene views: none", text)
+        self.assertIn("states an address cannot reach", text)
+        self.assertIn("the `Scene views` command", section(text, "## A UI milestone"))
+        self.assertIn("Scene views", read("templates/CLAUDE.md"))
+        self.assertIn("scene views", read("agents/design-critic.md"))
+
     def test_agents_build_and_judge_but_never_both(self):
         designer = read("agents/designer.md")
         critic = read("agents/design-critic.md")
