@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from plugin_commands import plain  # noqa: E402
+from plugin_commands import plain, script_command  # noqa: E402
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 BRANCH = re.compile(r"[A-Za-z0-9._/-]+")
@@ -45,15 +45,7 @@ def has_workflows(project: Path) -> bool:
     return any(workflows.glob("*.yml")) or any(workflows.glob("*.yaml"))
 
 
-def script_command(root: str, script: str) -> str:
-    """How the model runs one of the plugin's scripts. The OpenCode plugin names its
-    Python in MASTERSKILLS_PYTHON: its shell may be PowerShell, which has no `sh`."""
-    python = os.environ.get("MASTERSKILLS_PYTHON")
-    return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
-
-
 def context(name: str) -> str:
-    root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
     return (
         "## CI after push\n"
         "The push succeeded and the project runs GitHub Actions. Check CI once, "
@@ -61,7 +53,7 @@ def context(name: str) -> str:
         f"gh run list --branch {name} --limit 1 --json status,conclusion,url\n\n"
         "- `conclusion: failure` → create an inbox file, add the run's `url` to it and tell the user "
         "in one sentence:\n"
-        f'  `{script_command(root, "scripts/next_number.py")} --type stuck --slug "ci {name}" '
+        f'  `{script_command("scripts/next_number.py")} --type stuck --slug "ci {name}" '
         f'--title "CI failed on {name}" --source "git push" --by "CI check after push"`\n'
         "- `status: in_progress` or `queued` → one sentence to the user; do not wait or poll.\n"
         "- `success` → one sentence.\n"

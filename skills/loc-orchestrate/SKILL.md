@@ -14,7 +14,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 
 ## 1. Start
 
-1. `$ARGUMENTS` is a plan number or file in `loc/inbox/`. No argument: if `loc/state/` holds a file whose `phase` is not `done`, resume it; otherwise the first plan in `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py` (lowest group); no open plan: say so.
+1. `$ARGUMENTS` is a plan number or file in `loc/inbox/`. No argument: if `loc/state/` holds a file whose `phase` is not `done`, resume it; otherwise the first plan in `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py` not `blocked`; no open plan: say so.
 2. If `loc/state/<NNN>.json` exists, **resume** from its `next_action` (`references/state.md`).
 3. Read the plan, the project's `CLAUDE.md` (`Commands`, `Invariants`, `Limits`) and `loc/PATTERNS.md`.
 4. Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py --ready <plan>`. If it exits non-zero, the plan's status says the gate failed, or `loc/inbox/` has an open `PRD:` `question`, **stop**: say why, point to `/masterskills:loc-planning`.
@@ -41,10 +41,10 @@ A milestone with `**Kind:** search` runs the search loop of `references/search.m
 
 ## 3. Deviations from the plan
 
-- **Rules 1–3** (a bug, a missing critical piece such as validation, a blocker such as a missing dependency): fix it, record a deviation, carry on.
+- **Rules 1–3** (a bug, a missing critical piece like validation, a blocker like a missing dependency): fix it, record a deviation, carry on.
 - **A blocker only the user can remove** (a file outside the project is gone): a `question` file at once, never only in chat; the milestone `stuck`, then the next one.
 - A step of this skill you skipped (the red gate, the `test-author` agent, a review) is not a deviation: go back and do it; if it cannot be done, the gate is **stuck**.
-- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): call the `architect` agent in Decide mode with the options, costs and your recommendation; record the deviation with its ruling, or, when it escalates, with a `question` file of its options (`next_number.py --type question --by "architect (Decide)"`), and continue on the recommendation.
+- **Rule 4** (architecture: a new component, a changed interface or data model, a different library): call the `architect` agent in Decide mode with options, costs and your recommendation; record the deviation with its ruling, or, when it escalates, with a `question` file of its options (`next_number.py --type question --title "<choice>" --by "architect (Decide)"`), and continue on the recommendation.
 
 ## 4. When to stop
 

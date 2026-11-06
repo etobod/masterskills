@@ -230,6 +230,37 @@ class StopHookTest(unittest.TestCase):
         self.assertIn("**State:** stopping — step cap", section(cwd))
         self.assertEqual(stop_hook(cwd).stdout.strip(), "")
 
+    def test_step_cap_lets_the_last_plan_finish(self):
+        # `next` counts a plan when it starts, so the cap-th plan is still running at the cap.
+        cwd = project(self)
+        course(cwd, "start", "--limit", "none", "--agreed", "x", "--item", "plan 084")
+        prd = cwd / "loc" / "PRD.md"
+        prd.write_text(prd.read_text(encoding="utf-8").replace("**Steps:** 0 of 11", "**Steps:** 10 of 11"),
+                       encoding="utf-8")
+        course(cwd, "next", "--text", "loc-orchestrate 084")
+        self.assertIn("**Steps:** 11 of 11", section(cwd))
+        self.assertEqual(json.loads(stop_hook(cwd).stdout)["decision"], "block")
+        self.assertIn("**State:** open", section(cwd))
+        course(cwd, "done", "--item", "plan 084")
+        course(cwd, "next", "--text", "loc-planning loc/inbox/092-stuck-x.md")  # any step that is no plan
+        stop_hook(cwd)
+        self.assertIn("**State:** stopping — step cap", section(cwd))
+
+    def test_no_new_plan_starts_past_the_cap(self):
+        # Plan cap+1 started after the last one would be stopped by the Stop hook mid-run.
+        cwd = project(self)
+        course(cwd, "start", "--limit", "none", "--agreed", "x", "--item", "plan 084")
+        prd = cwd / "loc" / "PRD.md"
+        prd.write_text(prd.read_text(encoding="utf-8").replace("**Steps:** 0 of 11", "**Steps:** 11 of 11"),
+                       encoding="utf-8")
+        before = prd.read_text(encoding="utf-8")
+        result = course(cwd, "next", "--text", "loc-orchestrate 085")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("step cap reached", json.loads(result.stdout)["error"])
+        self.assertEqual(prd.read_text(encoding="utf-8"), before)
+        course(cwd, "next", "--text", "loc-planning loc/inbox/092-stuck-x.md")  # planning is no step
+        self.assertIn("**Steps:** 11 of 11", section(cwd))
+
     def test_nothing_to_do_without_an_open_course(self):
         for prd in (None, PRD, PRD + "\n## Course\n**State:** closed 2026-10-22 10:00 — done\n",
                     PRD + "\n## Course\nwhatever\n"):

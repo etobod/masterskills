@@ -1,6 +1,6 @@
 # Design: milestones that change what the user sees
 
-For a project with a user interface. The `designer` agent builds, `ui_check.py` measures, the `design-critic` agent judges the look, and the user rates it on the checks sheet.
+With a user interface: the `designer` agent builds, `ui_check.py` measures, the `design-critic` agent judges, and the user rates it on the checks sheet.
 
 ## `## Frontend` in `CLAUDE.md`
 
@@ -25,7 +25,7 @@ Design plugin: none
 
 ## Filled by `loc-init`
 
-`loc-init` fills an empty `## Frontend` as soon as it sees a user interface, with the Edit tool (never a script holding the text: Windows paths break its string escapes):
+`loc-init` fills an empty `## Frontend` as soon as it sees a user interface, with the Edit tool (never a script: Windows paths break its string escapes):
 
 - `UI check`, `References: on`, `Widths: 375, 768, 1440` and `Design plugin: none` as above;
 - `Screenshots`: after `ui_check.py --detect` and the question under Tools;
@@ -34,11 +34,11 @@ Design plugin: none
 
 ## Tools
 
-`ui_check.py --detect` says whether Playwright is installed. When it is not and `Screenshots` is not `declined`, ask with `AskUserQuestion` once: `Install the browser` (recommended: the critic sees the page, the sheet gets screenshots; the command is in `install`) or `No screenshots`. Record a refusal as `Screenshots: declined <date>` and never ask again. Without screenshots the critic judges from code and the sheet points have no images.
+`ui_check.py --detect` says whether Playwright is installed. When it is not and `Screenshots` is not `declined`, ask with `AskUserQuestion` once: `Install the browser` (recommended: the critic sees the page, the sheet gets screenshots; the command is in `install`) or `No screenshots`. Record a refusal as `Screenshots: declined <date>` and never ask again. Without screenshots the critic judges from code; sheet points have no images.
 
 ## References
 
-With `References: on`, before the first UI milestone of a plan and when a brainstorm needs visual directions, the `researcher` agent finds 3–5 good pages on the subject. Its query uses only general words about the subject ("bike repair shop booking page"), never the project's name, files or the user's text. Screenshot each one:
+With `References: on`, before the first UI milestone of a plan and when a brainstorm needs visual directions, the `researcher` agent finds 3–5 good pages on the subject. Its query uses general words about the subject ("bike repair shop booking page"), never the project's name, files or the user's text. Screenshot each one:
 
 ```sh
 sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/ui_check.py --url <address> --widths 1440,375 --out loc/tmp/design/references --name ref-<k>
@@ -49,7 +49,7 @@ Then a note per reference, `loc/tmp/design/references/ref-<k>.md`: its address, 
 ## A UI milestone
 
 1. **Build**: the `designer` agent, with the milestone, the visual direction (its brainstorm or PRD decision), the tokens file, the reference notes and screenshots, the critic's earlier notes and the files it may change.
-2. **Proof**: besides the tests, the milestone's `**Proof:**` runs both checks; each exits 0:
+2. **Proof**: besides the tests, the `**Proof:**` runs both checks, each exiting 0 (with `Screenshots: declined`, only the second):
 
    ```sh
    sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/ui_check.py --url <page> --widths <Widths> --check
@@ -57,8 +57,8 @@ Then a note per reference, `loc/tmp/design/references/ref-<k>.md`: its address, 
    ```
 
    A defect (horizontal scroll, cut-off text, contrast below WCAG AA, no visible focus, a raw colour or size outside the tokens) is fixed like a failing test.
-3. **Screenshots**: `ui_check.py --url <page> --widths <Widths> --out loc/tmp/design/shots/<NNN> --name M<n>`, and the `Scene views` command when the milestone changes such a state; both go to the critic and sheet.
-4. **Light review** (gate `M<n>/design`): the `design-critic` agent in `light` mode, with the screenshots, the direction, the tokens and the changed files. A Blocking finding goes back to the `designer` with the notes, then steps 2–4 again; at most 3 rounds (core rule 6). Notes go to the plan's `## Review notes` under `design (light)`.
+3. **Screenshots**: `ui_check.py --url <page> --widths <Widths> --out loc/tmp/design/shots/<NNN> --name M<n>`, and the `Scene views` command when the milestone changes such a state; both go to the critic and sheet. None with `Screenshots: declined`.
+4. **Light review** (gate `M<n>/design`): the `design-critic` agent in `light` mode, with the screenshots, the direction, the tokens and the changed files. A Blocking finding goes back to the `designer` with the notes, then steps 2–4 again; at most 3 rounds (core rule 6). Notes go to `## Review notes` as `- suggestion (M<n> design): …`.
 
 ## End of the plan
 

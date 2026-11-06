@@ -25,6 +25,9 @@ from inbox_summary import summarize  # noqa: E402
 from migrate import FORMAT, read_format  # noqa: E402
 from mutate import restore  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from plugin_commands import script_command  # noqa: E402
+
 
 def read_input() -> dict:
     try:
@@ -60,23 +63,14 @@ def inbox_section(summary: dict) -> str:
     return "\n".join(lines)
 
 
-def script_command(root: str, script: str) -> str:
-    """How the model runs one of the plugin's scripts. The OpenCode plugin names its
-    Python in MASTERSKILLS_PYTHON: its shell may be PowerShell, which has no `sh`."""
-    python = os.environ.get("MASTERSKILLS_PYTHON")
-    return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
-
-
 def inbox_commands() -> str:
-    # The root as Claude Code gave it, so plugin_commands.py recognises the command.
-    root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
     return (
         "\nInbox commands: run each alone in the Bash tool, from the project directory "
         "(no `cd`, `&&` or PowerShell), so they need no approval.\n"
-        f'- New file from its template, time from the clock: `{script_command(root, "scripts/next_number.py")} '
+        f'- New file from its template, time from the clock: `{script_command("scripts/next_number.py")} '
         '--type <question|deferred|...> --slug "<few words>" --title "<title>" --source "<where it came from>" '
         '--by "<who created it; for a question who recommends, e.g. architect (Triage)>"`\n'
-        f'- Hand a file to the user or back (`U` after its number): `{script_command(root, "scripts/inbox_owner.py")} '
+        f'- Hand a file to the user or back (`U` after its number): `{script_command("scripts/inbox_owner.py")} '
         '--number <NNN> --user` or `--director`\n'
         "- Close a file: `mv loc/inbox/<file> loc/inbox/done/`"
     )

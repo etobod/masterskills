@@ -3,18 +3,21 @@
 
 The orchestrator measures; this script decides, so a model never judges its own score.
 
-  --start --log <path> --metric "<command>" [--quick "<command>"] --baseline <x> --target ">= 80"
-          --budget <n> --give-up <n>
+  --start --log <path> --metric "<command>" [--quick "<command>" [--quick-target ">= 60"]]
+          --baseline <x> --target ">= 80" --budget <n> --give-up <n>
       creates the log; prints {"best", "stop"} (stop "target" when the baseline already meets it).
       With --quick, the baseline and every try are quick scores, and a quick score never ends the
-      search by itself: the full metric confirms it.
+      search by itself: the full metric confirms it. --quick-target is the quick score worth a
+      confirmation when the quick metric is on another scale (e.g. only earlier failures);
+      without it, the target. It points the same way as the target.
   --add --log <path> --score <x> --hypothesis "<idea>" --change "<what changed>"
       records a try; prints {"iteration", "keep", "best", "stop", "confirm"}. `keep` only when the
       score beats the best so far in the target's direction; `stop` is "target", "budget",
-      "give-up" or null; `confirm` is true when a kept quick score meets the target.
+      "give-up" or null; `confirm` is true when a kept quick score meets the quick target; `stop` then waits for `--confirm`.
   --confirm --log <path> --full <x>
       records the full metric of the kept change; meeting the target stops the search ("target"),
-      otherwise it goes on. Not a try: it uses no iteration. Prints {"stop"}.
+      otherwise it goes on, or stops ("budget") when that try was the last. Not a try: it uses
+      no iteration. Prints {"stop"}.
   --metric-change --log <path> --reason "<why>" --baseline <x> --best <x>
       records a metric change the judge approved, with the baseline and best measured again;
       at most 2 per search, a third prints {"ok": false, "question": true} and exits 1.
@@ -96,6 +99,11 @@ def reached(value: float, higher: bool, goal: float) -> bool:
     return value >= goal if higher else value <= goal
 
 
+def quick_goal(fields: dict) -> float:
+    """The quick score worth a full confirmation: the quick target, else the target."""
+    return target(fields.get("Quick target") or fields["Target"])[1]
+
+
 def append(path: Path, text: str) -> None:
     with path.open("a", encoding="utf-8", newline="\n") as handle:
         handle.write(text)
@@ -114,9 +122,18 @@ def start(args) -> int:
         return fail("target reads '>= <number>' or '<= <number>'")
     if args.budget < 1 or args.give_up < 1:
         return fail("budget and give-up are at least 1")
+    if args.quick_target is not None:
+        if not args.quick:
+            return fail("--quick-target needs --quick")
+        if target(args.quick_target) is None:
+            return fail("quick target reads '>= <number>' or '<= <number>'")
+        if target(args.quick_target)[0] != target(args.target)[0]:
+            return fail("the quick target points the same way as the target")
     path.parent.mkdir(parents=True, exist_ok=True)
     baseline = number(args.baseline)
     quick = f"**Quick metric:** `{args.quick}`\n" if args.quick else ""
+    if args.quick_target:
+        quick += f"**Quick target:** {args.quick_target}\n"
     path.write_text(
         f"# Search log\n\n**Metric:** `{args.metric}`\n{quick}**Target:** {args.target}\n**Budget:** {args.budget}\n"
         f"**Give up:** {args.give_up}\n\n{HEADER}| 0 | {baseline:g} | baseline | - | - |\n",
@@ -125,8 +142,9 @@ def start(args) -> int:
     stop = "target" if reached(baseline, higher, goal) and not args.quick else None
     if stop:
         append(path, "\n**Stopped:** target\n")
+    quick_target = target(args.quick_target)[1] if args.quick_target else goal
     print(json.dumps({"best": baseline, "stop": stop,
-                      "confirm": bool(args.quick) and reached(baseline, higher, goal)}))
+                      "confirm": bool(args.quick) and reached(baseline, higher, quick_target)}))
     return 0
 
 
@@ -136,6 +154,8 @@ def add(args) -> int:
     if log["stopped"]:
         return fail(f"the search stopped: {log['stopped']}")
     now = state(log)
+    if now["tries"] >= int(log["fields"]["Budget"]):
+        return fail("the budget is used up; the last kept try waits for --confirm")
     score = number(args.score)
     higher, goal = target(log["fields"]["Target"])
     keep = score > now["best"] if higher else score < now["best"]
@@ -145,9 +165,11 @@ def add(args) -> int:
     best = score if keep else now["best"]
     streak = 0 if keep else now["streak"] + 1
     stop, quick = None, "Quick metric" in log["fields"]
-    confirm = keep and quick and reached(best, higher, goal)
+    confirm = keep and quick and reached(best, higher, quick_goal(log["fields"]))
     if keep and not quick and reached(best, higher, goal):
         stop = "target"
+    elif confirm:
+        stop = None  # the full metric decides first; `--confirm` stops on a used-up budget
     elif iteration >= int(log["fields"]["Budget"]):
         stop = "budget"
     elif streak >= int(log["fields"]["Give up"]):
@@ -169,9 +191,10 @@ def confirm(args) -> int:
     higher, goal = target(log["fields"]["Target"])
     met = reached(full, higher, goal)
     append(path, f"| c | {full:g} | {'full: target met' if met else 'full: below target'} | full metric | - |\n")
-    stop = "target" if met else None
+    used_up = state(log)["tries"] >= int(log["fields"]["Budget"])
+    stop = "target" if met else ("budget" if used_up else None)
     if stop:
-        append(path, "\n**Stopped:** target\n")
+        append(path, f"\n**Stopped:** {stop}\n")
     print(json.dumps({"stop": stop}))
     return 0
 
@@ -241,6 +264,7 @@ def main() -> int:
     parser.add_argument("--log", required=True)
     parser.add_argument("--metric")
     parser.add_argument("--quick")
+    parser.add_argument("--quick-target")
     parser.add_argument("--full")
     parser.add_argument("--baseline")
     parser.add_argument("--target")

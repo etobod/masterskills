@@ -4,7 +4,8 @@
 Reads loc/PRD.md `## Course` (`scripts/course.py`). While `**State:** open` and
 neither the time limit (`until <time>`, checked here, not by the model) nor the
 step cap is reached, it blocks the end of the turn, naming the next step. Steps
-are counted by `course.py done` (one finished item), not here, so waiting costs none. When this
+are counted by `course.py next` when a plan starts, not here, so waiting costs none;
+the cap is reached once the last counted plan is done (`done` resets `Next`). When this
 hook already made the model go on (`stop_hook_active`) and it stops again, the
 turn ends: it is waiting, e.g. for a background agent that resumes it. A reached limit sets `stopping — <reason>` and blocks once more
 for the stop report; the next stop closes the course. Without a PRD, a course,
@@ -22,14 +23,10 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
-from course import STEPS, TIME, UNTIL, fields, join, now, set_field, split  # noqa: E402
+from course import OPEN, PLAN, STEPS, TIME, UNTIL, fields, join, now, set_field, split  # noqa: E402
 
-
-def command(script: str) -> str:
-    """How the model runs one of the plugin's scripts (as in session_start.py)."""
-    root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
-    python = os.environ.get("MASTERSKILLS_PYTHON")
-    return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from plugin_commands import script_command  # noqa: E402
 
 
 def decide(section: list, active: bool = False):
@@ -47,16 +44,17 @@ def decide(section: list, active: bool = False):
     limit = None
     if until and datetime.datetime.now() >= datetime.datetime.strptime(until[1], TIME):
         limit = "time limit"
-    elif done >= cap:
+    elif done > cap or (done >= cap and not PLAN.search(info.get("Next", ""))):
+        # `next` counts a plan when it starts: the cap is reached once no plan is running.
         limit = "step cap"
     if limit:
-        stop = command("scripts/course.py")
+        stop = script_command("scripts/course.py")
         return set_field(section, "State", f"stopping — {limit}"), (
             f"The course reached its {limit}. Finish no new task. Give the stop report (Done / Skipped / Left, "
             f'and the command to resume), then run `{stop} stop --reason "{limit}"`.')
     if active:
         return section, None
-    next_step = info.get("Next", "") or "the first open item"
+    next_step = info.get("Next", "") or OPEN
     return section, (
         f"The director's course in loc/PRD.md is open ({done} of {cap} plans executed). Next: {next_step}. "
         "Carry on with loc-director: write each next step with course.py next before starting it, and never ask "

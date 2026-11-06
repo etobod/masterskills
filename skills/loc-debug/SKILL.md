@@ -37,7 +37,7 @@ Change the code where the cause is, not where the symptom shows: a missing `None
 When the right fix is larger than one change (a design flaw, several modules, a decision the user must make): fix nothing, and create a `deferred` file with the cause, the reproduction, the failing test and the fix you propose; `loc-planning` makes a plan from it.
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<bug, few words>" --title "<bug>" --source "loc-debug" --by loc-debug
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<bug, few words>" --title "<bug>" --source "loc-debug" --what "<cause, reproduction, failing test, proposed fix>" --why "<why it is larger than one change>" --when "the next loc-planning" --by loc-debug
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.

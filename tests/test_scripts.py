@@ -169,6 +169,14 @@ class NextNumberTest(unittest.TestCase):
             text = (project / json.loads(out.stdout)["path"]).read_text(encoding="utf-8")
             self.assertIn("**Created by:** loc-orchestrate\n", text, kind)
 
+    def test_slug_defaults_to_the_title(self):
+        # Skills give `--title` alone for some files; the file name is made from it.
+        project = scratch_dir(self)
+        out = run("next_number.py", "--project", ".", "--type", "question", "--title", "Decision D-03: cache size",
+                  "--source", "test", "--by", "architect (Challenge)", cwd=project)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(json.loads(out.stdout)["path"], "loc/inbox/001-U-question-decision-d-03-cache-size.md")
+
     def test_deferred_sections_from_options(self):
         project = scratch_dir(self)
         out = run("next_number.py", "--project", ".", "--type", "deferred", "--slug", "ui check",
@@ -202,6 +210,15 @@ class ReviewDiffTest(unittest.TestCase):
         result = json.loads(out.stdout)
         self.assertEqual(result["files"], ["app.js"])
         self.assertIn("+const x = 1;", (project / "loc" / "review" / "x.diff").read_text(encoding="utf-8"))
+
+    def test_a_file_not_in_utf8_still_gives_a_diff(self):
+        # git prints the file's own bytes; strict UTF-8 decoding left the review with no diff.
+        project = scratch_dir(self)
+        subprocess.run(["git", "init", "-q"], cwd=project, check=True)
+        (project / "old.txt").write_bytes("zażółć\n".encode("cp1250"))
+        out = run("review_diff.py", "--project", ".", "--from", "HEAD", "--out", "loc/review/x.diff", cwd=project)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertEqual(json.loads(out.stdout)["files"], ["old.txt"])
 
 
 @unittest.skipUnless(sys.platform == "win32", "launchers are .bat files")
@@ -330,6 +347,13 @@ class PlanQueueTest(unittest.TestCase):
         names = [Path(p["path"]).name for p in self.queue()["queue"]]
         self.assertEqual(names, ["060-plan-old-topic.md", "072-plan-1-medium-c.md",
                                  "070-plan-2-easy-a.md", "071-plan-2-hard-b.md"])
+
+    def test_a_plan_waiting_for_planning_is_blocked_and_last(self):
+        # A plan whose gate failed stays in loc/inbox/; orchestrating it first would stop the queue.
+        self.write("loc/inbox/070-plan-1-easy-a.md", "**Status:** open — gate failed\n")
+        self.write("loc/inbox/071-plan-2-hard-b.md", "**Status:** open\n")
+        plans = self.queue()["queue"]
+        self.assertEqual([(p["number"], p["blocked"]) for p in plans], [("071", None), ("070", "open — gate failed")])
 
     def test_make_room_shifts_groups_and_references(self):
         self.write("loc/inbox/070-plan-1-easy-a.md")

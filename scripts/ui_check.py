@@ -147,6 +147,10 @@ FOCUS_CHECK = r"""
 () => {
   const el = document.activeElement;
   if (!el || el === document.body || el === document.documentElement) return null;
+  // Element identity, not the selector: two `a.nav-link` are two stops, the same one twice is a cycle.
+  const seen = window.__uiCheckSeen = window.__uiCheckSeen || new WeakSet();
+  if (seen.has(el)) return {repeat: true};
+  seen.add(el);
   const st = getComputedStyle(el);
   const outline = st.outlineStyle !== "none" && parseFloat(st.outlineWidth) > 0;
   const shadow = st.boxShadow && st.boxShadow !== "none";
@@ -175,7 +179,14 @@ def run_pages(url: str, widths: list, out, name: str, check: bool) -> dict:
         try:
             for width in widths:
                 page = browser.new_page(viewport={"width": width, "height": 900})
-                page.goto(target_url(url), wait_until="networkidle")
+                try:
+                    page.goto(target_url(url), wait_until="load")
+                except Exception as error:  # a timeout or a refused address: keep the JSON contract
+                    return {**result, "error": f"cannot open {url} at {width} px: {str(error).splitlines()[0]}"}
+                try:  # a page with a websocket or polling never goes idle; settle briefly, then go on
+                    page.wait_for_load_state("networkidle", timeout=5000)
+                except Exception:
+                    pass
                 if out is not None:
                     out.mkdir(parents=True, exist_ok=True)
                     shot = out / f"{name}-{width}.png"
@@ -184,13 +195,11 @@ def run_pages(url: str, widths: list, out, name: str, check: bool) -> dict:
                 if check:
                     for defect in page.evaluate(PAGE_CHECKS, [NORMAL, LARGE]):
                         result["defects"].append({**defect, "width": width})
-                    seen = set()
                     for _ in range(15):
                         page.keyboard.press("Tab")
                         focus = page.evaluate(FOCUS_CHECK)
-                        if focus is None or focus["selector"] in seen:
+                        if focus is None or focus.get("repeat"):
                             break
-                        seen.add(focus["selector"])
                         if not focus["visible"]:
                             result["defects"].append({"kind": "no-focus", "width": width, "selector": focus["selector"],
                                                       "value": f"no outline or shadow on focus: {focus['text']!r}"})
@@ -227,8 +236,9 @@ def main() -> int:
     if args.url:
         widths = [int(w) for w in args.widths.split(",") if w.strip()]
         pages = run_pages(args.url, widths, args.out, args.name, args.check)
-        if "error" in pages:
-            print(json.dumps(pages))
+        if "error" in pages:  # what was measured before the failure is kept
+            print(json.dumps({**pages, "shots": result["shots"] + pages.get("shots", []),
+                              "defects": result["defects"] + pages.get("defects", [])}, ensure_ascii=False))
             return 2
         result["shots"] += pages["shots"]
         result["defects"] += pages["defects"]

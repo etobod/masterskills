@@ -18,9 +18,9 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 
 ## 1. Agree the course
 
-1. Read every open file in `loc/inbox/` and `loc/PRD.md`.
+1. Read the open `loc/inbox/` files and `loc/PRD.md`.
 2. In one step, call the `pm` agent (order of the plans and of the `deferred`, `stuck` and `review` files) and the `architect` agent in Triage mode (what each `stuck`, `deferred` and `review` file needs: a plan, a decision, nothing).
-3. Show a table in the user's language: item, source file, what follows (`loc-planning`, `loc-orchestrate`, waits for you), in the pm's order. Files with `U` wait for the user and are not items. Never start without it, even when the agents answer late.
+3. Show a table in the user's language: item, source file, what follows (`loc-planning`, `loc-orchestrate`, waits for you), in the pm's order. `U` files wait for the user; they are not items. Never start without it, even when the agents answer late.
 4. The limit, from the user's words:
 
 | User says | `--limit` | Which files you take |
@@ -35,11 +35,11 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 
 Repeat, never asking "should I continue?":
 
-1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py next --text "<the step, e.g. loc-orchestrate 084>"` **before** starting it, so a cut run resumes there. Show its `banner` to the user as it is, on its own line.
-2. Run it: `Skill(skill: "masterskills:loc-planning", args: "<NNN>")` for an inbox file or an agreed plan without one, `Skill(skill: "masterskills:loc-orchestrate", args: "<NNN>")` for a plan. Gates and questions inside them are handled there.
-3. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py done --item "<item>"`. One executed plan is one step of the cap (the agreed items + 10, unless the user named a number: `--cap`); planning and agents are not.
+1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py next --text "<the step, e.g. loc-orchestrate 084>"` **before** starting it, so a cut run resumes there; an `error` (step cap) is a stop rule. Show its `banner` as it is, alone on a line.
+2. Run it: `Skill(skill: "masterskills:loc-planning", args: "<NNN>")` for an inbox file or an agreed plan without one, `Skill(skill: "masterskills:loc-orchestrate", args: "<NNN>")` for a plan; they handle their gates and questions.
+3. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py done --item "<item>"`. One executed plan is one step of the cap (the agreed items + 10, or the user's number: `--cap`); planning and agents are not.
 4. New inbox files: the architect says what each needs; within the limit, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py add --item "<item>" --source "<file> (<the plan that made it>)"`; the pm orders the open items.
-5. Read the user's messages; check the stop rules.
+5. Read the user's messages; check stop rules.
 
 The architect's word is followed. Its ruling goes where it applies, marked `(architect, <date>)`; a matter beyond its competence becomes a `question` with `U` and waits.
 
@@ -51,13 +51,13 @@ Stop only when:
 - what is left waits for the user (`U` files), and nothing else can go on;
 - a blocking checks sheet point waits (`checks.py --list`);
 - the same stuck point comes back after a plan made for it: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/inbox_owner.py --number <NNN> --user` instead of a third plan, then go on with the rest;
-- the Stop hook says the time limit or the step cap is reached; a running task is finished first.
+- the Stop hook or `course.py next` says the time limit or step cap is reached; a running task is finished first.
 
 Then `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py stop --reason "<which rule>"` and the stop report.
 
 ## 4. Stop report
 
-In the user's language, briefly:
+Briefly, in the user's language:
 
 ```
 Done: plan 084 (commit a1b2c3d), plan 091 from stuck 091.

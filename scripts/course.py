@@ -107,6 +107,11 @@ def next_step(section: list, text: str) -> list:
     current = None if previous.startswith(OPEN) else PLAN.search(previous)
     steps = STEPS.match(info.get("Steps", ""))
     if plan and steps and not (current and current[1] == plan[1]):
+        if int(steps[1]) >= int(steps[2]):
+            # A plan started past the cap would be stopped by the Stop hook mid-run.
+            print(json.dumps({"error": f"step cap reached ({steps[1]} of {steps[2]}): start no new plan, "
+                                       "check the stop rules"}))
+            return None
         section = set_field(section, "Steps", f"{int(steps[1]) + 1} of {steps[2]}")
     return set_field(section, "Next", text)
 

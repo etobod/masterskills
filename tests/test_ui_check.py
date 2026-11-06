@@ -102,6 +102,23 @@ class ToolTest(unittest.TestCase):
         for expected in (("horizontal-scroll", "html"), ("contrast", "p.pale"), ("cut-off", "div.box"), ("no-focus", "a")):
             self.assertIn(expected, kinds)
 
+    @unittest.skipUnless(HAS_PLAYWRIGHT, "Playwright is not installed: page checks are skipped")
+    def test_links_with_one_class_are_all_walked_for_focus(self):
+        # The walk stopped at the second `a.nav`, taking a repeated selector for a cycle.
+        page = self.dir / "nav.html"
+        page.write_text('<!doctype html><html><head><style>a.nav:focus{outline:2px solid #00f}'
+                        'button{outline:none}</style></head><body><a class="nav" href="#1">One</a>'
+                        '<a class="nav" href="#2">Two</a><button>Send</button></body></html>', encoding="utf-8")
+        result = self.run_tool("--url", str(page), "--widths", "375", "--check")
+        kinds = {(d["kind"], d["selector"]) for d in json.loads(result.stdout)["defects"]}
+        self.assertIn(("no-focus", "button"), kinds, result.stdout)
+
+    @unittest.skipUnless(HAS_PLAYWRIGHT, "Playwright is not installed: page checks are skipped")
+    def test_an_address_that_cannot_open_is_a_json_error(self):
+        result = self.run_tool("--url", "http://127.0.0.1:9/", "--widths", "375", "--check")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("cannot open", json.loads(result.stdout)["error"])
+
 
 if __name__ == "__main__":
     unittest.main()

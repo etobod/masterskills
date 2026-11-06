@@ -121,6 +121,23 @@ class PluginCommandsTest(unittest.TestCase):
         self.assertEqual(out, {})
 
 
+class SharedHelpersTest(unittest.TestCase):
+    """One command builder and one drive-path conversion: the copies had drifted apart."""
+
+    def test_one_copy_of_each(self):
+        for name in ("def script_command", "def command(", "def drive_path", r're.match(r"^/'):
+            holders = [p.name for p in (ROOT / "hooks").glob("*.py") if name in p.read_text(encoding="utf-8")]
+            self.assertLessEqual(len(holders), 1, (name, holders))
+
+    @unittest.skipUnless(os.name == "nt", "drive paths exist only on Windows")
+    def test_drive_path(self):
+        sys.path.insert(0, str(ROOT / "hooks"))
+        from plugin_commands import drive_path
+        self.assertEqual(drive_path("/c/Users/x"), "c:/Users/x")
+        self.assertEqual(drive_path("/c"), "c:/")
+        self.assertEqual(drive_path("/cd/x"), "/cd/x")
+
+
 class PyShTest(unittest.TestCase):
     def test_leaves_no_bytecode_in_the_plugin(self):
         plugin = scratch_dir(self)

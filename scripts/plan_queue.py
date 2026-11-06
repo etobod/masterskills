@@ -7,7 +7,9 @@ first, plans of one group change different files and run in any order. A plan
 without a group (written before groups) comes first. Within a group, by number.
 
 Without options, prints the queue:
-    {"queue": [{"path", "number", "group", "running"}, ...]}
+    {"queue": [{"path", "number", "group", "running", "blocked"}, ...]}
+`blocked` is the plan's `**Status:**` when it cannot run as it is (`open — gate failed`,
+`open — QA failed`: it waits for `loc-planning`), else null; blocked plans come last.
 
 `--make-room G --keep NNN` raises by one the group of every open plan whose group is
 G or higher, except plan NNN and a plan with a state file not yet `done` (it is
@@ -28,6 +30,16 @@ import sys
 from pathlib import Path
 
 PLAN = re.compile(r"^(?P<number>\d{3,})-plan-(?:(?P<group>\d+)-)?(?P<rest>.+\.md)$")
+BLOCKED = re.compile(r"^\*\*Status:\*\*\s*(open — .+?)\s*$", re.MULTILINE)
+
+
+def blocked(path: Path):
+    """The plan's status when it waits for planning (`open — gate failed`), else None."""
+    try:
+        match = BLOCKED.search(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError):
+        return None
+    return match.group(1) if match else None
 
 
 def running(project: Path) -> set:
@@ -42,7 +54,8 @@ def running(project: Path) -> set:
     return numbers
 
 
-def queue(project: Path) -> list:
+def queue(project: Path, status: bool = True) -> list:
+    """Open plans in run order; `status` reads each file for `blocked` (renaming needs only names)."""
     active = running(project)
     plans = []
     for path in (project / "loc" / "inbox").glob("*-plan-*.md"):
@@ -50,14 +63,16 @@ def queue(project: Path) -> list:
         if match:
             group = match.group("group")
             plans.append({"path": f"loc/inbox/{path.name}", "number": match.group("number"),
-                          "group": int(group) if group else None, "running": match.group("number") in active})
-    return sorted(plans, key=lambda p: (p["group"] is not None, p["group"] or 0, p["number"]))
+                          "group": int(group) if group else None, "running": match.group("number") in active,
+                          "blocked": blocked(path) if status else None})
+    return sorted(plans, key=lambda p: (p["blocked"] is not None, p["group"] is not None, p["group"] or 0,
+                                        p["number"]))
 
 
 def regroup(project: Path, groups: dict) -> list:
     """Rename each plan of `groups` (number -> new group) and every reference to it."""
     renamed = []
-    for plan in queue(project):
+    for plan in queue(project, status=False):
         if plan["number"] not in groups or plan["group"] == groups[plan["number"]]:
             continue
         old = Path(plan["path"]).name
@@ -85,7 +100,7 @@ def replace_references(project: Path, renamed: list) -> None:
 
 
 def make_room(project: Path, first: int, keep: str) -> list:
-    return regroup(project, {plan["number"]: plan["group"] + 1 for plan in queue(project)
+    return regroup(project, {plan["number"]: plan["group"] + 1 for plan in queue(project, status=False)
                              if plan["group"] is not None and plan["group"] >= first
                              and not plan["running"] and plan["number"] != keep})
 
@@ -111,7 +126,7 @@ def main() -> int:
             if not match:
                 parser.error(f"--set {item}: expected NNN=G, e.g. 070=2")
             groups[match.group(1)] = int(match.group(2))
-        active = {plan["number"] for plan in queue(project) if plan["running"]}
+        active = {plan["number"] for plan in queue(project, status=False) if plan["running"]}
         result["skipped"] = sorted(number for number in groups if number in active)
         result["renamed"] = regroup(project, {n: g for n, g in groups.items() if n not in active})
     print(json.dumps({"queue": queue(project), **result}, ensure_ascii=False))

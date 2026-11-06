@@ -23,6 +23,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from plugin_commands import drive_path  # noqa: E402
+
 REASON = (
     "masterskills: files are written only inside the project ({project}); "
     "refused: {path}. Put lessons in loc/PATTERNS.md, plans through loc-planning "
@@ -168,10 +171,7 @@ def ps_path(args: list) -> list:
 
 def resolve(path: str, cwd: Path) -> Path:
     path = VARIABLE.sub(lambda m: "~" if m.group(1).upper() in ("HOME", "USERPROFILE") else "/tmp", path)
-    if os.name == "nt":
-        drive = re.match(r"^/([a-zA-Z])(/|$)", path)
-        if drive:
-            path = f"{drive.group(1)}:/{path[3:]}"
+    path = drive_path(path)
     candidate = Path(os.path.expanduser(path))
     if not candidate.is_absolute():
         candidate = cwd / candidate

@@ -43,7 +43,7 @@ One fenced block marked `text`, built from these pieces only:
 ──▶  call or data flow, labelled with what passes      ─ ─▶  async: a job, an agent, a hook
 ```
 
-- **Boxes** are steps: the name as in the code, then `file:line`, then optionally what it does in the user's language.
+- **Boxes** are steps: the name as in the code, then `file:line`, then optionally what it does.
 - **Arrows** go top to bottom or left to right, labelled with what passes or the condition; number them `(1)`, `(2)`… when the order is not obvious.
 - **At most 100 columns and about 40 lines.** A larger flow becomes an overview plus one diagram per part, titled `Part 2: <name>`.
 - **Count the columns**: every box edge lines up; no tabs, emoji or wide characters inside boxes.
@@ -64,13 +64,13 @@ The file:
 <walk-through, not shown, where to look first>
 ```
 
-Under the diagram, in the user's language:
+Under the diagram, in English like everything in `loc/`:
 
 1. **Walk-through**: one line per numbered arrow or box: what happens and why, with `file:line`.
 2. **Not shown**: what you left out, and every `?` with what would confirm it.
 3. **Where to look first** when changing it: one or two `file:line`.
 
-Answer with the diagram and those three, shorter than it, then the file path. When asked for more detail on one box, draw that box as its own diagram, the same way.
+Answer with the diagram and those three in the user's language, shorter than it, then the file path. When asked for more detail on one box, draw that box as its own diagram, the same way.
 
 **HTML**: the overview, every kept diagram, and any diagram the user asks to see in the browser ("w przegladarce", "html") also get `<slug>.html` beside the `.md`; follow `references/html.md`. Give the user the path to open.
 
