@@ -25,6 +25,12 @@ def measure():
 
 
 class BudgetTest(unittest.TestCase):
+    def test_judge_fixes_visible_defects(self):
+        # A judge passed unstyled buttons beside styled chips as "enough": still clickable.
+        judge = (ROOT / "agents" / "judge.md").read_text(encoding="utf-8")
+        self.assertIn("A visible defect on a screen the plan changes", judge)
+        self.assertIn('"it still works" is no reason for `enough`', judge)
+
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
         self.assertEqual(overrides["skills/loc-orchestrate/SKILL.md"], 1350)
@@ -32,7 +38,7 @@ class BudgetTest(unittest.TestCase):
         self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
         self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2720)
         self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
-        self.assertEqual(overrides["agents/judge.md"], 670)
+        self.assertEqual(overrides["agents/judge.md"], 700)
         self.assertEqual(overrides["agents/rubber-duck.md"], 670)
 
 
