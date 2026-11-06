@@ -343,8 +343,8 @@ class MigrateTest(unittest.TestCase):
 
     def test_format_1_to_2(self):
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (1, 4))
-        self.assertEqual(self.read("loc/VERSION").strip(), "4")
+        self.assertEqual((out["from"], out["to"]), (1, 5))
+        self.assertEqual(self.read("loc/VERSION").strip(), "5")
 
         inbox = sorted(p.name for p in (self.project / "loc" / "inbox").glob("*.md"))
         self.assertEqual(inbox, ["004-deferred-normalizacja.md", "005-stuck-powitania.md",
@@ -424,7 +424,7 @@ class MigrateTest(unittest.TestCase):
         self.migrate()
         before = self.snapshot()
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (4, 4))
+        self.assertEqual((out["from"], out["to"]), (5, 5))
         self.assertEqual(out["translate"], [])
         self.assertEqual(self.snapshot(), before)
 
@@ -469,7 +469,7 @@ class DecisionsMigrationTest(unittest.TestCase):
     def test_adds_decisions_before_directions(self):
         (self.project / "loc/inbox/done/004-plan-1-easy-export.md").write_text("# plan\n", encoding="utf-8")
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (2, 4))
+        self.assertEqual((out["from"], out["to"]), (2, 5))
         self.assertTrue(out["harvest"])
         self.assertIn("loc/PRD.md", out["changed"])
         self.assertEqual(out["translate"], [])
@@ -478,10 +478,10 @@ class DecisionsMigrationTest(unittest.TestCase):
         self.assertLess(prd.index("## Scenarios"), prd.index("## Decisions"))
         self.assertLess(prd.index("## Decisions"), prd.index("## Directions"))
         self.assertIn("D-01", prd)
-        self.assertEqual((self.project / "loc/VERSION").read_text(encoding="utf-8").strip(), "4")
+        self.assertEqual((self.project / "loc/VERSION").read_text(encoding="utf-8").strip(), "5")
         before = (self.project / "loc/PRD.md").read_bytes()
         again = self.migrate()
-        self.assertEqual((again["from"], again["to"]), (4, 4))
+        self.assertEqual((again["from"], again["to"]), (5, 5))
         self.assertEqual((self.project / "loc/PRD.md").read_bytes(), before)
 
     def test_no_harvest_without_done_plans_or_with_decisions(self):
@@ -589,7 +589,7 @@ class PriorityMigrationTest(unittest.TestCase):
 
     def test_priorities_and_old_plans(self):
         out = self.migrate()
-        self.assertEqual((out["from"], out["to"]), (3, 4))
+        self.assertEqual((out["from"], out["to"]), (3, 5))
         prd = (self.project / "loc/PRD.md").read_text(encoding="utf-8")
         self.assertLess(prd.index("## Decisions"), prd.index("## Priorities"))
         self.assertLess(prd.index("## Priorities"), prd.index("## Directions"))
@@ -609,13 +609,94 @@ class PriorityMigrationTest(unittest.TestCase):
 
         before = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file()}
         again = self.migrate()
-        self.assertEqual((again["from"], again["to"]), (4, 4))
+        self.assertEqual((again["from"], again["to"]), (5, 5))
         self.assertEqual({p: p.read_bytes() for p in self.project.rglob("*") if p.is_file()}, before)
 
     def test_template_has_priorities(self):
         prd = (ROOT / "templates" / "loc" / "PRD.md").read_text(encoding="utf-8")
         self.assertLess(prd.index("\n## Decisions"), prd.index("\n## Priorities"))
         self.assertLess(prd.index("\n## Priorities"), prd.index("\n## Directions"))
+
+
+MANUAL_DEFERRED = """# 011 — Manual checks of plan 009
+
+**Type:** deferred
+**Status:** open
+**Created:** 2026-10-01 10:00
+**Source:** plan 009, M2
+**Created by:** loc-orchestrate
+
+## What was deferred
+- M2: the greeting is readable on a phone
+- M3: the dark theme has no white flash
+
+## Why not now
+user (deferrable)
+
+## When to return
+before the release
+
+## Resolution
+<empty until handled>
+"""
+
+OTHER_DEFERRED = """# 012 — Faster import
+
+**Type:** deferred
+**Status:** open
+**Source:** review
+
+## What was deferred
+cache the parsed file
+
+## Why not now
+not needed yet
+"""
+
+
+class ChecksSheetMigrationTest(unittest.TestCase):
+    def setUp(self):
+        SCRATCH.mkdir(parents=True, exist_ok=True)
+        self.project = Path(tempfile.mkdtemp(dir=SCRATCH))
+        self.addCleanup(shutil.rmtree, self.project, True)
+        files = {
+            "loc/VERSION": "4\n",
+            "loc/inbox/011-deferred-manual-checks.md": MANUAL_DEFERRED,
+            "loc/inbox/012-deferred-faster-import.md": OTHER_DEFERRED,
+            "loc/inbox/013-U-deferred-manual-check-sound.md": "# 013 — Sound\n\n## What was deferred\nthe beep is quiet\n",
+        }
+        for rel, text in files.items():
+            path = self.project / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(text.encode("utf-8"))
+
+    def migrate(self) -> dict:
+        result = run("migrate.py", "--project", str(self.project))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_manual_checks_become_one_sheet(self):
+        out = self.migrate()
+        self.assertEqual((out["from"], out["to"]), (4, 5))
+        self.assertEqual(out["checks"], [["011-deferred-manual-checks.md", 1], ["013-U-deferred-manual-check-sound.md", 2]])
+        inbox = sorted(p.name for p in (self.project / "loc/inbox").iterdir() if p.is_file())
+        self.assertEqual(inbox, ["012-deferred-faster-import.md", "014-U-checks.html"])
+        sheet = (self.project / "loc/inbox/014-U-checks.html").read_text(encoding="utf-8")
+        for part in ('data-point="1"', 'data-plan="009"', "Manual checks of plan 009",
+                     "M2: the greeting is readable on a phone", "M3: the dark theme has no white flash",
+                     'data-point="2"', "the beep is quiet"):
+            self.assertIn(part, sheet)
+        done = (self.project / "loc/inbox/done/011-deferred-manual-checks.md").read_text(encoding="utf-8")
+        self.assertIn("**Status:** closed", done)
+        self.assertIn("## Resolution\n", done)
+        self.assertIn("moved to the checks sheet `loc/inbox/014-U-checks.html`, point 1.", done)
+        self.assertNotIn("<empty until handled>", done)
+        self.assertIn("point 2.", (self.project / "loc/inbox/done/013-U-deferred-manual-check-sound.md").read_text(encoding="utf-8"))
+
+        before = {p: p.read_bytes() for p in self.project.rglob("*") if p.is_file()}
+        again = self.migrate()
+        self.assertEqual((again["from"], again["to"], again["checks"]), (5, 5, []))
+        self.assertEqual({p: p.read_bytes() for p in self.project.rglob("*") if p.is_file()}, before)
 
 
 if __name__ == "__main__":

@@ -145,7 +145,7 @@ class AgentAnswerTest(unittest.TestCase):
                 self.assertIn(part, text, path.name)
 
     def test_reviewers_announce_how_many_findings(self):
-        for rel in ("agents/rubber-duck.md", "agents/judge.md", "opencode/agents/code-review.md"):
+        for rel in ("agents/rubber-duck.md", "agents/judge.md", "agents/design-critic.md", "opencode/agents/code-review.md"):
             self.assertIn("Its first line is `Findings: <n>`, how many it lists.", read(rel), rel)
 
     def test_agent_budget_is_600(self):

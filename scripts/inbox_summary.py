@@ -2,7 +2,8 @@
 """List what the project has waiting: open inbox files and plan state files.
 
 Open files are `loc/inbox/*.md` (never `loc/inbox/done/`), named `NNN-[U-]<type>-<desc>.md`; `U` marks a file
-that waits for the user, and those come first.
+that waits for the user, and those come first. The manual checks sheet `NNN-U-checks.html` is listed too,
+with its `<title>`.
 State files are `loc/state/*.json` of runs not yet done, newest first. A
 project without `loc/inbox/` gives an empty list, not an error.
 
@@ -20,7 +21,8 @@ import re
 import sys
 from pathlib import Path
 
-NAME = re.compile(r"^(\d{3,})-(?:(U)-)?([a-z]+)-")
+NAME = re.compile(r"^(\d{3,})-(?:(U)-)?([a-z]+)[-.]")
+HTML_TITLE = re.compile(r"<title>\s*\d+\s*[—-]+\s*(.*?)\s*</title>", re.S)
 TITLE = re.compile(r"^#\s+\d+\s*[—-]+\s*(.+?)\s*$")
 PLACEHOLDER = re.compile(r"^<[^\n]*>$", re.M)
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "loc" / "inbox"
@@ -36,6 +38,12 @@ def is_template(path: Path, kind: str) -> bool:
 
 
 def read_title(path: Path) -> str:
+    if path.suffix == ".html":
+        try:
+            match = HTML_TITLE.search(path.read_text(encoding="utf-8"))
+            return match.group(1) if match else ""
+        except (OSError, UnicodeDecodeError):
+            return ""
     try:
         with path.open(encoding="utf-8") as f:
             for line in f:
@@ -59,7 +67,7 @@ def summarize(project: Path) -> dict:
     inbox_dir = project / "loc" / "inbox"
     inbox = []
     if inbox_dir.is_dir():
-        for path in sorted(inbox_dir.glob("*.md")):
+        for path in sorted([*inbox_dir.glob("*.md"), *inbox_dir.glob("*-checks.html")]):
             match = NAME.match(path.name)
             inbox.append({
                 "path": path.relative_to(project).as_posix(),

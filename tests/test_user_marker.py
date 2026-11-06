@@ -88,6 +88,14 @@ class SummaryTest(unittest.TestCase):
         self.assertLess(text.index("002-U-question-b.md"), text.index("001-deferred-a.md"))
         self.assertIn("waits for you", text.split("002-U-question-b.md")[1].splitlines()[0])
 
+    def test_checks_sheet_is_listed_with_its_title(self):
+        cwd = project(self)
+        (cwd / "loc" / "inbox" / "003-U-checks.html").write_text(
+            "<!doctype html><html><head><title>003 — Manual checks</title></head><body></body></html>\n", encoding="utf-8")
+        summary = json.loads(run("scripts/inbox_summary.py", "--project", str(cwd), cwd=cwd).stdout)
+        item = {item["number"]: item for item in summary["inbox"]}["003"]
+        self.assertEqual((item["type"], item["user"], item["title"]), ("checks", True, "Manual checks"))
+
 
 class RuleTest(unittest.TestCase):
     def test_rule_three_names_the_marker(self):

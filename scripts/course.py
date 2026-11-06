@@ -229,7 +229,7 @@ def status(project: Path, mark: bool) -> int:
             if match and match[1] >= day and not DECISION.match(line):
                 out.append(f"- {line.strip().lstrip('- ')} ({file.relative_to(project).as_posix()})")
 
-    open_files = sorted(inbox.glob("*.md"))
+    open_files = sorted([*inbox.glob("*.md"), *inbox.glob("*-checks.html")])
     out += ["", "## For you"]
     out += [f"- `loc/inbox/{f.name}`" for f in open_files if re.match(r"^\d{3,}-U-", f.name)]
     out += ["", "## New in the inbox"]

@@ -73,10 +73,44 @@ class DesignReviewTest(unittest.TestCase):
         text = read("skills/loc-review/SKILL.md")
         step2 = section(text, "## 2. Review, in parallel")
         self.assertIn("## Frontend", step2)
-        self.assertIn("design review", step2)
+        self.assertIn("`design-critic` agent in `full` mode", step2)
+        self.assertIn("references/design.md", step2)
+        self.assertIn("`Design plugin`", step2)
         self.assertIn("same step", step2)
         step3 = section(text, "## 3. Merge")
         self.assertIn("`[design]`", step3)
+
+
+class DesignFlowTest(unittest.TestCase):
+    """The plugin designs on its own: designer builds, ui_check.py measures, design-critic judges."""
+
+    def test_reference_wires_the_agents_the_checks_and_the_sheet(self):
+        text = read("skills/loc-orchestrate/references/design.md")
+        for part in ("`designer` agent", "`design-critic` agent in `light` mode", "`design-critic` agent in `full` mode",
+                     "ui_check.py --detect", "--check", "--tokens <Tokens>", "AskUserQuestion", "declined <date>",
+                     "loc/tmp/design/references", "general words", "never assets", "checks.py --add", "--reference",
+                     "--again", "at most 3 rounds"):
+            self.assertIn(part, text)
+
+    def test_skills_point_to_the_reference(self):
+        for rel in ("skills/loc-orchestrate/SKILL.md", "skills/loc-planning/SKILL.md", "skills/loc-review/SKILL.md",
+                    "skills/loc-brainstorm/SKILL.md", "skills/loc-init/SKILL.md"):
+            self.assertIn("references/design.md", read(rel), rel)
+        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        self.assertIn("`designer` agent", orchestrate)
+        self.assertIn("`design-critic` gate", orchestrate)
+        self.assertIn("ui_check.py", read("skills/loc-planning/SKILL.md"))
+        self.assertIn("ui_check.py", read("templates/CLAUDE.md"))
+
+    def test_agents_build_and_judge_but_never_both(self):
+        designer = read("agents/designer.md")
+        critic = read("agents/design-critic.md")
+        self.assertIn("tools: Read, Grep, Glob, Edit, Write", designer)
+        self.assertIn("tools: Read, Grep, Glob\n", critic)
+        for part in ("Second pass", "tokens file", "375 px", "never assets", "Never run commands"):
+            self.assertIn(part, designer)
+        for part in ("## Light", "## Full", "judged from code", "copy of one reference", "Findings: <n>"):
+            self.assertIn(part, critic)
 
 
 class ReadmeTest(unittest.TestCase):

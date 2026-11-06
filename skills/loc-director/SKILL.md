@@ -36,10 +36,10 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 Repeat, never asking "should I continue?":
 
 1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py next --text "<the step, e.g. loc-orchestrate 084>"` **before** starting it, so a cut run resumes there. Show its `banner` to the user as it is, on its own line.
-2. Run it: `Skill(skill: "masterskills:loc-planning", args: "<NNN>")` for an inbox file or an agreed plan without one, `Skill(skill: "masterskills:loc-orchestrate", args: "<NNN>")` for a plan. A failed plan gate, a stuck gate or a question inside them is handled there.
+2. Run it: `Skill(skill: "masterskills:loc-planning", args: "<NNN>")` for an inbox file or an agreed plan without one, `Skill(skill: "masterskills:loc-orchestrate", args: "<NNN>")` for a plan. Gates and questions inside them are handled there.
 3. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py done --item "<item>"`. One executed plan is one step of the cap (the agreed items + 10, unless the user named a number: `--cap`); planning and agents are not.
 4. New inbox files: the architect says what each needs; within the limit, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py add --item "<item>" --source "<file> (<the plan that made it>)"`; the pm orders the open items.
-5. Read any message the user typed, and check the stop rules.
+5. Read the user's messages; check the stop rules.
 
 The architect's word is followed. Its ruling goes where it applies, marked `(architect, <date>)`; a matter beyond its competence becomes a `question` with `U` and waits.
 
@@ -49,6 +49,7 @@ Stop only when:
 
 - every item is done (with `goal`, also what they produced, within the limit);
 - what is left waits for the user (`U` files), and nothing else can go on;
+- a blocking checks sheet point waits (`checks.py --list`);
 - the same stuck point comes back after a plan made for it: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/inbox_owner.py --number <NNN> --user` instead of a third plan, then go on with the rest;
 - the Stop hook says the time limit or the step cap is reached; a running task is finished first.
 
@@ -62,7 +63,8 @@ In the user's language, briefly:
 Done: plan 084 (commit a1b2c3d), plan 091 from stuck 091.
 Skipped: loc/inbox/080-deferred-old.md — outside the goal of this course.
 Left: loc/inbox/092-U-question-cache.md waits for you (092 A: one cache module, recommended).
+Checks: loc/inbox/093-U-checks.html, 3 points to rate.
 Resume: /masterskills:loc-director
 ```
 
-Name every option by its file, letter and content. The resume command comes last, also when nothing is left.
+Name every option by file, letter and content. The resume command comes last, always.
