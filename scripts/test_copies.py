@@ -42,7 +42,7 @@ def files(project: Path):
     for root, dirs, names in os.walk(project):
         dirs[:] = [d for d in dirs if d not in SKIP]  # never walk into node_modules, .venv, ...
         for name in names:
-            if Path(name).suffix in SUFFIXES:
+            if Path(name).suffix in SUFFIXES and (Path(root) / name).is_file():  # no broken links
                 found.append((Path(root) / name).relative_to(project))
     yield from sorted(found)
 

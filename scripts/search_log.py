@@ -137,6 +137,8 @@ def add(args) -> int:
     if log["stopped"]:
         return fail(f"the search stopped: {log['stopped']}")
     now = state(log)
+    if now["tries"] >= int(log["fields"]["Budget"]):
+        return fail("the budget is used up; the last kept try waits for --confirm")
     score = number(args.score)
     higher, goal = target(log["fields"]["Target"])
     keep = score > now["best"] if higher else score < now["best"]

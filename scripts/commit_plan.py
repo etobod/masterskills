@@ -16,7 +16,8 @@ directory is named with `--add <dir>` (the plan's own work) or `--leave <dir>`
     commit_plan.py --state loc/state/018.json --message "feat(kb): sources" --add src --leave data
     commit_plan.py --state loc/state/018.json --skip "CLAUDE.md: the user commits"
 
-Records `commit` in the state file: the new hash, "none" when the plan changed
+Records `commit` in the state file: the new hash (HEAD, with "already": true, when
+the plan's changes were committed during the plan), "none" when the plan changed
 no file outside `loc/`, or "skipped: <reason>".
 
 Prints JSON {"ok", "commit", "files", "left"} or {"ok": false, "error"}.
@@ -100,6 +101,9 @@ def main() -> int:
         # --no-renames: a renamed file lists its old path too, so its deletion is committed.
         files = git(["diff", "--name-only", "--no-renames", start, snapshot(project), "--", ".", ":!loc"],
                     project).splitlines()
+        # A file untracked at the start and gone now (renamed or deleted) has nothing to commit.
+        tracked = set(git(["ls-files", "--", *files], project).splitlines()) if files else set()
+        files = [name for name in files if name in tracked or (project / name).exists()]
         new = new_directories(files, project)
         leave = {name.strip("/\\") for name in args.leave}
         undecided = sorted(set(new) - leave - {name.strip("/\\") for name in args.add})
@@ -117,9 +121,10 @@ def main() -> int:
             return 0
         git(["add", "-A", "--", *files], project)
         if not git(["diff", "--cached", "--name-only", "--", *files], project).strip():
-            # Already committed during the plan (e.g. by the user): nothing left to commit.
-            record(state_path, data, "none")
-            print(json.dumps({"ok": True, "commit": "none", "files": [], "left": left}))
+            # Already committed during the plan (e.g. by the user): record that commit, not "none".
+            commit = git(["rev-parse", "HEAD"], project)
+            record(state_path, data, commit)
+            print(json.dumps({"ok": True, "commit": commit, "files": [], "left": left, "already": True}))
             return 0
         git(["commit", "-q", "-m", message, "--", *files], project)
         commit = git(["rev-parse", "HEAD"], project)

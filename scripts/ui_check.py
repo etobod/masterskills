@@ -182,7 +182,7 @@ def run_pages(url: str, widths: list, out, name: str, check: bool) -> dict:
                 try:
                     page.goto(target_url(url), wait_until="load")
                 except Exception as error:  # a timeout or a refused address: keep the JSON contract
-                    return {"error": f"cannot open {url}: {str(error).splitlines()[0]}"}
+                    return {**result, "error": f"cannot open {url} at {width} px: {str(error).splitlines()[0]}"}
                 try:  # a page with a websocket or polling never goes idle; settle briefly, then go on
                     page.wait_for_load_state("networkidle", timeout=5000)
                 except Exception:
@@ -236,8 +236,9 @@ def main() -> int:
     if args.url:
         widths = [int(w) for w in args.widths.split(",") if w.strip()]
         pages = run_pages(args.url, widths, args.out, args.name, args.check)
-        if "error" in pages:
-            print(json.dumps(pages))
+        if "error" in pages:  # what was measured before the failure is kept
+            print(json.dumps({**pages, "shots": result["shots"] + pages.get("shots", []),
+                              "defects": result["defects"] + pages.get("defects", [])}, ensure_ascii=False))
             return 2
         result["shots"] += pages["shots"]
         result["defects"] += pages["defects"]

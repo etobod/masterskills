@@ -119,6 +119,7 @@ class SearchLogTest(unittest.TestCase):
         self.add("30")
         code, out = self.add("85")
         self.assertEqual((out["keep"], out["stop"], out["confirm"]), (True, None, True))
+        self.assertEqual(self.add("90")[0], 1)  # no try past the budget while the confirmation waits
         code, out = self.run_log("--confirm", "--full", "70")
         self.assertEqual((code, out["stop"]), (0, "budget"))
         self.assertEqual(self.run_log("--check"), (0, "ok"))

@@ -242,6 +242,7 @@ class StopHookTest(unittest.TestCase):
         self.assertEqual(json.loads(stop_hook(cwd).stdout)["decision"], "block")
         self.assertIn("**State:** open", section(cwd))
         course(cwd, "done", "--item", "plan 084")
+        course(cwd, "next", "--text", "loc-planning loc/inbox/092-stuck-x.md")  # any step that is no plan
         stop_hook(cwd)
         self.assertIn("**State:** stopping — step cap", section(cwd))
 

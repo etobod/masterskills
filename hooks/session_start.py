@@ -25,7 +25,7 @@ from inbox_summary import summarize  # noqa: E402
 from migrate import FORMAT, read_format  # noqa: E402
 from mutate import restore  # noqa: E402
 
-sys.path.insert(0, str(PLUGIN_ROOT / "hooks"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from plugin_commands import script_command  # noqa: E402
 
 

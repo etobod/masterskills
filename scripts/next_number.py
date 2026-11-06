@@ -96,7 +96,8 @@ def main() -> int:
             parser.error("--user: a plan never waits for the user")
         slug = slugify(args.slug or args.title)
         if not slug:
-            parser.error("--slug has no usable characters")
+            parser.error(f"{'--slug' if args.slug else '--title'} has no usable characters for the file name; "
+                         "give --slug in ASCII")
         marker = "U-" if args.user or args.type in USER_TYPES else ""
         rel = f"loc/inbox/{number}-{marker}{args.type}-{slug}.md"
         path = project / rel

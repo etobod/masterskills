@@ -54,7 +54,8 @@ def running(project: Path) -> set:
     return numbers
 
 
-def queue(project: Path) -> list:
+def queue(project: Path, status: bool = True) -> list:
+    """Open plans in run order; `status` reads each file for `blocked` (renaming needs only names)."""
     active = running(project)
     plans = []
     for path in (project / "loc" / "inbox").glob("*-plan-*.md"):
@@ -63,7 +64,7 @@ def queue(project: Path) -> list:
             group = match.group("group")
             plans.append({"path": f"loc/inbox/{path.name}", "number": match.group("number"),
                           "group": int(group) if group else None, "running": match.group("number") in active,
-                          "blocked": blocked(path)})
+                          "blocked": blocked(path) if status else None})
     return sorted(plans, key=lambda p: (p["blocked"] is not None, p["group"] is not None, p["group"] or 0,
                                         p["number"]))
 
@@ -71,7 +72,7 @@ def queue(project: Path) -> list:
 def regroup(project: Path, groups: dict) -> list:
     """Rename each plan of `groups` (number -> new group) and every reference to it."""
     renamed = []
-    for plan in queue(project):
+    for plan in queue(project, status=False):
         if plan["number"] not in groups or plan["group"] == groups[plan["number"]]:
             continue
         old = Path(plan["path"]).name
@@ -99,7 +100,7 @@ def replace_references(project: Path, renamed: list) -> None:
 
 
 def make_room(project: Path, first: int, keep: str) -> list:
-    return regroup(project, {plan["number"]: plan["group"] + 1 for plan in queue(project)
+    return regroup(project, {plan["number"]: plan["group"] + 1 for plan in queue(project, status=False)
                              if plan["group"] is not None and plan["group"] >= first
                              and not plan["running"] and plan["number"] != keep})
 
@@ -125,7 +126,7 @@ def main() -> int:
             if not match:
                 parser.error(f"--set {item}: expected NNN=G, e.g. 070=2")
             groups[match.group(1)] = int(match.group(2))
-        active = {plan["number"] for plan in queue(project) if plan["running"]}
+        active = {plan["number"] for plan in queue(project, status=False) if plan["running"]}
         result["skipped"] = sorted(number for number in groups if number in active)
         result["renamed"] = regroup(project, {n: g for n, g in groups.items() if n not in active})
     print(json.dumps({"queue": queue(project), **result}, ensure_ascii=False))

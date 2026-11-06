@@ -23,9 +23,9 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
-from course import OPEN, STEPS, TIME, UNTIL, fields, join, now, set_field, split  # noqa: E402
+from course import OPEN, PLAN, STEPS, TIME, UNTIL, fields, join, now, set_field, split  # noqa: E402
 
-sys.path.insert(0, str(PLUGIN_ROOT / "hooks"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from plugin_commands import script_command  # noqa: E402
 
 
@@ -44,8 +44,8 @@ def decide(section: list, active: bool = False):
     limit = None
     if until and datetime.datetime.now() >= datetime.datetime.strptime(until[1], TIME):
         limit = "time limit"
-    elif done > cap or (done >= cap and info.get("Next", OPEN).startswith(OPEN)):
-        # `next` counts a plan when it starts: the cap is reached once that plan is done.
+    elif done > cap or (done >= cap and not PLAN.search(info.get("Next", ""))):
+        # `next` counts a plan when it starts: the cap is reached once no plan is running.
         limit = "step cap"
     if limit:
         stop = script_command("scripts/course.py")
@@ -54,7 +54,7 @@ def decide(section: list, active: bool = False):
             f'and the command to resume), then run `{stop} stop --reason "{limit}"`.')
     if active:
         return section, None
-    next_step = info.get("Next", "") or "the first open item"
+    next_step = info.get("Next", "") or OPEN
     return section, (
         f"The director's course in loc/PRD.md is open ({done} of {cap} plans executed). Next: {next_step}. "
         "Carry on with loc-director: write each next step with course.py next before starting it, and never ask "
