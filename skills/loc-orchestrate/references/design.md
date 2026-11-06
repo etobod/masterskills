@@ -21,6 +21,15 @@ Design plugin: none
 - **Pages**: what to open, a file or a local address (`http://localhost:5173/`) with its start command.
 - **Design plugin**: an external design plugin and its review command, or `none`. It is an addition; the plugin's own agents always run.
 
+## Filled by `loc-init`
+
+`loc-init` fills an empty `## Frontend` as soon as it sees a user interface, with the Edit tool (never a script holding the text: Windows paths break its string escapes):
+
+- `UI check`, `References: on`, `Widths: 375, 768, 1440` and `Design plugin: none` as above;
+- `Screenshots`: after `ui_check.py --detect` and the question under Tools;
+- `Pages`: the entry page (`index.html`), or the dev server address with its start command from `Commands`;
+- `Tokens: none yet`: the first UI milestone creates the file and writes its path here.
+
 ## Tools
 
 `ui_check.py --detect` says whether Playwright is installed. When it is not and `Screenshots` is not `declined`, ask with `AskUserQuestion` once: `Install the browser` (recommended: the critic sees the page, the sheet gets screenshots; the command is in `install`) or `No screenshots`. Record a refusal as `Screenshots: declined <date>` and never ask again. Without screenshots the critic judges from code and the sheet points have no images.

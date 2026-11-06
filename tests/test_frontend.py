@@ -102,6 +102,16 @@ class DesignFlowTest(unittest.TestCase):
         self.assertIn("ui_check.py", read("skills/loc-planning/SKILL.md"))
         self.assertIn("ui_check.py", read("templates/CLAUDE.md"))
 
+    def test_init_fills_the_section_itself(self):
+        # 2.28.0 told the user to fill it, so a course found nothing to do and the section stayed empty.
+        init = read("skills/loc-init/SKILL.md")
+        self.assertIn("fill an empty `## Frontend` yourself", init)
+        next_step = init.split("Then point out the next step:", 1)[1].split("- **Project brainstorm.**", 1)[0]
+        self.assertNotIn("Frontend", next_step)
+        filled = section(read("skills/loc-orchestrate/references/design.md"), "## Filled by `loc-init`")
+        for part in ("Edit tool", "ui_check.py --detect", "Pages", "Tokens: none yet"):
+            self.assertIn(part, filled)
+
     def test_agents_build_and_judge_but_never_both(self):
         designer = read("agents/designer.md")
         critic = read("agents/design-critic.md")
