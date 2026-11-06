@@ -11,6 +11,7 @@ A search only for a number with an unknown ceiling (a pass rate, a run time) the
 **Kind:** search
 **Metric:** `python -B eval/score.py` prints the pass rate of `eval/cases/`
 **Quick metric:** `python -B eval/score.py --failed` (the 30 cases plan 041 failed, 2 min)
+**Quick target:** >= 60 of those 30, roughly a full 80
 **Baseline:** 64, plan 041's run of the same metric on the same code; quick: measured at start
 **Target:** >= 80
 **Budget:** 50
@@ -31,7 +32,7 @@ A search only for a number with an unknown ceiling (a pass rate, a run time) the
 Measuring serves the tries. Stop at the first rung that works:
 
 1. **Is the number already known?** An earlier plan, a log, the user's results: `**Baseline:**` names it, and nothing is measured before the first try. With a quick metric, tries are compared with a quick score: run it once on the current code.
-2. **Quick metric**: when the full metric takes longer than a change, a smaller set that moves first: earlier failures plus a few passing cases. Otherwise `same as Metric` with the reason. Measuring grows with progress: minutes first; a wider set only once gains show (a metric change).
+2. **Quick metric**: when the full metric takes longer than a change, a smaller set that moves first: earlier failures plus a few passing cases. Otherwise `same as Metric` with the reason. On another scale (only failures), a `Quick target`: the quick score worth a full run. Measuring grows with progress: minutes first; a wider set only once gains show (a metric change).
 3. **Full metric** only to confirm a quick gain that meets the target, and once at the end. Repeated runs (`Measure`) and the hold-out only at the end, never per try or as a grid up front.
 
 The plan's rubber-duck judges this preparation, never whether the target will be reached.
@@ -40,9 +41,9 @@ The plan's rubber-duck judges this preparation, never whether the target will be
 
 Phase `search`, gate `M<n>/search` with `"log": "loc/state/<NNN>/search-M<n>.md"` (`rounds: 1`). `search_log.py` decides keep, revert and stop, never you.
 
-1. **Start.** Take the `Baseline` as written; measure only what it says is missing, with the quick metric. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/search_log.py --start --log <log> --metric "<command>" [--quick "<command>"] --baseline <quick score, else Baseline> --target "<target>" --budget <n> --give-up <n>`. Copy the `May change` files to `loc/state/<NNN>/search-best/`.
+1. **Start.** Take the `Baseline` as written; measure only what it says is missing, with the quick metric. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/search_log.py --start --log <log> --metric "<command>" [--quick "<command>" [--quick-target "<quick target>"]] --baseline <quick score, else Baseline> --target "<target>" --budget <n> --give-up <n>`. Copy the `May change` files to `loc/state/<NNN>/search-best/`.
 2. **One try.** A fresh `searcher` agent with the milestone, `May change` files and log returns one change with its hypothesis, a metric change proposal, or "give up". Then you:
-   - check it changed only `May change` files (else revert; it counts as reverted);
+   - check it changed only `May change` files; restore others from the milestone's `start` snapshot (`git show <start>:<file>`; a new file is deleted), never `git checkout` (it loses plan work); the try counts as reverted;
    - run the quick metric (or the metric), and the `Guard` if any; a failing guard is no gain;
    - `search_log.py --add --log <log> --score <score> --hypothesis "<...>" --change "<...>"`;
    - `keep: true`: copy the `May change` files to `loc/state/<NNN>/search-best/` (never a commit: the plan commits once, at its end); `false`: restore them from there.

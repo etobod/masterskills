@@ -1,6 +1,6 @@
 # Design: milestones that change what the user sees
 
-With a user interface: the `designer` agent builds, `ui_check.py` measures, the `design-critic` agent judges the look, and the user rates it on the checks sheet.
+With a user interface: the `designer` agent builds, `ui_check.py` measures, the `design-critic` agent judges, and the user rates it on the checks sheet.
 
 ## `## Frontend` in `CLAUDE.md`
 
@@ -25,7 +25,7 @@ Design plugin: none
 
 ## Filled by `loc-init`
 
-`loc-init` fills an empty `## Frontend` as soon as it sees a user interface, with the Edit tool (never a script holding the text: Windows paths break its string escapes):
+`loc-init` fills an empty `## Frontend` as soon as it sees a user interface, with the Edit tool (never a script: Windows paths break its string escapes):
 
 - `UI check`, `References: on`, `Widths: 375, 768, 1440` and `Design plugin: none` as above;
 - `Screenshots`: after `ui_check.py --detect` and the question under Tools;
@@ -57,7 +57,7 @@ Then a note per reference, `loc/tmp/design/references/ref-<k>.md`: its address, 
    ```
 
    A defect (horizontal scroll, cut-off text, contrast below WCAG AA, no visible focus, a raw colour or size outside the tokens) is fixed like a failing test.
-3. **Screenshots**: `ui_check.py --url <page> --widths <Widths> --out loc/tmp/design/shots/<NNN> --name M<n>`, and the `Scene views` command when the milestone changes such a state; both go to the critic and sheet.
+3. **Screenshots**: `ui_check.py --url <page> --widths <Widths> --out loc/tmp/design/shots/<NNN> --name M<n>`, and the `Scene views` command when the milestone changes such a state; both go to the critic and sheet. None with `Screenshots: declined`.
 4. **Light review** (gate `M<n>/design`): the `design-critic` agent in `light` mode, with the screenshots, the direction, the tokens and the changed files. A Blocking finding goes back to the `designer` with the notes, then steps 2–4 again; at most 3 rounds (core rule 6). Notes go to `## Review notes` as `- suggestion (M<n> design): …`.
 
 ## End of the plan

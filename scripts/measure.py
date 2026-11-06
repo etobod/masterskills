@@ -35,6 +35,7 @@ OVERRIDES = {
     "skills/loc-review/SKILL.md": 900,
     "skills/loc-diagram/SKILL.md": 850,
     "skills/loc-qa/SKILL.md": 1000,
+    "skills/loc-orchestrate/references/search.md": 850,
     "agents/rubber-duck.md": 670,
     "agents/judge.md": 700,
 }

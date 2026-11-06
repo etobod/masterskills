@@ -6,19 +6,20 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 
 Fixes from the first review of the whole plugin.
 
-- The light design gate `M<n>/design` and its notes `- suggestion (M<n> design): …` are valid in the state file and `## Review notes`; `state_check` reported "unknown gate" after every state write in a UI milestone. With `Screenshots: declined` the UI proof runs only the tokens check.
-- A director course with a step cap lets the last counted plan finish: Steps count when a plan starts, so the Stop hook blocked mid-plan.
-- Search milestones: with a quick metric the baseline is a quick score measured on the current code, not the full metric's; a kept quick try on the last iteration is still confirmed instead of stopping on budget; the best version is kept in `loc/state/<NNN>/search-best/`, not committed per try; the give-up command has its `--log`.
-- `commit_plan.py` commits the deletion of a renamed file, and records `none` when the plan's changes were already committed.
+- The light design gate `M<n>/design` and its notes `- suggestion (M<n> design): …` are valid in the state file and `## Review notes`; `state_check` reported "unknown gate" after every state write in a UI milestone. With `Screenshots: declined` the UI proof runs only the tokens check, also in plans `loc-planning` writes and in the `ui` and `screenshots` layers of `loc/TEST-PLAN.md`.
+- A director course with a step cap lets the last counted plan finish: Steps count when a plan starts, so the Stop hook blocked mid-plan. The cap also holds when another step follows the last plan, and `course.py next` refuses to start a plan past the cap.
+- Search milestones: with a quick metric the baseline is a quick score measured on the current code, not the full metric's; a kept quick try on the last iteration is still confirmed instead of stopping on budget; the best version is kept in `loc/state/<NNN>/search-best/`, not committed per try; the give-up command has its `--log`. A `Quick target` (`--quick-target`) says which quick score is worth a full run when the quick metric is on another scale; no try is added past the budget while a confirmation waits; a file outside `May change` is restored from the milestone's `start` snapshot, never with `git checkout`.
+- `commit_plan.py` commits the deletion of a renamed file, and of a file the plan renamed that git never tracked; when the plan's changes were already committed it records that commit (`already: true`).
 - `next_number.py` makes the slug from the title when `--slug` is missing; every `deferred` command gives `--what`, `--why` and `--when`.
 - `plan_queue.py` marks a plan whose status is `open — gate failed` or `open — QA failed` as `blocked` and lists it last; `loc-orchestrate` without an argument skips it.
 - `loc-journal` uses the types `Fix` and `Decision` that `memory_index.py` accepts.
 - `state.md` matches `check_state.py` (the `stuck` value per gate, the triage verdict `search`); the `architect` reads the file named for Harvest.
 - Git output that is not UTF-8 (a cp1250 file) no longer leaves the review without a diff.
-- `ui_check.py`: the focus walk tells elements apart by identity, so two links with one class no longer end it early; a page that never goes idle (a websocket, polling) is checked after `load`, and an address that cannot open is a JSON error.
+- `ui_check.py`: the focus walk tells elements apart by identity, so two links with one class no longer end it early; a page that never goes idle (a websocket, polling) is checked after `load`, and an address that cannot open is a JSON error that keeps the earlier results.
 - `loc-diagram` writes the walk-through in English in `loc/diagrams/` (core rule 1) and answers in the user's language.
-- `test_copies.py` never walks into skipped directories (`node_modules`, `.venv`).
+- `test_copies.py` never walks into skipped directories (`node_modules`, `.venv`) and skips broken links.
 - The hooks share one script-command builder and one Git Bash drive-path conversion (`hooks/plugin_commands.py`) instead of three copies each.
+- Budget: `loc-orchestrate` `references/search.md` 850 words (was 800).
 
 ## 2.28.3 — 2026-11-06
 

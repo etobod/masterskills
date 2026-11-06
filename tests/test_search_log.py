@@ -124,6 +124,22 @@ class SearchLogTest(unittest.TestCase):
         self.assertEqual((code, out["stop"]), (0, "budget"))
         self.assertEqual(self.run_log("--check"), (0, "ok"))
 
+    def test_a_quick_target_on_the_quick_scale_asks_for_confirmation(self):
+        # The quick set held only earlier failures: a quick 60 already meant a full 80.
+        self.run_log("--start", "--metric", "python score.py", "--quick", "python score.py --failed-only",
+                     "--quick-target", ">= 60", "--baseline", "0", "--target", ">= 80", "--budget", "5",
+                     "--give-up", "5")
+        self.assertIn("**Quick target:** >= 60", self.log.read_text(encoding="utf-8"))
+        self.assertFalse(self.add("40")[1]["confirm"])
+        self.assertTrue(self.add("65")[1]["confirm"])
+        self.assertEqual(self.run_log("--confirm", "--full", "82")[1]["stop"], "target")
+
+    def test_a_quick_target_needs_a_quick_metric_and_the_same_direction(self):
+        base = ("--start", "--metric", "m", "--baseline", "0", "--target", ">= 80", "--budget", "5", "--give-up", "5")
+        self.assertEqual(self.run_log(*base, "--quick-target", ">= 60")[0], 1)
+        self.assertEqual(self.run_log(*base, "--quick", "q", "--quick-target", "<= 60")[0], 1)
+        self.assertFalse(self.log.exists())
+
     def test_confirm_needs_a_quick_metric(self):
         self.start()
         self.assertEqual(self.run_log("--confirm", "--full", "90")[0], 1)

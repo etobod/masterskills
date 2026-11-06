@@ -38,6 +38,7 @@ class BudgetTest(unittest.TestCase):
         self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
         self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2720)
         self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
+        self.assertEqual(overrides["skills/loc-orchestrate/references/search.md"], 850)
         self.assertEqual(overrides["agents/judge.md"], 700)
         self.assertEqual(overrides["agents/rubber-duck.md"], 670)
 
@@ -182,10 +183,20 @@ class SearchMilestoneTest(unittest.TestCase):
     def test_measuring_stays_in_proportion(self):
         reference = read("skills/loc-orchestrate/references/search.md")
         for part in ("Is the number already known?", "**Baseline:**", "**Quick metric:**", "--confirm",
-                     "nothing is measured before the first try", "Measuring grows with progress", "time spent measuring is never a reason"):
+                     "nothing is measured before the first try", "Measuring grows with progress", "time spent measuring is never a reason",
+                     "**Quick target:**", "--quick-target", "`git show <start>:<file>`", "never `git checkout`"):
             self.assertIn(part, reference)
         self.assertIn("measuring out of proportion", read("agents/rubber-duck.md"))
+        self.assertIn("not one quick run at the start", read("agents/rubber-duck.md"))
         self.assertIn("**Kind:** search", read("templates/loc/inbox/plan.md"))
+
+    def test_declined_screenshots_leave_only_the_tokens_check(self):
+        # Without a browser, a proof with `--check` or `--out` exits 2 on every UI milestone.
+        self.assertIn("(with `Screenshots: declined`, `--tokens` only)", read("skills/loc-planning/SKILL.md"))
+        plan = read("templates/loc/TEST-PLAN.md")
+        self.assertIn("(only this one with `Screenshots: declined`)", plan)
+        self.assertIn("none with `Screenshots: declined`", plan)
+        self.assertIn("None with `Screenshots: declined`.", read("skills/loc-orchestrate/references/design.md"))
 
     def test_kind_is_proof_or_search_never_traditional(self):
         for rel in ("skills/loc-orchestrate/references/search.md", "skills/loc-planning/SKILL.md",

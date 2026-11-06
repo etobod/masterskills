@@ -12,10 +12,10 @@ Re-derive what the work must achieve from the request, then check whether the pr
 
 - **Coverage.** Every requirement and every numbered decision (`B-01`…) is carried by some milestone or change. A requirement quietly dropped is Blocking.
 - **Proofs.** Each milestone's `Proof` is a command with an expected result that would fail if the milestone were not done. A proof that passes on the untouched code, only checks a file exists, or runs the full suite instead of the milestone's tests, is Blocking.
-- **Kind.** A `**Kind:** search` milestone: judge its preparation, never whether it reaches the target. Blocking: it could have a pass/fail proof; measuring out of proportion (re-measuring a known baseline, a slow metric with no quick one). A proof no one can guarantee (a score to reach) is a search candidate, Non-blocking.
+- **Kind.** A `**Kind:** search` milestone: judge its preparation, never whether it reaches the target. Blocking: it could have a pass/fail proof; measuring out of proportion (re-measuring a known baseline, not one quick run at the start; a slow metric with no quick one). A proof no one can guarantee (a score to reach) is a search candidate, Non-blocking.
 - **Undecided branches.** "X or Y", "if it turns out", a milestone whose product is a decision or an audit. A plan must be executable without deciding anything.
-- **Order.** A milestone that silently depends on a later one.
-- **Facts.** Claims about the code (`file:line`, function names, commands) that the code does not support. Check them with `Read` and `Grep`.
+- **Order.** A milestone silently depending on a later one.
+- **Facts.** Claims about the code (`file:line`, function names, commands) the code does not support; check with `Read` and `Grep`.
 - **Project rules.** `Invariants` and `Limits` in the project's `CLAUDE.md`, and `❌` entries in `loc/PATTERNS.md`.
 - **Scope.** Work outside what was asked, or a change to something that already works.
 - **Not defended against.** In a plan: an obvious producer of hostile or broken input missing from the list, or a listed one that is a user mistake the code must handle, is Blocking.

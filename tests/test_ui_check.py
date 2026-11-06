@@ -113,10 +113,11 @@ class ToolTest(unittest.TestCase):
         kinds = {(d["kind"], d["selector"]) for d in json.loads(result.stdout)["defects"]}
         self.assertIn(("no-focus", "button"), kinds, result.stdout)
 
+    @unittest.skipUnless(HAS_PLAYWRIGHT, "Playwright is not installed: page checks are skipped")
     def test_an_address_that_cannot_open_is_a_json_error(self):
         result = self.run_tool("--url", "http://127.0.0.1:9/", "--widths", "375", "--check")
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-        self.assertIn("error", json.loads(result.stdout))
+        self.assertIn("cannot open", json.loads(result.stdout)["error"])
 
 
 if __name__ == "__main__":
