@@ -167,4 +167,4 @@ In the user's language, briefly:
 - the judge's `enough` lines, numbered;
 - what moved to `loc/inbox/done/`, and what changed in `loc/PRD.md`.
 
-End with the next step: `/masterskills:loc-orchestrate <NNN>` when the user decides. Do not start it.
+End with the next step: `/masterskills:loc-orchestrate <NNN>` when the user decides. Do not start it. In a `loc-director` course the director goes on: never ask to continue.

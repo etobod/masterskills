@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.27.2 — 2026-11-06
+
+- In a `loc-director` course, the reports of `loc-planning` and `loc-orchestrate` never ask whether to continue: the director goes on. A session ended a plan's report with "Continue?" and waited, because both reports end with the next step for the user to decide.
+
 ## 2.27.1 — 2026-11-06
 
 - `course.py done` sets the course's `**Next:**` to the first open item. It kept the step that had just ended, so a resumed session was told `Next: loc-planning 017` after 017 was planned, and could plan it again. The banner's `ended:` names the item done last.

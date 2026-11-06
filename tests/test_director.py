@@ -262,5 +262,13 @@ class SkillTest(unittest.TestCase):
             self.assertIn(marker, skill)
 
 
+
+class CourseNeverAsksTest(unittest.TestCase):
+    def test_the_skills_a_course_runs_never_ask_to_continue(self):
+        for name in ("loc-planning", "loc-orchestrate"):
+            text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("In a `loc-director` course the director goes on: never ask to continue.", text, name)
+
+
 if __name__ == "__main__":
     unittest.main()
