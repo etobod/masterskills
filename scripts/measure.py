@@ -36,7 +36,7 @@ OVERRIDES = {
     "skills/loc-diagram/SKILL.md": 850,
     "skills/loc-qa/SKILL.md": 1000,
     "agents/rubber-duck.md": 670,
-    "agents/judge.md": 670,
+    "agents/judge.md": 700,
 }
 
 PATTERNS = [
