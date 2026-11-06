@@ -17,6 +17,7 @@ without git.
 
 import difflib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -37,10 +38,13 @@ TEST_DIRS = {"test", "tests", "spec", "__tests__"}
 
 
 def files(project: Path):
-    for path in sorted(project.rglob("*")):
-        rel = path.relative_to(project)
-        if path.is_file() and path.suffix in SUFFIXES and not SKIP.intersection(rel.parts):
-            yield rel
+    found = []
+    for root, dirs, names in os.walk(project):
+        dirs[:] = [d for d in dirs if d not in SKIP]  # never walk into node_modules, .venv, ...
+        for name in names:
+            if Path(name).suffix in SUFFIXES:
+                found.append((Path(root) / name).relative_to(project))
+    yield from sorted(found)
 
 
 def is_test(rel: Path) -> bool:

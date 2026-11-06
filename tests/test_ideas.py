@@ -91,6 +91,13 @@ class DiagramMarksTest(unittest.TestCase):
         self.assertIn("inferred", text)
         self.assertIn("`?`", text)
 
+    def test_the_file_is_english_the_answer_in_the_users_language(self):
+        # Core rule 1: English in `loc/`; the walk-through was written there in the user's language.
+        text = read("skills/loc-diagram/SKILL.md")
+        self.assertIn("Under the diagram, in English", text)
+        self.assertNotIn("Under the diagram, in the user's language", text)
+        self.assertIn("those three in the user's language", text)
+
 
 class TrackedInputsTest(unittest.TestCase):
     """A plan never gitignores a file its proofs, tests or manual checks need."""

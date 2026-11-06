@@ -25,12 +25,8 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
 from course import OPEN, STEPS, TIME, UNTIL, fields, join, now, set_field, split  # noqa: E402
 
-
-def command(script: str) -> str:
-    """How the model runs one of the plugin's scripts (as in session_start.py)."""
-    root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
-    python = os.environ.get("MASTERSKILLS_PYTHON")
-    return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
+sys.path.insert(0, str(PLUGIN_ROOT / "hooks"))
+from plugin_commands import script_command  # noqa: E402
 
 
 def decide(section: list, active: bool = False):
@@ -52,7 +48,7 @@ def decide(section: list, active: bool = False):
         # `next` counts a plan when it starts: the cap is reached once that plan is done.
         limit = "step cap"
     if limit:
-        stop = command("scripts/course.py")
+        stop = script_command("scripts/course.py")
         return set_field(section, "State", f"stopping — {limit}"), (
             f"The course reached its {limit}. Finish no new task. Give the stop report (Done / Skipped / Left, "
             f'and the command to resume), then run `{stop} stop --reason "{limit}"`.')

@@ -16,6 +16,9 @@ Fixes from the first review of the whole plugin.
 - `state.md` matches `check_state.py` (the `stuck` value per gate, the triage verdict `search`); the `architect` reads the file named for Harvest.
 - Git output that is not UTF-8 (a cp1250 file) no longer leaves the review without a diff.
 - `ui_check.py`: the focus walk tells elements apart by identity, so two links with one class no longer end it early; a page that never goes idle (a websocket, polling) is checked after `load`, and an address that cannot open is a JSON error.
+- `loc-diagram` writes the walk-through in English in `loc/diagrams/` (core rule 1) and answers in the user's language.
+- `test_copies.py` never walks into skipped directories (`node_modules`, `.venv`).
+- The hooks share one script-command builder and one Git Bash drive-path conversion (`hooks/plugin_commands.py`) instead of three copies each.
 
 ## 2.28.3 — 2026-11-06
 

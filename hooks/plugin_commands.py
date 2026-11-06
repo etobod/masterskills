@@ -43,6 +43,21 @@ BRANCH = re.compile(r"[A-Za-z0-9._/][A-Za-z0-9._/-]*")
 REASON = "masterskills: the plugin's own command"
 
 
+def script_command(script: str) -> str:
+    """How the model runs one of the plugin's scripts, in the form `allowed` lets through:
+    the root as Claude Code gave it. The OpenCode plugin names its Python in
+    MASTERSKILLS_PYTHON: its shell may be PowerShell, which has no `sh`."""
+    root = (os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)).replace("\\", "/")
+    python = os.environ.get("MASTERSKILLS_PYTHON")
+    return f'{python} -B "{root}/{script}"' if python else f'sh "{root}/scripts/py.sh" {script}'
+
+
+def drive_path(path: str) -> str:
+    """A Git Bash drive path on Windows (`/c/Users`, `/c`) as Python reads it (`c:/Users`)."""
+    drive = re.match(r"^/([a-zA-Z])(/|$)", path) if os.name == "nt" else None
+    return f"{drive.group(1)}:/{path[3:]}" if drive else path
+
+
 def plain(command: str) -> bool:
     """True when the command is one simple command: no operator, substitution
     or redirection outside quotes, and no `$` or backtick inside double quotes.
@@ -67,17 +82,13 @@ def plain(command: str) -> bool:
 
 
 def same_path(given: str, expected: Path) -> bool:
-    given = given.replace("\\", "/")
-    if os.name == "nt" and re.match(r"^/[a-zA-Z]/", given):
-        given = f"{given[1]}:{given[2:]}"
+    given = drive_path(given.replace("\\", "/"))
     return os.path.normcase(os.path.normpath(given)) == os.path.normcase(os.path.normpath(expected))
 
 
 def plugin_file(given: str, kind: str = "file") -> bool:
     """True for an existing file (or directory) inside the plugin, after symlinks and `..` are resolved."""
-    given = given.replace("\\", "/")
-    if os.name == "nt" and re.match(r"^/[a-zA-Z]/", given):
-        given = f"{given[1]}:{given[2:]}"
+    given = drive_path(given.replace("\\", "/"))
     try:
         path = Path(given).resolve()
         exists = path.is_file() if kind == "file" else path.exists()
