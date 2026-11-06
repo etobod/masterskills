@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.28.1 — 2026-11-06
+
+- `loc-init` fills an empty `## Frontend` itself when the project has a user interface (the UI check, screenshots after `ui_check.py --detect`, references, widths, the entry page, `Tokens: none yet` until the first UI milestone creates the file), with the Edit tool. 2.28.0 listed it as a next step for the user, so a director course found nothing to do and the section stayed empty; a session that then filled it through a Python script hit string escapes in Windows paths.
+
 ## 2.28.0 — 2026-11-06
 
 - **Manual checks on one page.** Every manual check of a plan goes on a checks sheet, `loc/inbox/NNN-U-checks.html`, instead of one deferred file per check: numbered points with the plan and milestone, the steps (with a ring on a screenshot where to click), what to look at, screenshots, a reference, what was expected and seen. You answer by number in chat ("3 ok, 5 fix: the shadow is too strong"); `scripts/checks.py --rate` moves the rated points with the answer into `loc/inbox/done/`, deletes their images, and a fix comes back as a new point (`again: 5`) after its test and fix. A blocking point is framed in red and the work waits for it. When every point is rated the page closes and the next check starts a new one; point numbers are never reused. `loc-orchestrate`, `loc-qa`, `loc-planning`, `loc-director` and core rule 8 use the sheet; the inbox summary and the director's course list it.
