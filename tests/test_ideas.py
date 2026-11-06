@@ -33,14 +33,17 @@ class BudgetTest(unittest.TestCase):
 
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
-        self.assertEqual(overrides["skills/loc-orchestrate/SKILL.md"], 1350)
-        self.assertEqual(overrides["skills/loc-review/SKILL.md"], 900)
-        self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
-        self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2720)
-        self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
-        self.assertEqual(overrides["skills/loc-orchestrate/references/search.md"], 850)
-        self.assertEqual(overrides["agents/judge.md"], 700)
-        self.assertEqual(overrides["agents/rubber-duck.md"], 670)
+        expected = {
+            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2770,
+            "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
+            "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 850,
+            "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
+            "agents/architect.md": 650, "agents/design-critic.md": 650, "agents/designer.md": 650,
+            "agents/rubber-duck.md": 720, "agents/judge.md": 750,
+        }
+        self.assertEqual(overrides, expected)
+        self.assertEqual(measure().LIMITS["rule"], 575)
 
 
 class LadderTest(unittest.TestCase):

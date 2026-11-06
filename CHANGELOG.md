@@ -19,7 +19,7 @@ Fixes from the first review of the whole plugin.
 - `loc-diagram` writes the walk-through in English in `loc/diagrams/` (core rule 1) and answers in the user's language.
 - `test_copies.py` never walks into skipped directories (`node_modules`, `.venv`) and skips broken links.
 - The hooks share one script-command builder and one Git Bash drive-path conversion (`hooks/plugin_commands.py`) instead of three copies each.
-- Budget: `loc-orchestrate` `references/search.md` 850 words (was 800).
+- Budgets raised by 50 words for every file at its limit: the rules 575 (sum), `loc-orchestrate` 1400, `loc-planning` 2770, `loc-review` 950, `loc-qa` 1050, `loc-director` and `loc-init` 850, the references `design.md`, `gates.md` and `prd.md` 850, `search.md` 900, the agents `architect`, `design-critic` and `designer` 650, `rubber-duck` 720, `judge` 750.
 
 ## 2.28.3 — 2026-11-06
 

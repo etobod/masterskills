@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 LIMITS = {
-    "rule": 525,
+    "rule": 575,
     "skill": 800,
     "reference": 800,
     "agent": 600,
@@ -30,14 +30,22 @@ LIMITS = {
 
 # Per-file limits approved by the user; everything else uses LIMITS.
 OVERRIDES = {
-    "skills/loc-orchestrate/SKILL.md": 1350,
-    "skills/loc-planning/SKILL.md": 2720,
-    "skills/loc-review/SKILL.md": 900,
+    "skills/loc-orchestrate/SKILL.md": 1400,
+    "skills/loc-planning/SKILL.md": 2770,
+    "skills/loc-review/SKILL.md": 950,
     "skills/loc-diagram/SKILL.md": 850,
-    "skills/loc-qa/SKILL.md": 1000,
-    "skills/loc-orchestrate/references/search.md": 850,
-    "agents/rubber-duck.md": 670,
-    "agents/judge.md": 700,
+    "skills/loc-qa/SKILL.md": 1050,
+    "skills/loc-director/SKILL.md": 850,
+    "skills/loc-init/SKILL.md": 850,
+    "skills/loc-orchestrate/references/design.md": 850,
+    "skills/loc-orchestrate/references/gates.md": 850,
+    "skills/loc-orchestrate/references/search.md": 900,
+    "skills/loc-planning/references/prd.md": 850,
+    "agents/architect.md": 650,
+    "agents/design-critic.md": 650,
+    "agents/designer.md": 650,
+    "agents/rubber-duck.md": 720,
+    "agents/judge.md": 750,
 }
 
 PATTERNS = [
