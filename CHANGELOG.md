@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.28.3 — 2026-11-06
+
+- The `judge` agent fixes a visible defect on a screen the plan changes (an element styled unlike its siblings, a broken layout, the direction ignored): in a plan about the look, the look is what the user gets. A judge had passed unstyled scenario buttons beside styled chips as `enough` because they still worked.
+- Budget: `judge` 700 words (was 670).
+
 ## 2.28.2 — 2026-11-06
 
 - `## Frontend` has a `Scene views` field: the project's own screenshot command for states an address cannot reach (a 3D scene, a simulation, a state set through the app's controls). A UI milestone that changes such a state runs it beside `ui_check.py`, and both sets of screenshots go to the `design-critic` and the checks sheet. `ui_check.py` only opens an address, so the critic saw nothing but the start view of a three.js scene.
