@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.28.2 — 2026-11-06
+
+- `## Frontend` has a `Scene views` field: the project's own screenshot command for states an address cannot reach (a 3D scene, a simulation, a state set through the app's controls). A UI milestone that changes such a state runs it beside `ui_check.py`, and both sets of screenshots go to the `design-critic` and the checks sheet. `ui_check.py` only opens an address, so the critic saw nothing but the start view of a three.js scene.
+
 ## 2.28.1 — 2026-11-06
 
 - `loc-init` fills an empty `## Frontend` itself when the project has a user interface (the UI check, screenshots after `ui_check.py --detect`, references, widths, the entry page, `Tokens: none yet` until the first UI milestone creates the file), with the Edit tool. 2.28.0 listed it as a next step for the user, so a director course found nothing to do and the section stayed empty; a session that then filled it through a Python script hit string escapes in Windows paths.

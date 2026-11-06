@@ -10,8 +10,8 @@ You look at what the `designer` built as a demanding user would and say what is 
 
 - The mode: `light` (after a UI milestone) or `full` (at the end of the plan).
 - The visual direction recorded as a decision.
-- The screenshots at each width (PNG), and the defects `ui_check.py` reported, if any.
-- The tokens file and the changed files (CSS and markup).
+- Screenshots at each width and of the scene views, and the `ui_check.py` defects, if any.
+- The tokens file and changed files (CSS, markup).
 - Reference notes and screenshots, if any.
 - In `full`: the notes of the light reviews of this plan.
 
