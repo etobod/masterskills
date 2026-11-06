@@ -9,7 +9,7 @@ resumes from it:
     **Agreed:** <time> — <the user's words>
     **Limit:** goal | none | until <YYYY-MM-DD HH:MM>
     **Steps:** <n> of <cap>   (plans executed: a new `loc-orchestrate <NNN>`)
-    **Next:** <the next step, written before it starts>
+    **Next:** <the next step, written before it starts; `done` sets it to the first open item>
     **Last report to the user:** <time>
     - [ ] plan 084 — agreed
     - [x] plan 091 — from loc/inbox/091-stuck-x.md (plan 084) — done <time>
@@ -38,6 +38,7 @@ import sys
 from pathlib import Path
 
 CAP = 10  # plans beyond the agreed items
+OPEN = "the first open item"
 FIELD = re.compile(r"^\*\*(?P<name>[^*]+):\*\*\s*(?P<value>.*?)\s*$")
 UNTIL = re.compile(r"^until (\d{4}-\d{2}-\d{2} \d{2}:\d{2})$")
 STEPS = re.compile(r"^(\d+) of (\d+)$")
@@ -101,7 +102,9 @@ def next_step(section: list, text: str) -> list:
     """Write the next step. A step of the cap is one plan executed: a `loc-orchestrate <NNN>` other than the
     current one. Planning, inbox files and agents are not counted, and resuming the same plan counts once."""
     info = fields(section)
-    plan, current = PLAN.search(text), PLAN.search(info.get("Next", ""))
+    previous = info.get("Next", "")
+    plan = PLAN.search(text)
+    current = None if previous.startswith(OPEN) else PLAN.search(previous)
     steps = STEPS.match(info.get("Steps", ""))
     if plan and steps and not (current and current[1] == plan[1]):
         section = set_field(section, "Steps", f"{int(steps[1]) + 1} of {steps[2]}")
@@ -111,7 +114,10 @@ def next_step(section: list, text: str) -> list:
 def banner(section: list, text: str, ended: str) -> str:
     """One line the user sees between two steps: what ended, what starts, the plans executed."""
     info = fields(section)
-    parts = [f"ended: {ended}"] if ended and ended != "the first open item" else []
+    if ended.startswith(OPEN):
+        finished = [m for m in map(ITEM.match, section) if m and m["mark"] == "x" and m["done"]]
+        ended = max(finished, key=lambda m: m["done"])["text"].split(" — ")[0] if finished else ""
+    parts = [f"ended: {ended}"] if ended else []
     parts.append(f"starting: {text}")
     if STEPS.match(info.get("Steps", "")):
         parts.append(f"plans {info['Steps']}")
@@ -166,7 +172,10 @@ def done(section: list, item: str):
     for index, line in enumerate(section):
         match = ITEM.match(line)
         if match and match["mark"] == " " and (match["text"] == item or match["text"].startswith(f"{item} — ")):
-            return [*section[:index], f"- [x] {match['text']} — done {now()}", *section[index + 1:]]
+            section = [*section[:index], f"- [x] {match['text']} — done {now()}", *section[index + 1:]]
+            # The step that just ended is no longer next: a resumed session must not run it again.
+            left = [m["text"] for m in map(ITEM.match, section) if m and m["mark"] == " "]
+            return set_field(section, "Next", f"{OPEN}: {left[0]}" if left else OPEN)
     print(json.dumps({"error": f"no open item {item!r} in ## Course"}))
     return None
 
