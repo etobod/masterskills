@@ -46,6 +46,7 @@ class PluginCommandsTest(unittest.TestCase):
             f"{PY_SH} scripts/mutate.py backup app.py",
             f"{PY_SH} scripts/mutate.py restore",
             f"{PY_SH} scripts/test_baseline.py --plan 007",
+            f"{PY_SH} scripts/checks.py --rate --ok 1 3 --fix 2 \"the shadow is too strong\"",
             'date "+%Y-%m-%d %H:%M"',
             "mv loc/inbox/001-question-a.md loc/inbox/done/",
             "mv loc/inbox/001-question-a.md loc/inbox/done/001-question-a.md",
@@ -289,8 +290,8 @@ class SessionStartTest(unittest.TestCase):
     def test_session_start_asks_for_migration(self):
         project = scratch_dir(self)
         (project / "loc" / "inbox").mkdir(parents=True)
-        self.assertIn("/masterskills:loc-init to migrate loc/ to format 4", self.context(project))
-        (project / "loc" / "VERSION").write_text("4\n", encoding="utf-8")
+        self.assertIn("/masterskills:loc-init to migrate loc/ to format 5", self.context(project))
+        (project / "loc" / "VERSION").write_text("5\n", encoding="utf-8")
         self.assertNotIn("migrate", self.context(project))
 
     def test_session_start_asks_for_the_overview_on_a_new_plugin_version(self):
@@ -329,7 +330,7 @@ class SessionStartTest(unittest.TestCase):
         (project / "loc" / "inbox").mkdir(parents=True)
         out = run_hook("session_start.py", {"cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
         self.assertIn("/masterskills:loc-init", out.get("systemMessage", ""))
-        (project / "loc" / "VERSION").write_text("4\n", encoding="utf-8")
+        (project / "loc" / "VERSION").write_text("5\n", encoding="utf-8")
         out = run_hook("session_start.py", {"cwd": str(project)}, {"CLAUDE_PROJECT_DIR": str(project)})
         self.assertNotIn("systemMessage", out)
 

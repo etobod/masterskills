@@ -113,6 +113,7 @@ class StatusTest(unittest.TestCase):
             "**Architect (Triage):** plan — one cache module — cost if wrong: one file (architect, 2026-10-22)\n",
             encoding="utf-8")
         (inbox / "080-deferred-old.md").write_text("# 080 — Old\n\n**Created:** 2026-10-20 08:00\n", encoding="utf-8")
+        (inbox / "093-U-checks.html").write_text("<title>093 — Manual checks</title>\n", encoding="utf-8")
         result = course(cwd, "status")
         self.assertEqual(result.returncode, 0, result.stderr)
         out = result.stdout
@@ -131,6 +132,7 @@ class StatusTest(unittest.TestCase):
         self.assertIn("D-02", decisions)
         self.assertNotIn("D-01", decisions)
         self.assertIn("092-U-question-cache.md", out.split("## For you")[1].split("## New in the inbox")[0])
+        self.assertIn("093-U-checks.html", out.split("## For you")[1].split("## New in the inbox")[0])
         new = out.split("## New in the inbox")[1]
         self.assertIn("091-stuck-greeting.md", new)
         self.assertNotIn("080-deferred-old.md", new)

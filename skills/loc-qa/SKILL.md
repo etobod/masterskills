@@ -55,12 +55,12 @@ For every criterion ``- K<n>: … → `<test>` `` in the plan:
 
 1. The named test exists and passed in step 2 → **PASS**.
 2. It is missing → write it, following TEST-PLAN (e), and run it. At most 3 rounds for all missing tests together. It passes → **PASS** ("written by loc-qa"). It fails on its assertion → **FAIL**: the code does not meet the criterion; do not touch the code. Still broken after round 3 → **FAIL**.
-3. `→ manual` → **INFO** with the performer. For `user (deferrable)` the milestone's `**Manual check:**` must be in a `deferred` file whose `**Source:**` names the plan; if none holds it, create one (command below) with the check and the milestone, and list it.
+3. `→ manual` → **INFO** with the performer. For `user (deferrable)` the milestone's `**Manual check:**` must be a point of the checks sheet (`checks.py --list`, or rated in `loc/inbox/done/`); if none is, add it (`loc-orchestrate` step 6) and list it.
 
 A milestone that changed code without `**Criteria:**` → **INFO**. A gap in TEST-PLAN itself (section (b) says what to extend and nothing was) → a `deferred` file, never an edit:
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<few words>" --title "<title>" --source "loc-qa <NNN>" --what "<the work or the manual check, with the milestone>" --why "<reason>" --when "<when to return>" --by loc-qa
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<few words>" --title "<title>" --source "loc-qa <NNN>" --what "<the work, with the milestone>" --why "<reason>" --when "<when to return>" --by loc-qa
 ```
 
 The three texts go in this command, never as a later edit: a file left as the template is an empty promise.

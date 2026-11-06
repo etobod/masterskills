@@ -109,12 +109,22 @@ Everything the workflow writes stays in `loc/`, ignored by git with one line:
 
 | Path | What it holds |
 |---|---|
-| `loc/inbox/` | open work: brainstorms, plans, questions for you, deferred and stuck items |
+| `loc/inbox/` | open work: brainstorms, plans, questions for you, deferred and stuck items, the checks sheet |
 | `loc/PRD.md` | what the project is for, its decisions (`D-01`…) and directions |
 | `loc/TEST-PLAN.md` | the project's test contract: layers, commands, what to extend |
 | `loc/PATTERNS.md` | commands that failed and what worked instead |
 | `loc/MEMORY.md` | lessons from finished work |
 | `loc/diagrams/` | the project overview and the diagrams you keep |
+
+### Manual checks: one page
+
+What no command can see (the look, the feel, a real device) waits for you on one HTML page, `loc/inbox/NNN-U-checks.html`. Open it in a browser. Each point has a big number, the plan and milestone, the steps (with a screenshot and a ring where to click), what to look at, what was expected and the screenshots. Answer in the chat by number:
+
+```
+3 ok, 5 fix: the shadow is too strong
+```
+
+`scripts/checks.py` moves rated points, with your answer and the date, into the same-named file in `loc/inbox/done/`; a fix comes back as a new point (`again: 5`) once it is made and tested. New checks are added to the open page; when every point is rated, the next check starts a new page with a new number. Work goes on while points wait, except for a point in a red frame: the work needs that answer first. Upgrading `loc/` to format 5 moves the old manual-check files onto one page.
 
 ## The team
 
@@ -129,6 +139,8 @@ Agents are spawned with a clean context and narrow tools, so each one judges onl
 | 🧪 | **QA** | `qa` | Runs the suite once, compares the tests with the plan's starting copy (a weakened test is caught), writes what is missing, gives the verdict | edits tests only |
 | ✍️ | **Test author** | `test-author` | Writes tests from a milestone's behaviour criteria before the code exists | writes tests only, never reads the code |
 | 🎯 | **Searcher** | `searcher` | One try of a search milestone: one change with its hypothesis, read from the log of earlier tries | changes only the files the plan allows, never the metric |
+| 🎨 | **Designer** | `designer` | Builds a screen that looks good: plans the tokens, challenges the plan against the generated look, builds from the tokens | changes only the files it is given and the tokens, never takes screenshots |
+| 👁️ | **Design critic** | `design-critic` | Looks at the screenshots: light after a UI milestone, full at the end against the direction, the references and a checklist | read-only |
 | 🔎 | **Researcher** | `researcher` | Maps what exists before a change: files, call sites, tests, commands, with `file:line` | documents, never judges |
 | 🔍 | **Code reviewer** | `code-review` | Reviews the diff of every milestone and the final change | read-only |
 
@@ -178,23 +190,29 @@ Both cover the road from an idea through a plan and test-driven development to r
 
 ## Frontend projects
 
-Tests prove that a page works, not that it looks good. masterskills does not ship its own design rules; it works with a design plugin installed beside it and is told about it in a `## Frontend` section of your `CLAUDE.md`:
+Tests prove that a page works, not that it looks good. masterskills has its own designer and critic, and a `## Frontend` section of your `CLAUDE.md` tells them about the project (`loc-init` fills it when it finds a user interface):
 
 ```markdown
 ## Frontend
-Design plugin: impeccable. Design review: its critique command.
-UI check: <the plugin's detector command>, fails on a finding.
-Screenshots: npx playwright test tests/screens, widths 375, 768, 1440.
+UI check: sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/ui_check.py
+Screenshots: on
+References: on
+Tokens: src/styles/tokens.css
+Widths: 375, 768, 1440
+Pages: index.html
+Design plugin: none
 ```
 
 With that section filled:
 
-- **brainstorms** record a visual direction for every new screen as a decision;
-- **plans** run the UI check in the proof of every milestone that changes what the user sees, and leave only the look to a manual check;
-- **`loc-qa`** runs the UI check and the screenshot layer of `loc/TEST-PLAN.md` like any other gate;
-- **`loc-review`** runs the design review beside `rubber-duck` and `code-review`, and its findings go through the `judge` like the rest.
+- **brainstorms** record a visual direction for every new screen as a decision, with two or three options drawn from good pages on the same subject (`References: on`; the search uses only general words about the subject, and those pages give principles, never copied images or text);
+- **plans** start the first UI work with a milestone that sets up the section and the tokens file, and every milestone that changes what the user sees has `ui_check.py` in its proof: horizontal scroll, cut-off text, contrast below WCAG AA, no visible focus, and raw colours or sizes outside the tokens file all fail it;
+- **`loc-orchestrate`** builds those milestones with the `designer` agent (it plans the tokens, challenges its own plan against the generated look, then builds from the tokens), takes screenshots at every width and has the `design-critic` agent look at them; at the end of the plan each changed screen goes on the checks sheet with its screenshots and a reference beside them;
+- **`loc-review`** runs the `design-critic` in full mode beside `rubber-duck` and `code-review`, and its findings go through the `judge` like the rest.
 
-We suggest [pbakaus/impeccable](https://github.com/pbakaus/impeccable): its slop detector is deterministic, so a UI check can really fail. [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) is an alternative when you want art direction and browser checks at three widths. An empty `## Frontend` means the project has no user interface, and nothing changes.
+Screenshots and page checks need Playwright (`python -m pip install playwright`, then `python -m playwright install chromium`). Without it the plugin asks once; say no and it records `Screenshots: declined`, the critic judges from code and the sheet has no images. The token check needs no browser.
+
+An external design plugin is optional: name it in `Design plugin` and its review runs too. [pbakaus/impeccable](https://github.com/pbakaus/impeccable) has a deterministic slop detector; [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) adds art direction. An empty `## Frontend` means the project has no user interface, and nothing changes.
 
 ## Guards
 

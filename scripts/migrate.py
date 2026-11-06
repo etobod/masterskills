@@ -26,11 +26,18 @@ Step 3 -> 4 (plan priorities):
     `NNN-plan-x.md` -> `NNN-deferred-x.md`, `**Type:** deferred` and a
     `**Deferred:**` line with the first problem; the rest of the text is kept.
 
+Step 4 -> 5 (one manual checks sheet):
+  - every open `deferred` file that holds a manual check (`## Why not now` says
+    `user (deferrable)`, or the name says `manual-check`) becomes a point of the sheet
+    `loc/inbox/NNN-U-checks.html` (`checks.py`): its title, the lines of
+    `## What was deferred` as what to look at, the plan from `**Source:**`;
+  - the file moves to `loc/inbox/done/` with `## Resolution` naming the sheet and point.
+
 `regroup` is true while an open plan, not running, has no group: the model asks
 the `pm` agent to order the queue.
 
 Prints JSON: {"project", "from", "to", "renamed": [[old, new], ...], "changed": [...], "translate": [...],
-"harvest": bool, "deferred": [[old, new], ...], "regroup": bool}
+"harvest": bool, "deferred": [[old, new], ...], "checks": [[file, point], ...], "regroup": bool}
 `from` is null when the project has no `loc/`.
 """
 
@@ -42,7 +49,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-FORMAT = 4
+FORMAT = 5
 
 TYPES = {"pytanie": "question", "odlozone": "deferred", "przeglad": "review", "utknelo": "stuck"}
 OLD_NAME = re.compile(r"^(\d{3,})-(" + "|".join(TYPES) + r")-(.+)$")
@@ -307,14 +314,56 @@ def step_3_to_4(project: Path, report: dict) -> None:
     plan_queue.replace_references(project, report["deferred"])
 
 
-STEPS = {1: step_1_to_2, 2: step_2_to_3, 3: step_3_to_4}
+DEFERRED_FILE = re.compile(r"^\d{3,}-(?:U-)?deferred-.*\.md$")
+PLAN_NUMBER = re.compile(r"(?:\bplan[ -]?|^\s*|loc/inbox/)(\d{3,})\b")
+
+
+def section_text(text: str, heading: str) -> str:
+    match = re.search(rf"(?ms)^## {heading}[ \t]*\r?\n(.*?)(?=^## |\Z)", text)
+    return match.group(1).strip() if match else ""
+
+
+def step_4_to_5(project: Path, report: dict) -> None:
+    import checks
+    inbox = project / "loc" / "inbox"
+    if not inbox.is_dir():
+        return
+    for path in sorted(inbox.glob("*.md")):
+        if not DEFERRED_FILE.match(path.name):
+            continue
+        text = path.read_bytes().decode("utf-8", errors="surrogateescape")
+        if "user (deferrable)" not in section_text(text, "Why not now") and "manual-check" not in path.name:
+            continue
+        first = text.splitlines()[0] if text else ""
+        title = re.sub(r"^#\s*\d+\s*[—-]+\s*", "", first).strip() or path.stem
+        what = section_text(text, "What was deferred")
+        look = [re.sub(r"^\s*(?:[-*]|\d+[.)])\s+", "", line).strip() for line in what.splitlines()]
+        look = [line for line in look if line and not line.startswith("<")] or [f"see {path.name}"]
+        source = re.search(r"(?m)^\*\*Source:\*\*(.*)$", text)
+        plan = PLAN_NUMBER.search(source.group(1)) if source else None
+        result = checks.add_point(project, title, look, plan=plan.group(1) if plan else None)
+        nl = "\r\n" if "\r\n" in text else "\n"
+        resolution = f"{date.today().isoformat()}: moved to the checks sheet `{result['sheet']}`, point {result['point']}."
+        if re.search(r"(?m)^## Resolution[ \t]*\r?$", text):
+            text = re.sub(r"(?ms)^## Resolution[ \t]*\r?\n.*?(?=^## |\Z)",
+                          lambda _: "## Resolution" + nl + resolution + nl, text, count=1)
+        else:
+            text = text.rstrip() + nl + nl + "## Resolution" + nl + resolution + nl
+        text = re.sub(r"(?m)^\*\*Status:\*\*[^\r\n]*", "**Status:** closed", text, count=1)
+        (inbox / "done").mkdir(exist_ok=True)
+        (inbox / "done" / path.name).write_bytes(text.encode("utf-8", errors="surrogateescape"))
+        path.unlink()
+        report["checks"].append([path.name, result["point"]])
+
+
+STEPS = {1: step_1_to_2, 2: step_2_to_3, 3: step_3_to_4, 4: step_4_to_5}
 
 
 def migrate(project: Path) -> dict:
     loc = project / "loc"
     start = read_format(loc)
     report = {"project": project.as_posix(), "from": start, "to": start, "renamed": [], "changed": [],
-              "translate": [], "harvest": False, "deferred": [], "regroup": False}
+              "translate": [], "harvest": False, "deferred": [], "checks": [], "regroup": False}
     if start is None:
         return report
     version = start

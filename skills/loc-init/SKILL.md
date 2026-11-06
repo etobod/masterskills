@@ -50,8 +50,8 @@ The script prints JSON.
   - what was **added** to existing files (`updated`: file and the sections or entries added);
   - that everything else **already existed**;
   - each `skipped` file with its reason: the user fixes it by hand.
-  `.claude/settings.json` turns off Claude's auto memory (lessons go to `loc/PATTERNS.md`) and AI attribution in commits and pull requests. If both `created` and `updated` are empty, say the project is already complete and nothing changed. Then point out the next step:
-  - fill the empty `CLAUDE.md` sections (`Commands` first: skills run those commands and never guess them);
+  `.claude/settings.json` turns off Claude's auto memory (lessons go to `loc/PATTERNS.md`) and AI attribution in commits and pull requests. If `created` and `updated` are empty, say nothing changed. Then point out the next step:
+  - fill the empty `CLAUDE.md` sections (`Commands` first: skills run those commands and never guess them); a user interface (HTML, a UI framework, canvas) fills `## Frontend` per `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/design.md`;
   - write in `loc/PRD.md` what the project is for (`Goal`), the few points it stands on (`Core idea`), how it is used (`Scenarios`) and its ideas (`Directions`); the review judge weighs findings against the first three.
 - **Project brainstorm.** No brainstorm given, no `for <skill>`, and `empty` lists `Goal`: right after the report, `Skill(skill: "masterskills:loc-brainstorm", args: "the project: what it is for, who uses it and how")`, and ask the user to describe the project. Everything they write goes into that brainstorm; `loc-brainstorm` offers to fill the project from it when it is enough.
 - **`ok: false`.** Show `message` as it is, in the user's language. With `no-git`, ask with `AskUserQuestion`: `Run git init in <dir>` (recommended) or `No`. Run: `git init "<dir>"`, then the script again. No, or any other error: stop; nothing was created.

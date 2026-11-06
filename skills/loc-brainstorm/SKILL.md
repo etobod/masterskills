@@ -37,7 +37,7 @@ Every reply in which something new was said updates the file **before** you answ
 
 Record only what the user decided as a decision. Your suggestion stays in `## Open` until they agree.
 
-When the project's `CLAUDE.md` has a filled `## Frontend`, a new screen or page needs its visual direction as a decision before planning (e.g. `B-05 — calm editorial look, one accent colour, real photos`); propose two or three in `## Open`, using the design plugin named there.
+When the project has a user interface (a filled `## Frontend` in `CLAUDE.md`, HTML, a UI framework), a new screen or page needs its visual direction as a decision before planning (e.g. `B-05 — calm editorial look, one accent colour, real photos`); propose two or three in `## Open`, each from a reference page when `References: on` (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/design.md`).
 
 ## 3. Answer
 

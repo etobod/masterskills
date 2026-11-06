@@ -15,8 +15,8 @@ Example:
 | unit | `python -m pytest tests/unit -q` | gate | fast, after every milestone |
 | integration | `python -m pytest tests/integration -q` | gate | full, in `loc-qa` |
 | model behaviour | `python evals/run.py` | report | on demand |
-| ui | the UI check command from `## Frontend` in `CLAUDE.md` | gate | fast, after every UI milestone |
-| screenshots | the screenshot command from `## Frontend`, at its widths | gate | full, in `loc-qa` |
+| ui | `ui_check.py --url <page> --widths <widths> --check` and `--tokens <file> --files <changed>`, from `## Frontend` in `CLAUDE.md` | gate | fast, after every UI milestone |
+| screenshots | `ui_check.py --url <page> --widths <widths> --out loc/tmp/design/shots`, from `## Frontend` | gate | full, in `loc-qa` |
 -->
 
 ## (b) What changed → what to extend

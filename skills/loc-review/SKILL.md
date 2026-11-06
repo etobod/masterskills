@@ -32,7 +32,7 @@ Start them in the same step, each once per round. A lost agent report is asked f
 
 - **`rubber-duck` agent.** What was asked: the requirements (path or text). What was produced: the diff file and the changed files. Add: "Check the `Invariants` and `Limits` of `CLAUDE.md` and the `❌` entries of `loc/PATTERNS.md`."
 - **`Skill(skill: "code-review", args: "<changed files> <level> — also flag new code the project, its standard library, platform or dependencies already provide")`**: always the explicit files and level (it otherwise reuses the last one). Orchestrated (milestones already reviewed), append "; review only how the milestones work together and what changed after the last milestone's `end`" with that snapshot hash.
-- **Design review**, only when the project's `CLAUDE.md` has a filled `## Frontend` and a changed file is part of what the user sees: run the design review command named there on those files, read-only.
+- **Design review**, only when the project's `CLAUDE.md` has a filled `## Frontend` and a changed file is part of what the user sees: the `design-critic` agent in `full` mode (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/design.md`), plus the `Design plugin` review command named there, read-only.
 
 Meanwhile check yourself: every `Invariants` entry of the project's `CLAUDE.md` that the changed files touch, and every `❌` entry of `loc/PATTERNS.md` whose **When to use** matches them.
 
