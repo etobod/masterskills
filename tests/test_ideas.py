@@ -33,14 +33,17 @@ class BudgetTest(unittest.TestCase):
 
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
-        self.assertEqual(overrides["skills/loc-orchestrate/SKILL.md"], 1350)
-        self.assertEqual(overrides["skills/loc-review/SKILL.md"], 900)
-        self.assertEqual(overrides["skills/loc-diagram/SKILL.md"], 850)
-        self.assertEqual(overrides["skills/loc-planning/SKILL.md"], 2720)
-        self.assertEqual(overrides["skills/loc-qa/SKILL.md"], 1000)
-        self.assertEqual(overrides["skills/loc-orchestrate/references/search.md"], 850)
-        self.assertEqual(overrides["agents/judge.md"], 700)
-        self.assertEqual(overrides["agents/rubber-duck.md"], 670)
+        expected = {
+            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2770,
+            "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
+            "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 850,
+            "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
+            "agents/architect.md": 650, "agents/design-critic.md": 650, "agents/designer.md": 650,
+            "agents/rubber-duck.md": 720, "agents/judge.md": 750,
+        }
+        self.assertEqual(overrides, expected)
+        self.assertEqual(measure().LIMITS["rule"], 575)
 
 
 class LadderTest(unittest.TestCase):
@@ -161,6 +164,13 @@ class AgentAnswerTest(unittest.TestCase):
     def test_reviewers_announce_how_many_findings(self):
         for rel in ("agents/rubber-duck.md", "agents/judge.md", "agents/design-critic.md", "opencode/agents/code-review.md"):
             self.assertIn("Its first line is `Findings: <n>`, how many it lists.", read(rel), rel)
+
+    def test_the_caller_never_restates_an_agents_rules(self):
+        # A caller's own summary ("pick at most 10") contradicted the agent's definition.
+        rule = read("rules/core.md").split("6b. ", 1)[1].split("\n7. ", 1)[0]
+        for part in ("only what the skill says to give it", "each part labelled", "never a role",
+                     "a summary of its rules", "a limit or an output format of your own", "its definition has them"):
+            self.assertIn(part, rule)
 
     def test_agent_budget_is_600(self):
         self.assertEqual(measure().LIMITS["agent"], 600)

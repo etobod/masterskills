@@ -7,6 +7,7 @@
 5. **Commits.** Never add `Co-authored-by`, session links or any mention of AI.
 6. **Gates.** Every gate gets at most 3 rounds, then record them and carry on.
 6a. **Lost reports.** Reviewers start with `Findings: <n>`; every agent ends with `End of report.` An empty answer, no end line or fewer findings than announced (for the `judge`, than given) is lost, never clean: ask that same agent again, up to 3 times, never a relaunch; still lost fails the round.
+6b. **Agent prompts.** An agent's prompt holds only what the skill says to give it, each part labelled; never a role, a summary of its rules, a limit or an output format of your own: its definition has them, and a second version contradicts it.
 7. **Flow.** Planning talk goes into the active `brainstorm` file (`loc-brainstorm`). Plans are made only by `loc-planning` and executed only by `loc-orchestrate`.
 7a. After work outside a plan that changed something, `loc-journal` adds an entry to `loc/MEMORY.md`.
 8. **Answered questions.** When the user answers a `question` (in chat or in the file; "as the architect recommends" is an answer too), write the answer under `## Resolution` and move the file to `loc/inbox/done/`; a rating on the checks sheet ("3 ok, 5 fix: …") goes to `checks.py --rate`. When work waits on one, also ask it with `AskUserQuestion`: the file, its options, recommended first. An answer other than the interim option gets a `deferred` file with what must change. Name an option by file, letter and content (`088 A: finish the entry`), never bare.
