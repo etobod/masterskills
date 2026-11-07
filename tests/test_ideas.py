@@ -165,6 +165,13 @@ class AgentAnswerTest(unittest.TestCase):
         for rel in ("agents/rubber-duck.md", "agents/judge.md", "agents/design-critic.md", "opencode/agents/code-review.md"):
             self.assertIn("Its first line is `Findings: <n>`, how many it lists.", read(rel), rel)
 
+    def test_the_caller_never_restates_an_agents_rules(self):
+        # A caller's own summary ("pick at most 10") contradicted the agent's definition.
+        rule = read("rules/core.md").split("6b. ", 1)[1].split("\n7. ", 1)[0]
+        for part in ("only what the skill says to give it", "each part labelled", "never a role",
+                     "a summary of its rules", "a limit or an output format of your own", "its definition has them"):
+            self.assertIn(part, rule)
+
     def test_agent_budget_is_600(self):
         self.assertEqual(measure().LIMITS["agent"], 600)
 
