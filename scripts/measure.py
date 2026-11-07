@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 LIMITS = {
-    "rule": 575,
+    "rule": 595,
     "skill": 800,
     "reference": 800,
     "agent": 600,

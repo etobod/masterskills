@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.29.2 — 2026-11-07
+
+- Core rule 6b: a file goes to an agent by its path, never copied into the prompt.
+- Budget: the rules 595 words (sum; was 575).
+
 ## 2.29.1 — 2026-11-07
 
 - Core rule 6b: an agent's prompt holds only what the skill says to give it, labelled; the caller never adds a role, a summary of the agent's rules, a limit or an output format of its own, which contradicted the agent's definition.
