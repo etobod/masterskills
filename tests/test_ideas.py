@@ -43,7 +43,7 @@ class BudgetTest(unittest.TestCase):
             "agents/rubber-duck.md": 720, "agents/judge.md": 750,
         }
         self.assertEqual(overrides, expected)
-        self.assertEqual(measure().LIMITS["rule"], 575)
+        self.assertEqual(measure().LIMITS["rule"], 595)
 
 
 class LadderTest(unittest.TestCase):
@@ -168,7 +168,7 @@ class AgentAnswerTest(unittest.TestCase):
     def test_the_caller_never_restates_an_agents_rules(self):
         # A caller's own summary ("pick at most 10") contradicted the agent's definition.
         rule = read("rules/core.md").split("6b. ", 1)[1].split("\n7. ", 1)[0]
-        for part in ("only what the skill says to give it", "each part labelled", "never a role",
+        for part in ("only what the skill says to give it", "each part labelled", "a file by its path, never copied", "never a role",
                      "a summary of its rules", "a limit or an output format of your own", "its definition has them"):
             self.assertIn(part, rule)
 
