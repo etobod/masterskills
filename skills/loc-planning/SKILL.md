@@ -134,7 +134,7 @@ The round passes when the script exits `0` and the critic reports nothing blocki
 
 ## 7. Close the input
 
-Also after a plan that did not pass the gate, so the next attempt starts from the plan and the `stuck` file. Take the date with `date "+%Y-%m-%d"`; never from memory. Move files with `mv` (`loc/` is not in git). Nothing is ever deleted.
+Also after a plan that did not pass the gate, except a stuck `## plan gate` (`stuck.md`). Take the date with `date "+%Y-%m-%d"`; never from memory. Move files with `mv` (`loc/` is not in git). Nothing is ever deleted.
 
 **Input file in `loc/inbox/`** (`brainstorm`, `review`, `deferred`, `stuck`, answered `question`):
 
