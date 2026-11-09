@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.29.4 — 2026-11-09
+
+- Plan gate: a second failure no longer forces a question. The architect rules on a changed approach and the next plan follows it; a question only for what is beyond its competence (core rule 3).
+
 ## 2.29.3 — 2026-11-09
 
 - Plan gate: a plan made from a stuck plan gate that fails its gate again goes to the user (`ask`); the architect no longer sends the same plan to planning a third time.

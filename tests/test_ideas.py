@@ -179,10 +179,15 @@ class AgentAnswerTest(unittest.TestCase):
 class PlanGateLoopTest(unittest.TestCase):
     """A base plan was planned three times (stuck, plan, stuck…) and nothing ran: the proofs could not be written."""
 
-    def test_a_plan_from_a_stuck_plan_gate_goes_to_the_user(self):
+    def test_a_second_plan_gate_failure_needs_a_ruling_not_a_question(self):
+        # Forced to `ask`, the run made a question file the architect then ruled on in Decide.
         gate = read("skills/loc-orchestrate/references/stuck.md").split("## Plan gate", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("the only verdict when the plan was made from a stuck file's `## plan gate`", gate)
-        self.assertIn("A plan gate of a plan made from a stuck plan gate: only **ask**.", read("agents/architect.md"))
+        self.assertIn("only with a **Ruling:** that changes the approach", gate)
+        self.assertIn("**ask**: only beyond the architect's competence.", gate)
+        self.assertNotIn("the only verdict", gate)
+        architect = read("agents/architect.md")
+        self.assertIn("**plan** only with a ruling that changes the approach", architect)
+        self.assertNotIn("stuck plan gate: only **ask**", architect)
 
     def test_proofs_are_single_commands(self):
         planning = read("skills/loc-planning/SKILL.md")
