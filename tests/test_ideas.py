@@ -38,6 +38,7 @@ class BudgetTest(unittest.TestCase):
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
             "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 850,
+            "skills/loc-orchestrate/references/stuck.md": 850,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
             "agents/architect.md": 650, "agents/design-critic.md": 650, "agents/designer.md": 650,
             "agents/rubber-duck.md": 720, "agents/judge.md": 750,
@@ -179,15 +180,16 @@ class AgentAnswerTest(unittest.TestCase):
 class PlanGateLoopTest(unittest.TestCase):
     """A base plan was planned three times (stuck, plan, stuck…) and nothing ran: the proofs could not be written."""
 
-    def test_a_second_plan_gate_failure_needs_a_ruling_not_a_question(self):
-        # Forced to `ask`, the run made a question file the architect then ruled on in Decide.
+    def test_a_failed_plan_from_a_stuck_plan_gate_merges_into_it(self):
+        # Each failed replan made a new stuck file and left the plans before it open.
         gate = read("skills/loc-orchestrate/references/stuck.md").split("## Plan gate", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("only with a **Ruling:** that changes the approach", gate)
-        self.assertIn("**ask**: only beyond the architect's competence.", gate)
-        self.assertNotIn("the only verdict", gate)
-        architect = read("agents/architect.md")
-        self.assertIn("**plan** only with a ruling that changes the approach", architect)
-        self.assertNotIn("stuck plan gate: only **ask**", architect)
+        self.assertIn("makes no stuck file of its own", gate)
+        self.assertIn("`**Status:** closed — replaced by <new plan>`", gate)
+        self.assertIn("`**Status:** closed — merged into <stuck file>`", gate)
+        self.assertIn("the stuck file stays open", gate)
+        self.assertNotIn("**Ruling:**", gate)
+        self.assertNotIn("stuck plan gate", read("agents/architect.md"))
+        self.assertIn("except a stuck `## plan gate` (`stuck.md`)", read("skills/loc-planning/SKILL.md"))
 
     def test_proofs_are_single_commands(self):
         planning = read("skills/loc-planning/SKILL.md")

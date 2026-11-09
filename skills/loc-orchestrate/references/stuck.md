@@ -33,8 +33,10 @@ Per gate, add it to `**Stuck gates:**` and write one section (`## final-review`,
 `loc-planning` writes the `## plan gate` section, then calls the `architect` agent in Triage mode with it, the plan, `loc/PRD.md` and `CLAUDE.md`:
 
 - **retry**: rounds 4–6, once; when they fail too, Triage again: only plan or ask.
-- **plan**: `**Status:**` → `open — gate failed`; the stuck file waits for the next planning, which starts from it. For a plan made from a stuck `## plan gate`, only with a **Ruling:** that changes the approach (what failed, what to do instead), copied into the next plan's `## Risks and decisions`.
+- **plan**: `**Status:**` → `open — gate failed`; the stuck file waits for the next planning, which starts from it.
 - **ask**: only beyond the architect's competence. As plan, plus `next_number.py --type question --title "<plan>: <what remains>" --source "<stuck file>" --by "architect (Triage)"` with its options.
+
+**A plan made from a stuck `## plan gate`** makes no stuck file of its own. Passed: the stuck file closes as its input; the plan that first failed gets `**Status:** closed — replaced by <new plan>`, moved to `loc/inbox/done/`. Failed: its rounds go into the stuck file's `## plan gate` as `### <new plan>`; after Triage the new plan gets `**Status:** closed — merged into <stuck file>`, moved to `loc/inbox/done/`; the stuck file stays open.
 
 ## Closing what the plan resolved
 

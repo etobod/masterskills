@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.29.5 — 2026-11-09
+
+- Plan gate: a plan made from a stuck plan gate makes no stuck file of its own. When it fails, its rounds are merged into that stuck file and the plan closes; when it passes, the stuck file and the plan that first failed close. Replaces the 2.29.3–2.29.4 rule that forced a ruling or a question after a second failure.
+
 ## 2.29.4 — 2026-11-09
 
 - Plan gate: a second failure no longer forces a question. The architect rules on a changed approach and the next plan follows it; a question only for what is beyond its competence (core rule 3).
