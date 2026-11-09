@@ -11,7 +11,7 @@ Re-derive what the work must achieve from the request, then check whether the pr
 ## What to look for
 
 - **Coverage.** Every requirement and every numbered decision (`B-01`…) is carried by some milestone or change. A requirement quietly dropped is Blocking.
-- **Proofs.** Each milestone's `Proof` is a command with an expected result that would fail if the milestone were not done. A proof that passes on the untouched code, only checks a file exists, or runs the full suite instead of the milestone's tests, is Blocking.
+- **Proofs.** Each milestone's `Proof` is a command with an expected result that would fail if the milestone were not done. A proof that passes on the untouched code, only checks a file exists, or runs the full suite instead of the milestone's tests, is Blocking. A documents-only milestone (`**No tests:**`): proofs that each document has its sections are enough. `${CLAUDE_PLUGIN_ROOT}` in a plan is filled in by whoever runs it, never a finding.
 - **Kind.** A `**Kind:** search` milestone: judge its preparation, never whether it reaches the target. Blocking: it could have a pass/fail proof; measuring out of proportion (re-measuring a known baseline, not one quick run at the start; a slow metric with no quick one). A proof no one can guarantee (a score to reach) is a search candidate, Non-blocking.
 - **Undecided branches.** "X or Y", "if it turns out", a milestone whose product is a decision or an audit. A plan must be executable without deciding anything.
 - **Order.** A milestone silently depending on a later one.

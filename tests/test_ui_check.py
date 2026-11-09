@@ -3,10 +3,12 @@
 import importlib.util
 import json
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -112,6 +114,34 @@ class ToolTest(unittest.TestCase):
         result = self.run_tool("--url", str(page), "--widths", "375", "--check")
         kinds = {(d["kind"], d["selector"]) for d in json.loads(result.stdout)["defects"]}
         self.assertIn(("no-focus", "button"), kinds, result.stdout)
+
+    def test_serve_starts_the_server_and_stops_it(self):
+        # A proof needed a dev server running in the background: no single command could check the page.
+        (self.dir / "good.html").write_text(GOOD, encoding="utf-8")
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            port = probe.getsockname()[1]
+        url = f"http://127.0.0.1:{port}/good.html"
+        serve = f'"{sys.executable}" -m http.server {port} --bind 127.0.0.1 --directory "{self.dir}"'
+        result = self.run_tool("--serve", serve, "--url", url, "--widths", "375", "--check")
+        if HAS_PLAYWRIGHT:
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        else:
+            self.assertIn("no playwright", json.loads(result.stdout)["error"])
+        with self.assertRaises(OSError, msg="the server outlived the check"):
+            urllib.request.urlopen(url, timeout=2)
+
+    def test_serve_that_never_answers_is_a_json_error(self):
+        idle = f'"{sys.executable}" -c "import time; time.sleep(30)"'
+        result = self.run_tool("--serve", idle, "--wait", "2", "--url", "http://127.0.0.1:9/", "--check")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("did not answer within 2 s", json.loads(result.stdout)["error"])
+        ended = f'"{sys.executable}" -c "raise SystemExit(3)"'
+        result = self.run_tool("--serve", ended, "--url", "http://127.0.0.1:9/", "--check")
+        self.assertIn("ended with exit 3", json.loads(result.stdout)["error"])
+
+    def test_serve_needs_an_address(self):
+        self.assertEqual(self.run_tool("--serve", "npm run dev", "--tokens", "t.css", "--files", "a.css").returncode, 2)
 
     @unittest.skipUnless(HAS_PLAYWRIGHT, "Playwright is not installed: page checks are skipped")
     def test_an_address_that_cannot_open_is_a_json_error(self):

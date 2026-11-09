@@ -10,7 +10,9 @@ Checks, in order:
     and `## Resolution` sections, which record history rather than instructions;
   - no unfilled template placeholder such as `<co powstaje>`;
   - milestones (`### ` headings under `## Milestones`) and `**Proof:**`
-    lines are both counted, both > 0 and equal;
+    lines are both counted, and every milestone has at least one proof; each proof
+    line is one command, run on its own: no `&&`, `||`, `;`, `$?` or `$LASTEXITCODE`
+    chain (a PowerShell `; if ($?)` runs the next step after a failure);
   - in a milestone with `**Criteria:**`, every criterion
     `- K<n>[ (behaviour)]: <what the code must do> → <test>` names its test in
     inline code, or `manual` when the performer is the user and another
@@ -101,6 +103,8 @@ TEST_NAME = re.compile(r"test|spec", re.I)
 # A command and an arrow, but the expected result written as prose.
 PROSE_RESULT = re.compile(r"^\*\*Proof:\*\*\s*`[^`]+`\s*→\s*(?P<result>[^`\s][^`]*?)\s*$")
 CHECKABLE_PROOF = re.compile(r"^\*\*Proof:\*\*\s*`(?P<command>[^`]+)`\s*→\s*`[^`]+`")
+# Two commands in one proof: a chain hides which one failed, and PowerShell's `; if ($?)` goes on after one.
+CHAIN = re.compile(r"&&|\|\||;|\$\?|\$LASTEXITCODE", re.I)
 BROWSER = re.compile(r"^\s*(open|start|xdg-open)\b")
 GATE_RECORD = "Plan gate"
 FINDING = re.compile(r"^- \*\*\[([^\]]+)\]\*\*")
@@ -172,7 +176,6 @@ def normal(text: str) -> str:
 def check_milestone(name: str, criteria: list, performer, issues: list, tested: dict) -> None:
     """criteria: [(line number, text)]; performer: (line number, value) or None;
     tested: {"criteria", "no_tests" (reason or None), "suite"} seen in the milestone."""
-    user = performer is not None and performer[1].startswith("user")
     kind = tested.get("kind")
     if kind is not None and kind[1] not in ("proof", "search"):
         issues.append({"line": kind[0], "problem": f"{name}: **Kind:** is proof or search"})
@@ -184,8 +187,16 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
     elif not (tested["criteria"] or tested["no_tests"] or tested["suite"]):
         issues.append({"line": 0, "problem": f"{name}: no **Criteria:** (with tests) and no "
                        "**No tests:** <reason>; a milestone that changes code needs criteria"})
-    proof = tested.get("proof")
-    if proof and (performer is None or performer[1] != "agent"):
+    if not tested.get("proofs"):
+        issues.append({"line": 0, "problem": f"{name}: no **Proof:** line"})
+    for proof in tested.get("proofs", []):
+        check_proof(name, proof, performer, issues)
+    check_milestone_rest(name, criteria, performer, issues, tested)
+
+
+def check_proof(name: str, proof: tuple, performer, issues: list) -> None:
+    """One `**Proof:**` line: `<command>` → `<output>`, a single command that does more than open a file."""
+    if performer is None or performer[1] != "agent":
         match = CHECKABLE_PROOF.match(proof[1])
         prose = PROSE_RESULT.match(proof[1])
         if prose:
@@ -199,6 +210,14 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
         elif BROWSER.match(match.group("command")):
             issues.append({"line": proof[0], "problem": f"{name}: the proof only opens a file; "
                            "run a test command; what only a person can see goes into **Manual check:**"})
+        elif CHAIN.search(match.group("command")):
+            issues.append({"line": proof[0], "problem": f"{name}: one command per proof: write each step as "
+                           "its own **Proof:** line, run on its own, instead of chaining them with "
+                           f"{CHAIN.search(match.group('command')).group(0)!r}"})
+
+
+def check_milestone_rest(name: str, criteria: list, performer, issues: list, tested: dict) -> None:
+    user = performer is not None and performer[1].startswith("user")
     if performer is not None and not PERFORMERS.match(performer[1]):
         issues.append({"line": performer[0], "problem": f"{name}: performer must be auto, agent, "
                        "user (blocking) or user (deferrable)"})
@@ -252,12 +271,15 @@ def check_search(name: str, tested: dict, issues: list) -> None:
         elif int(match.group("n")) > BUDGET_LIMIT and not USER_APPROVED.search(match.group("rest")):
             issues.append({"line": budget[0], "problem": f"{name}: a budget over {BUDGET_LIMIT} needs the "
                            "user's consent: '**Budget:** <n> — user approved <date>'"})
-    proof = tested.get("proof")
-    if proof and not ("search_log.py" in proof[1] and "--check" in proof[1]
-                      and CHECKABLE_PROOF.match(proof[1])):
-        issues.append({"line": proof[0], "problem": f"{name}: a search milestone's proof checks its log: "
-                       "'**Proof:** `sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" scripts/search_log.py --check "
-                       "--log loc/state/<NNN>/search-M<n>.md` → `ok`'"})
+    for proof in tested.get("proofs", [])[:1]:
+        if not ("search_log.py" in proof[1] and "--check" in proof[1]
+                          and CHECKABLE_PROOF.match(proof[1])):
+            issues.append({"line": proof[0], "problem": f"{name}: a search milestone's proof checks its log: "
+                           "'**Proof:** `sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" scripts/search_log.py --check "
+                           "--log loc/state/<NNN>/search-M<n>.md` → `ok`'"})
+    if len(tested.get("proofs", [])) > 1:
+        issues.append({"line": tested["proofs"][1][0], "problem": f"{name}: a search milestone has one proof, "
+                       "its log check"})
 
 
 PROJECT = None  # set by a caller that checks plans of another project (migrate.py)
@@ -449,7 +471,7 @@ def check(text: str) -> dict:
         if PROOF.match(line):
             proofs += 1
             if milestone:
-                tested["proof"] = (number, line)
+                tested.setdefault("proofs", []).append((number, line))
 
         prose = CODE.sub("", line)
         for match in PHRASE.finditer(prose):
@@ -467,8 +489,6 @@ def check(text: str) -> dict:
         issues.append({"line": 0, "problem": "no milestones (### headings under ## Milestones)"})
     if proofs == 0:
         issues.append({"line": 0, "problem": "no **Proof:** lines"})
-    if milestones != proofs:
-        issues.append({"line": 0, "problem": f"{milestones} milestones but {proofs} proofs"})
     project = project_dir()
     if any_criteria and not first_sets_up_suite and not has_suite(project):
         issues.append({"line": 0, "problem": "the project has no test suite (loc/TEST-PLAN.md and a test "

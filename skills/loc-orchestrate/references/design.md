@@ -49,7 +49,7 @@ Then a note per reference, `loc/tmp/design/references/ref-<k>.md`: its address, 
 ## A UI milestone
 
 1. **Build**: the `designer` agent, with the milestone, the visual direction (its brainstorm or PRD decision), the tokens file, the reference notes and screenshots, the critic's earlier notes and the files it may change.
-2. **Proof**: besides the tests, the `**Proof:**` runs both checks, each exiting 0 (with `Screenshots: declined`, only the second):
+2. **Proof**: besides the tests, a `**Proof:**` line per check, each exiting 0 (with `Screenshots: declined`, only the second); a page from a dev server adds `--serve "<its start command>"`:
 
    ```sh
    sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/ui_check.py --url <page> --widths <Widths> --check

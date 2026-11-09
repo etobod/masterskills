@@ -176,6 +176,34 @@ class AgentAnswerTest(unittest.TestCase):
         self.assertEqual(measure().LIMITS["agent"], 600)
 
 
+class PlanGateLoopTest(unittest.TestCase):
+    """A base plan was planned three times (stuck, plan, stuck…) and nothing ran: the proofs could not be written."""
+
+    def test_a_plan_from_a_stuck_plan_gate_goes_to_the_user(self):
+        gate = read("skills/loc-orchestrate/references/stuck.md").split("## Plan gate", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("the only verdict when the plan was made from a stuck file's `## plan gate`", gate)
+        self.assertIn("A plan gate of a plan made from a stuck plan gate: only **ask**.", read("agents/architect.md"))
+
+    def test_proofs_are_single_commands(self):
+        planning = read("skills/loc-planning/SKILL.md")
+        self.assertIn("one command each (never chained: `;`, `&&`, `if ($?)`)", planning)
+        self.assertNotIn("exactly one `**Proof:**` line", planning)
+        self.assertIn("run each `Proof` line exactly as written, one at a time", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("One command per `**Proof:**` line", read("templates/loc/inbox/plan.md"))
+
+    def test_documents_are_proved_by_their_sections(self):
+        planning = read("skills/loc-planning/SKILL.md")
+        self.assertIn("never a checking script it writes", planning)
+        self.assertIn("A document goes into the milestone whose work it describes", planning)
+        duck = read("agents/rubber-duck.md")
+        self.assertIn("proofs that each document has its sections are enough", duck)
+        self.assertIn("`${CLAUDE_PLUGIN_ROOT}` in a plan is filled in by whoever runs it, never a finding", duck)
+
+    def test_a_dev_server_is_started_by_the_proof(self):
+        self.assertIn("a dev server started by its `--serve`", read("skills/loc-planning/SKILL.md"))
+        self.assertIn('`--serve "<its start command>"`', read("skills/loc-orchestrate/references/design.md"))
+
+
 class SearchMilestoneTest(unittest.TestCase):
     """A search milestone improves a number toward a target; missing it is accepted, never stuck."""
 
@@ -202,7 +230,7 @@ class SearchMilestoneTest(unittest.TestCase):
 
     def test_declined_screenshots_leave_only_the_tokens_check(self):
         # Without a browser, a proof with `--check` or `--out` exits 2 on every UI milestone.
-        self.assertIn("(with `Screenshots: declined`, `--tokens` only)", read("skills/loc-planning/SKILL.md"))
+        self.assertIn("(with `Screenshots: declined`, `--tokens` only;", read("skills/loc-planning/SKILL.md"))
         plan = read("templates/loc/TEST-PLAN.md")
         self.assertIn("(only this one with `Screenshots: declined`)", plan)
         self.assertIn("none with `Screenshots: declined`", plan)

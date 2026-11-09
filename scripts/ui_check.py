@@ -7,6 +7,9 @@
 - `--check` (with `--url`): in the same run, measures the page at each width: horizontal scroll,
   text cut off in its box, text contrast below WCAG AA (4.5:1, large text 3:1; a background image
   or gradient behind the text is skipped), and no visible focus after Tab. Exit 1 on a defect.
+- `--serve "<start command>"` (with `--url`): starts the project's dev server, waits up to `--wait`
+  seconds (default 60) for the address to answer, runs the rest, then stops the server and its children,
+  so a proof is one command. A server that never answers: exit 2.
 - `--tokens <tokens file> --files <files...>`: raw colours (`#hex`, `rgb()`, `hsl()`) and `px` values
   in font-size, margin, padding and gap outside the tokens file (0 and 1px are allowed). No browser
   needed. Exit 1 on a defect.
@@ -20,8 +23,14 @@ Prints JSON: {"shots": [...], "defects": [{"kind", "width", "selector", "value"}
 import argparse
 import importlib.util
 import json
+import os
 import re
+import signal
+import subprocess
 import sys
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 INSTALL = "python -m pip install playwright && python -m playwright install chromium"
@@ -209,6 +218,42 @@ def run_pages(url: str, widths: list, out, name: str, check: bool) -> dict:
     return result
 
 
+def start_server(command: str, url: str, wait: float):
+    """Start `command` in a shell and wait for `url` to answer: (process, None) or (None, error)."""
+    group = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **group)
+    deadline = time.monotonic() + wait
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            return None, f"the server command ended with exit {process.returncode} before {url} answered"
+        try:
+            urllib.request.urlopen(url, timeout=2).close()
+            return process, None
+        except urllib.error.HTTPError:  # it answers, even with an error page
+            return process, None
+        except Exception:
+            time.sleep(0.5)
+    stop_server(process)
+    return None, f"{url} did not answer within {wait:g} s of starting the server"
+
+
+def stop_server(process) -> None:
+    """Stop the server and everything it started (npm starts node, node may start more)."""
+    if process.poll() is not None:
+        return
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(process.pid)], capture_output=True)
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    try:
+        process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        process.kill()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--detect", action="store_true", help="which tools the machine has")
@@ -217,6 +262,8 @@ def main() -> int:
     parser.add_argument("--out", type=Path, help="directory for the screenshots")
     parser.add_argument("--name", default="page", help="screenshot file name prefix")
     parser.add_argument("--check", action="store_true", help="measure scroll, cut-off text, contrast and focus")
+    parser.add_argument("--serve", help="command that starts the dev server; stopped after the checks")
+    parser.add_argument("--wait", type=float, default=60, help="seconds to wait for --serve's address")
     parser.add_argument("--tokens", type=Path, help="the project's tokens file")
     parser.add_argument("--files", nargs="+", default=[], help="source files to check against the tokens")
     args = parser.parse_args()
@@ -228,6 +275,8 @@ def main() -> int:
         parser.error("give --detect, --url or --tokens")
     if args.url and not (args.out or args.check):
         parser.error("--url needs --out (screenshots) and/or --check")
+    if args.serve and not args.url:
+        parser.error("--serve needs --url, the address the server answers on")
     result = {"shots": [], "defects": []}
     if args.tokens:
         if not args.files:
@@ -235,7 +284,17 @@ def main() -> int:
         result["defects"] += token_defects(args.tokens, args.files)
     if args.url:
         widths = [int(w) for w in args.widths.split(",") if w.strip()]
-        pages = run_pages(args.url, widths, args.out, args.name, args.check)
+        server = None
+        if args.serve:
+            server, error = start_server(args.serve, args.url, args.wait)
+            if error:
+                print(json.dumps({**result, "error": error}, ensure_ascii=False))
+                return 2
+        try:
+            pages = run_pages(args.url, widths, args.out, args.name, args.check)
+        finally:
+            if server is not None:
+                stop_server(server)
         if "error" in pages:  # what was measured before the failure is kept
             print(json.dumps({**pages, "shots": result["shots"] + pages.get("shots", []),
                               "defects": result["defects"] + pages.get("defects", [])}, ensure_ascii=False))
