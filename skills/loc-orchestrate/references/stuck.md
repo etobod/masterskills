@@ -30,19 +30,19 @@ Per gate, add it to `**Stuck gates:**` and write one section (`## final-review`,
 
 ## Plan gate
 
-`loc-planning` writes the `## plan gate` section with all rounds and what remains, then calls the `architect` agent in Triage mode with it, the plan, `loc/PRD.md` and `CLAUDE.md`:
+`loc-planning` writes the `## plan gate` section, then calls the `architect` agent in Triage mode with it, the plan, `loc/PRD.md` and `CLAUDE.md`:
 
 - **retry**: rounds 4–6, once; when they fail too, Triage again: only plan or ask.
-- **plan**: `**Status:**` → `open — gate failed`; the stuck file waits for the next planning, which starts from it.
-- **ask**: the only verdict when the plan was made from a stuck file's `## plan gate`: planning it a third time goes in circles. As plan, plus `next_number.py --type question --title "<plan>: <what remains>" --source "<stuck file>" --by "architect (Triage)"` with its options.
+- **plan**: `**Status:**` → `open — gate failed`; the stuck file waits for the next planning, which starts from it. For a plan made from a stuck `## plan gate`, only with a **Ruling:** that changes the approach (what failed, what to do instead), copied into the next plan's `## Risks and decisions`.
+- **ask**: only beyond the architect's competence. As plan, plus `next_number.py --type question --title "<plan>: <what remains>" --source "<stuck file>" --by "architect (Triage)"` with its options.
 
 ## Closing what the plan resolved
 
-After the final review, check each point of `**Remains:**` in the plan's `## Stuck gates` against the code as it is now: a later milestone or the final review may have fixed it. Mark a fixed one `- ✅ resolved in M3: <file:line>`. For an older run whose milestone gate made a `stuck` file, do the same with its `### What remains`; when every point is resolved, write `resolved in plan <NNN>` under its `## Resolution`, set `**Status:** closed <date>` and `mv` it to `loc/inbox/done/`.
+After the final review, check each point of `**Remains:**` in the plan's `## Stuck gates` against the code as it is now: a later milestone may have fixed it. Mark a fixed one `- ✅ resolved in M3: <file:line>`. For an older run whose milestone gate made a `stuck` file, do the same with its `### What remains`; when every point is resolved, write `resolved in plan <NNN>` under its `## Resolution`, set `**Status:** closed <date>` and `mv` it to `loc/inbox/done/`.
 
 ## Triage
 
-Triage runs when the final review went stuck, **or** when a point of `## Stuck gates` is still open after the closing check, even though the final review passed. Call the `architect` agent in Triage mode with the plan's `## Stuck gates`, the stuck file's `## final-review` section if any, the plan path, `loc/PRD.md` and `CLAUDE.md`. Append its verdict to the `final-review` gate's `triage` list and write it with its reason in each `**Architect (Triage):**`, then:
+Triage runs when the final review went stuck, **or** a point of `## Stuck gates` is still open after the closing check, even though the final review passed. Call the `architect` agent in Triage mode with the plan's `## Stuck gates`, the stuck file's `## final-review` section if any, the plan path, `loc/PRD.md` and `CLAUDE.md`. Append its verdict to the `final-review` gate's `triage` list and write it with its reason in each `**Architect (Triage):**`, then:
 
 - **retry**: call `loc-review` again for rounds 4–6 (once per plan), with the open points as findings to fix. It adds a `## final-review (rounds 4–6)` section; when that fails too, call the architect again: now only `plan`, `search` or `ask`.
 - **plan**: the open points become work for the next planning:
