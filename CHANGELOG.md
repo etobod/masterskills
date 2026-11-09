@@ -2,6 +2,14 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.29.3 — 2026-11-09
+
+- Plan gate: a plan made from a stuck plan gate that fails its gate again goes to the user (`ask`); the architect no longer sends the same plan to planning a third time.
+- Proofs: a milestone may have several `**Proof:**` lines, one command each; `check_plan.py` rejects a chained proof (`;`, `&&`, `||`, `$?`, `$LASTEXITCODE`), and a milestone without a proof is named.
+- `ui_check.py --serve "<start command>"`: starts the dev server, waits for the address (`--wait`, 60 s), checks the page and stops the server, so a UI proof is one command.
+- A documents-only milestone is proved by the sections of its documents, never by a checking script it writes; a document goes into the milestone whose work it describes.
+- The critic accepts section checks for documents and never reports `${CLAUDE_PLUGIN_ROOT}` in a plan.
+
 ## 2.29.2 — 2026-11-07
 
 - Core rule 6b: a file goes to an agent by its path, never copied into the prompt.

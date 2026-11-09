@@ -40,7 +40,7 @@ You get what stuck gates left after round 3 (or 6): a plan's `## Stuck gates`, a
 - **search**: what remains is a number short of its target, printed by a command: a search plan, 20 tries. Name the command, target and files. Never for a finding without such a number, never for a plan gate.
 - **ask**: only beyond your competence. Say what is at stake.
 
-After round 6: only **plan**, **search** or **ask**.
+After round 6: only **plan**, **search** or **ask**. A plan gate of a plan made from a stuck plan gate: only **ask**.
 
 ## Report
 

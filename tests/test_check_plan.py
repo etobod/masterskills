@@ -91,6 +91,26 @@ class CheckPlanTest(unittest.TestCase):
         text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n")
         return text.replace("## Not defended against\n- none\n", section)
 
+    def test_a_milestone_may_have_several_proofs_each_one_command(self):
+        # A base plan chained its steps with PowerShell's `; if ($?)`, which goes on after a failure.
+        docs = ("### M1 — opis\n**No tests:** tylko dokumenty\n"
+                "**Proof:** `grep -c \"^## Commands\" CLAUDE.md` → `1`\n"
+                "**Proof:** `grep -c \"^## (a)\" loc/TEST-PLAN.md` → `1`\n")
+        code, out = self.run_check(plan(docs))
+        self.assertEqual((code, out["proofs"]), (0, 2), out)
+        for chain in ("npm test; if ($?) { npm run lint }", "npm test && npm run lint", "npm test || exit 1",
+                      "npm test; echo $LASTEXITCODE"):
+            code, out = self.run_check(plan(f"### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `{chain}` → `0`\n"))
+            self.assertEqual(code, 1, chain)
+            self.assertIn("one command per proof", self.problems(out), chain)
+
+    def test_a_milestone_without_a_proof_fails(self):
+        text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n"
+                    "### M2 — reszta\n**No tests:** tylko dokumenty\n")
+        code, out = self.run_check(text)
+        self.assertEqual(code, 1)
+        self.assertIn("M2: no **Proof:** line", self.problems(out))
+
     def test_none_defended_against_passes(self):
         code, out = self.run_check(self.defended("## Not defended against\n- none\n"))
         self.assertEqual(code, 0, out)

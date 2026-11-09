@@ -72,7 +72,7 @@ The file comes from the template with all sections. Fill them in English:
 - **Out of scope**: what is deliberately out of scope.
 - **Not defended against**: who produces inputs the code deliberately does not defend against, with the reason (e.g. an administrator who could disable the tool anyway). Never a foreseeable user mistake. `- none` when nothing. Reviews call such inputs Unrealistic.
 - **Code context**: the files and `file:line` the plan relies on, as read now.
-- **Milestones**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with exactly one `**Proof:**` line: a command and its expected result that **fails if the milestone is not done**. Optional `**Manual check:**` for what only a person can see (below). Code and its tests go in the same milestone (below). A milestone's product is never a decision, an audit or a question.
+- **Milestones**: `### M1 — <name>`, `### M2 …`. Each is a working, reviewable piece with `**Proof:**` lines, one command each (never chained: `;`, `&&`, `if ($?)`) with its expected result; together they **fail if the milestone is not done**. Optional `**Manual check:**` for what only a person can see (below). Code and its tests go in the same milestone (below). A milestone's product is never a decision, an audit or a question.
 - **Risks and decisions**: references to brainstorm decisions (`B-01`…), decisions of `loc/PRD.md` (`D-01`…, cited, never restated) and `question` files, and what each risk would cost. A lasting choice later plans must follow: `references/prd.md`.
 
 ### Search milestones
@@ -81,7 +81,7 @@ A milestone is a **proof** milestone unless the requirement is a number to impro
 
 ### Tests in the plan
 
-A milestone that changes only documents or configuration has no criteria: it says so with the reason, `**No tests:** documents only`. Every milestone that changes code has acceptance criteria. `check_plan.py` rejects a milestone with neither line.
+A milestone that changes only documents or configuration has no criteria: it says so with the reason, `**No tests:** documents only`. Its proofs check each document's sections (`grep -c "^## Commands" CLAUDE.md` → `1`), never a checking script it writes. A document goes into the milestone whose work it describes. Every milestone that changes code has acceptance criteria. `check_plan.py` rejects a milestone with neither line.
 
 What gets tested: the behaviour the plan changes (its criteria); regression (`loc-qa` runs the whole suite once at the end); fixed contracts (the project's `qa-*` skills, run by `loc-qa`); an explicit manual list from `Manual verification / UAT`.
 
@@ -106,7 +106,7 @@ A criterion says **what the code must do**, never "a test exists" or "it works":
 
 `loc/TEST-PLAN.md` is the project's test contract and changes only through a milestone: when the plan adds something new to the product, one milestone extends section (b) (tests only).
 
-**The user checks after your tests, never instead of them.** So every milestone that changes code has criteria with tests and a command proof, also when a person must look at the result; the user gets only what no command can see: the look, the feel, a real device, per `Manual verification / UAT`. A canvas animation has testable logic (the math, the empty input), tested first. With a user interface (`## Frontend` in `CLAUDE.md`), a milestone that changes what the user sees runs the `ui` layer of `loc/TEST-PLAN.md` (a), `ui_check.py` (with `Screenshots: declined`, `--tokens` only), in its `**Proof:**`; the first such plan starts with a milestone filling `## Frontend` and the tokens file (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/design.md`); only the look stays a `**Manual check:**`. A file a proof, test or manual check needs is in git or made by the test; never in `.gitignore`.
+**The user checks after your tests, never instead of them.** So every milestone that changes code has criteria with tests and a command proof, also when a person must look at the result; the user gets only what no command can see: the look, the feel, a real device, per `Manual verification / UAT`. A canvas animation has testable logic (the math, the empty input), tested first. With a user interface (`## Frontend` in `CLAUDE.md`), a milestone that changes what the user sees runs the `ui` layer of `loc/TEST-PLAN.md` (a), `ui_check.py` (with `Screenshots: declined`, `--tokens` only; a dev server started by its `--serve`), in its `**Proof:**`; the first such plan starts with a milestone filling `## Frontend` and the tokens file (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/design.md`); only the look stays a `**Manual check:**`. A file a proof, test or manual check needs is in git or made by the test; never in `.gitignore`.
 
 **Performer** (`**Performer:**`): `auto`, the proof command run by `loc-orchestrate` (default); `agent`, a check an agent performs and records; `user (blocking)` or `user (deferrable)`: after the proof and the code review pass, the user does the milestone's `**Manual check:**` and gives their word with a date. A user performer and a `**Manual check:**` line go together; a criterion may point to `manual` only next to criteria with tests:
 
