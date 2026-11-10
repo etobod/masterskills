@@ -213,7 +213,7 @@ def check_proof(name: str, proof: tuple, performer, issues: list) -> None:
         elif CHAIN.search(match.group("command")):
             issues.append({"line": proof[0], "problem": f"{name}: one command per proof: write each step as "
                            "its own **Proof:** line, run on its own, instead of chaining them with "
-                           f"{CHAIN.search(match.group('command')).group(0)!r}"})
+                           f"{CHAIN.search(match.group('command')).group(0)!r}", "format": True})
 
 
 def check_milestone_rest(name: str, criteria: list, performer, issues: list, tested: dict) -> None:
@@ -507,8 +507,8 @@ def own_issues(path: Path) -> list:
     check_review(text, result["issues"])
     check_decisions(text, result["issues"])
     check_ready(text, result["issues"])
-    return [issue["problem"] for issue in result["issues"]
-            if not issue["problem"].startswith("the project has no test suite")]
+    return [issue["problem"] for issue in result["issues"] if not issue.get("format")
+            and not issue["problem"].startswith("the project has no test suite")]
 
 
 NAME = re.compile(r"^\d{3,}-plan-(\d+)-(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")
@@ -551,6 +551,8 @@ def main() -> int:
         check_name(args.plan.name, result)
     result["ok"] = not result["issues"]
     if args.ready:
+        # A plan that passed its gate is not failed by a format rule added since: its proofs still run.
+        result["issues"] = [issue for issue in result["issues"] if not issue.pop("format", False)]
         check_ready(text, result["issues"])
         result["ok"] = not result["issues"]
     print(json.dumps({"plan": args.plan.as_posix(), **result}, indent=2))

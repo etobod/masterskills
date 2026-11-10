@@ -191,6 +191,11 @@ class PlanGateLoopTest(unittest.TestCase):
         self.assertNotIn("stuck plan gate", read("agents/architect.md"))
         self.assertIn("except a stuck `## plan gate` (`stuck.md`)", read("skills/loc-planning/SKILL.md"))
 
+    def test_a_plan_that_is_not_ready_goes_to_planning_without_the_architect(self):
+        # A run asked the architect (Decide), which rewrote the proofs in place and used up the last gate round.
+        self.assertIn("point to `/masterskills:loc-planning`; no architect, no edits to the plan.",
+                      read("skills/loc-orchestrate/SKILL.md"))
+
     def test_proofs_are_single_commands(self):
         planning = read("skills/loc-planning/SKILL.md")
         self.assertIn("one command each (never chained: `;`, `&&`, `if ($?)`)", planning)

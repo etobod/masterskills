@@ -104,6 +104,13 @@ class CheckPlanTest(unittest.TestCase):
             self.assertEqual(code, 1, chain)
             self.assertIn("one command per proof", self.problems(out), chain)
 
+    def test_ready_does_not_fail_a_gated_plan_for_a_newer_proof_rule(self):
+        # An update that added the one-command rule stopped a plan that had passed its gate.
+        text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `npm test && npm run lint` → `0`\n")
+        code, out = self.run_check(text, ready=True)
+        self.assertNotIn("one command per proof", self.problems(out))
+        self.assertEqual(self.run_check(text)[0], 1, "planning still enforces the rule")
+
     def test_a_milestone_without_a_proof_fails(self):
         text = plan("### M1 — opis\n**No tests:** tylko dokumenty\n**Proof:** `grep x` → `1`\n"
                     "### M2 — reszta\n**No tests:** tylko dokumenty\n")
