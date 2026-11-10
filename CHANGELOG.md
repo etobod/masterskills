@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.29.6 — 2026-11-10
+
+- `check_plan.py --ready` no longer fails a plan that passed its gate because of the one-command proof rule added in 2.29.3: its proofs still run. Planning still enforces the rule.
+- `loc-orchestrate`: a plan that is not ready goes back to `loc-planning`, with no architect and no edits to the plan.
+
 ## 2.29.5 — 2026-11-09
 
 - Plan gate: a plan made from a stuck plan gate makes no stuck file of its own. When it fails, its rounds are merged into that stuck file and the plan closes; when it passes, the stuck file and the plan that first failed close. Replaces the 2.29.3–2.29.4 rule that forced a ruling or a question after a second failure.
