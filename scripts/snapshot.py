@@ -18,6 +18,7 @@ Exit 0 on success, 2 when git fails or the state file cannot be updated.
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -43,7 +44,10 @@ def snapshot(project: Path) -> str:
             head = git(["rev-parse", "--verify", "-q", "HEAD"], project)
         except RuntimeError:
             head = ""  # no commits yet
-        if head:
+        real = git_dir / "index"
+        if real.is_file():
+            shutil.copyfile(real, index)  # keeps the stat cache: add -A rehashes only changed files
+        elif head:
             git(["read-tree", head], project, env)
         git(["add", "-A"], project, env)
         tree = git(["write-tree"], project, env)

@@ -24,7 +24,7 @@ from pathlib import Path
 NAME = re.compile(r"^(\d{3,})-(?:(U)-)?([a-z]+)[-.]")
 HTML_TITLE = re.compile(r"<title>\s*\d+\s*[—-]+\s*(.*?)\s*</title>", re.S)
 TITLE = re.compile(r"^#\s+\d+\s*[—-]+\s*(.+?)\s*$")
-PLACEHOLDER = re.compile(r"^<[^\n]*>$", re.M)
+PLACEHOLDER = re.compile(r"^<(?!!--)[^\n]*>$", re.M)  # a template comment is no placeholder
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "loc" / "inbox"
 
 
