@@ -37,7 +37,7 @@ OVERRIDES = {
     "skills/loc-director/SKILL.md": 850,
     "skills/loc-init/SKILL.md": 850,
     "skills/loc-orchestrate/references/design.md": 850,
-    "skills/loc-orchestrate/references/gates.md": 1050,
+    "skills/loc-orchestrate/references/gates.md": 1100,
     "skills/loc-orchestrate/references/stuck.md": 900,
     "skills/loc-orchestrate/references/search.md": 900,
     "skills/loc-orchestrate/references/run.md": 1400,
@@ -47,7 +47,7 @@ OVERRIDES = {
     "agents/design-critic.md": 800,
     "agents/designer.md": 650,
     "agents/rubber-duck.md": 720,
-    "agents/judge.md": 750,
+    "agents/judge.md": 770,
 }
 
 PATTERNS = [

@@ -37,12 +37,12 @@ class BudgetTest(unittest.TestCase):
             "skills/loc-planning/SKILL.md": 2950,
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
-            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1050,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1100,
             "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1400,
             "skills/loc-orchestrate/references/divergent.md": 850,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
             "agents/architect.md": 700, "agents/design-critic.md": 800, "agents/designer.md": 650,
-            "agents/rubber-duck.md": 720, "agents/judge.md": 750,
+            "agents/rubber-duck.md": 720, "agents/judge.md": 770,
         }
         self.assertEqual(overrides, expected)
         self.assertEqual(measure().LIMITS["rule"], 595)
@@ -203,7 +203,7 @@ class LeanReviewTest(unittest.TestCase):
         self.assertNotIn("reviewed once, at the end", steps)
         run = self.read("skills/loc-orchestrate/references/run.md")
         self.assertNotIn("review the whole plan once", run)
-        self.assertIn('a run of 2.30-2.31 skips it', run)
+        self.assertIn('a state file without it (a run before 2.32) skips it', run)
         self.assertNotIn("one review of the whole plan", self.read("skills/loc-orchestrate/SKILL.md"))
         self.assertNotIn("reviewed with the plan, in the final review", self.read("skills/loc-orchestrate/references/search.md"))
         gates = self.read("skills/loc-orchestrate/references/gates.md")
@@ -211,7 +211,8 @@ class LeanReviewTest(unittest.TestCase):
         for part in ('args: "<changed files> low', "**never `ultra`**", "no rubber-duck", "Only a round with Blocking findings not `rejected` calls the `judge`",
                      '"is it really blocking?"', "a Blocking one the judge called `enough`",
                      '`"pending"`', "the final review's judge gets it",
-                     "gate `M<n> code-review`", "**stuck**"):
+                     "gate `M<n> code-review`", "**stuck**", "No changed files: record", "<category>: <finding>",
+                     "A `challenges D-NN` follows", "leaves nothing the judge marked `fix`"):
             self.assertIn(part, milestone)
 
     def test_the_final_judge_weighs_blocking_and_non_blocking(self):
@@ -233,6 +234,10 @@ class LeanReviewTest(unittest.TestCase):
                      "with the milestone gates' `pending` findings", "Rounds 2 and 3 review only the fixes' diff"):
             self.assertIn(part, review)
         self.assertIn("A milestone's quick review gives you only Blocking findings", self.read("agents/judge.md"))
+        self.assertIn("This replaces steps 2 and 3 below", self.read("agents/judge.md"))
+        self.assertIn("the fix, the proof and step 5 again", self.read("skills/loc-orchestrate/references/run.md"))
+        agent = self.read("opencode/agents/code-review.md")  # low is the quickest level, as in Claude Code
+        self.assertIn("- `low`: report only findings you are sure of", agent)
 
 class AgentAnswerTest(unittest.TestCase):
     """An agent ends with its report alone, and says so when it found nothing."""

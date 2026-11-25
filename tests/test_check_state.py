@@ -206,7 +206,8 @@ class CheckStateTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("gates.M1/code-review: M1 is done without a passed quick code review", out["problems"])
         data["gates"]["M1/code-review"] = {"rounds": 1, "passed": True, "stuck": None,
-                                           "pending": ["app.py:3 — a retry logs twice"]}
+                                           "pending": ["app.py:3 — non-blocking: a retry logs twice",
+                                                       "README.md — blocking: the new flag is missing"]}
         code, out = self.run_check(data, PLAN_WITH_CRITERIA)
         self.assertEqual(code, 0, out)
 
@@ -218,8 +219,8 @@ class CheckStateTest(unittest.TestCase):
         self.assertIn("review: expected one of ['milestone']", out["problems"])
 
     def test_pending_only_in_a_code_review_gate(self):
-        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — y"]}})
-        data["gates"]["M1/code-review"] = {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — ok", "retry logs twice", 3]}
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — non-blocking: y"]}})
+        data["gates"]["M1/code-review"] = {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — blocking: ok", "a.py:2 — retry logs twice", 3]}
         code, out = self.run_check(data, PLAN_WITH_CRITERIA)
         self.assertEqual(code, 1)
         problems = " | ".join(out["problems"])

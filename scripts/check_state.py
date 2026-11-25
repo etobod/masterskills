@@ -49,9 +49,9 @@ milestone explaining why. A plan with `**Criteria:**` reaches `journal`
 or `done` only after a `qa` gate that passed or went stuck. A `done` milestone
 with `**Criteria:**` needs a passed `M<n>/red` gate (or a deviation for it). With
 `"review": "milestone"` a `done` milestone also needs a passed `M<n>/code-review`
-gate (runs of 2.30-2.31 have no `review` and no such gate); that gate may keep
-`pending`, its Non-blocking findings for the final review, a list of
-`"<file:line> — <finding>"`. `journal` and `done` need a `final-review`
+gate (runs before 2.32 have no `review`); that gate may keep `pending`, the
+findings that wait for the final review, a list of
+`"<file:line> — <blocking|non-blocking>: <finding>"`. `journal` and `done` need a `final-review`
 gate that passed or went stuck; `done` needs the plan's `**Status:**` closed
 (`done <date>` or `open — QA failed`). `deferred`, when
 set (runs started before 1.6), names the plan's `deferred` file of milestone
@@ -78,7 +78,7 @@ KEYS = {"plan", "mode", "milestone", "phase", "milestones", "gates", "deviations
         "next_action", "updated"}
 OPTIONAL = {"deferred", "commit", "questions", "review"}
 REVIEWS = {"milestone"}
-PENDING = re.compile(r"^\S+:\d+\S* — \S")  # "<file:line> — <finding>"
+PENDING = re.compile(r"^.+? — (blocking|non-blocking): \S")  # "<file:line> — <category>: <finding>"
 MODES = {"agent", "inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "search", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
@@ -202,7 +202,7 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
             if match.group(2) != "code-review":
                 problems.append(f"gates.{name}.pending: only a M<n>/code-review gate has it")
             elif not (isinstance(pending, list) and all(isinstance(v, str) and PENDING.match(v) for v in pending)):
-                problems.append(f"gates.{name}.pending: expected a list of findings ('<file:line> — <finding>')")
+                problems.append(f"gates.{name}.pending: expected a list of findings ('<file:line> — <blocking|non-blocking>: <finding>')")
         output = gate.get("output")
         if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")

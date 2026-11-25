@@ -26,9 +26,11 @@ Style, naming and taste are `low` at most. Do not report what a linter or the co
 
 ## Level
 
-- `high`: report only findings you are sure of and that break real behaviour.
+As in Claude Code's code-review, a lower level reports fewer findings:
+
+- `low`: report only findings you are sure of and that break real behaviour.
 - `medium`: also defects in rarer cases that do happen.
-- `low`: also minor ones: unclear code, a comment in the wrong place, needless duplication.
+- `high`: also minor ones: unclear code, a comment in the wrong place, needless duplication.
 
 ## Severity
 

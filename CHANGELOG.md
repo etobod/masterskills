@@ -2,6 +2,13 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.2 — 2026-11-25
+
+- Pre-release review fixes: a milestone gate passes when nothing the judge marked `fix` is left (an `enough` no longer makes it stuck), a `challenges D-NN` there goes to the architect, a milestone with no changed files skips the quick review, and a manual-check fix gets the quick review again.
+- A `pending` entry carries its category (`<file:line> — <blocking|non-blocking>: <finding>`); a location without a line is accepted.
+- The judge's milestone rule replaces its general steps 2 and 3.
+- OpenCode's code-review agent: `low` is now the quickest level, as in Claude Code.
+
 ## 2.32.1 — 2026-11-25
 
 - The milestone's quick review calls the `judge` when a round has a Blocking finding, with one question, "is it really blocking?": the orchestrator no longer judges its own code alone. A finding the judge calls `enough` goes to `pending` and is weighed again in the final review.
