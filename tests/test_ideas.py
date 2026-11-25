@@ -198,7 +198,7 @@ class LeanReviewTest(unittest.TestCase):
         self.assertIn("Orchestrated, the whole plan's diff: the milestone gates fixed only Blocking findings and kept the Non-blocking ones in `pending`.", review)
         steps = self.read("skills/loc-orchestrate/references/run.md").split("## 2. Each milestone", 1)[1].split("\n## ", 1)[0]
         for part in ("**Quick code-review gate** (`M<n>/code-review`", "code-review `low`",
-                     "only Blocking findings fixed, no judge, no rubber-duck", "`pending`"):
+                     "only Blocking findings fixed, the judge only when there is one, no rubber-duck", "`pending`"):
             self.assertIn(part, steps)
         self.assertNotIn("reviewed once, at the end", steps)
         run = self.read("skills/loc-orchestrate/references/run.md")
@@ -208,8 +208,9 @@ class LeanReviewTest(unittest.TestCase):
         self.assertNotIn("reviewed with the plan, in the final review", self.read("skills/loc-orchestrate/references/search.md"))
         gates = self.read("skills/loc-orchestrate/references/gates.md")
         milestone = gates.split("## The milestone gate", 1)[1].split("\n## ", 1)[0]
-        for part in ('args: "<changed files> low', "**never `ultra`**", "no judge, no rubber-duck",
-                     "Fix only the Blocking findings", '`"pending"`', "the final review's judge gets it",
+        for part in ('args: "<changed files> low', "**never `ultra`**", "no rubber-duck", "Only a round with Blocking findings not `rejected` calls the `judge`",
+                     '"is it really blocking?"', "a Blocking one the judge called `enough`",
+                     '`"pending"`', "the final review's judge gets it",
                      "gate `M<n> code-review`", "**stuck**"):
             self.assertIn(part, milestone)
 
@@ -221,14 +222,17 @@ class LeanReviewTest(unittest.TestCase):
                      "in round 1 also every milestone gate's `pending` finding", "## Rounds 2 and 3",
                      "**A challenged decision.**"):
             self.assertIn(part, gates)
-        for gone in ("Only a round with Blocking findings", "is it really blocking", "Repeated non-blocking",
+        final = gates.split("## The judge", 1)[1]
+        for gone in ("Only a round with Blocking findings", "is it really blocking"):
+            self.assertNotIn(gone, final)
+        for gone in ("Repeated non-blocking",
                      "Non-blocking findings never go to the judge"):
             self.assertNotIn(gone, gates)
         review = self.read("skills/loc-review/SKILL.md").split("## 4. Orchestrated mode", 1)[1].split("\n## ", 1)[0]
         for part in ("give the Blocking and Non-blocking findings to the `judge` agent",
                      "with the milestone gates' `pending` findings", "Rounds 2 and 3 review only the fixes' diff"):
             self.assertIn(part, review)
-        self.assertNotIn("is it really blocking", self.read("agents/judge.md"))
+        self.assertIn("A milestone's quick review gives you only Blocking findings", self.read("agents/judge.md"))
 
 class AgentAnswerTest(unittest.TestCase):
     """An agent ends with its report alone, and says so when it found nothing."""
