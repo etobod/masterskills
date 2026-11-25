@@ -4,7 +4,8 @@
 `loc/` is left out: plans, reviews and questions are not the code under
 review. Without `--to` the end point is a fresh snapshot of the working tree
 (new files included, see snapshot.py), so uncommitted work is reviewed too.
-`--from HEAD` in a repository with no commits starts from the empty tree.
+`--from HEAD` in a repository with no commits, and `--from empty` always, start
+from the empty tree: the whole project is the change. `--exclude` leaves paths out.
 
 Files nobody reviews by reading are left out of the diff and of `files`: lock
 files, minified files (`*.min.*`), files marked `linguist-generated` in
@@ -13,7 +14,7 @@ of the project's CLAUDE.md (comma-separated globs or directories), and files
 over 100 KB after the change. Each gets a line `skipped: <file> (<size>, <reason>)`
 at the top of the diff file and an entry in `skipped`.
 
-    review_diff.py --from <rev> [--to <rev>] --out loc/review/018.diff [--paths a.py b/]
+    review_diff.py --from <rev|empty> [--to <rev>] --out loc/review/018.diff [--paths a.py b/] [--exclude tests/]
 
 Prints JSON {"from", "to", "out", "files", "skipped", "empty"}. Exit 0, or 2 when git fails.
 """
@@ -35,6 +36,7 @@ LOCKS = {"package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yam
          "Pipfile.lock", "uv.lock", "pdm.lock", "Cargo.lock", "Gemfile.lock", "composer.lock", "go.sum",
          "packages.lock.json", "flake.lock", "mix.lock", "pubspec.lock", "Podfile.lock"}
 LARGE = 100 * 1024
+BATCH = 100  # files per git diff call
 
 
 def generated_patterns(project: Path) -> list:
@@ -70,17 +72,22 @@ def skipped_files(project: Path, end: str, files: list) -> list:
     """The changed files nobody reviews by reading, each {"file", "size", "reason"}."""
     if not files:
         return []
+    # Whole trees and stdin, never the file list on the command line: a whole-project
+    # review lists thousands of files, over the Windows command-line limit.
+    wanted = set(files)
     sizes = {}
-    for line in git(["ls-tree", "-r", "-l", end, "--", *files], project).splitlines():
+    for line in git(["-c", "core.quotePath=false", "ls-tree", "-r", "-l", end], project).splitlines():
         meta, _, name = line.partition("\t")
         parts = meta.split()
-        if len(parts) == 4 and parts[3].isdigit():
+        if name in wanted and len(parts) == 4 and parts[3].isdigit():
             sizes[name] = int(parts[3])
     generated = set()
-    for line in git(["check-attr", "linguist-generated", "--", *files], project).splitlines():
-        name, _, value = line.rpartition(": ")
+    # NUL-separated (-z): on Windows a text-mode stdin turns "\n" into "\r\n", part of the path.
+    fields = git(["check-attr", "-z", "--stdin", "linguist-generated"], project,
+                 stdin="".join(f"{path}\0" for path in files), strip=False).split("\0")
+    for name, _attr, value in zip(fields[0::3], fields[1::3], fields[2::3]):
         if value in ("set", "true"):
-            generated.add(name.rsplit(": linguist-generated", 1)[0])
+            generated.add(name)
     patterns = generated_patterns(project)
     result = []
     for path in files:
@@ -113,26 +120,32 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--project", type=Path,
                         default=Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()))
-    parser.add_argument("--from", dest="start", required=True, help="start revision or snapshot")
+    parser.add_argument("--from", dest="start", required=True, help="start revision or snapshot; empty: the empty tree")
     parser.add_argument("--to", dest="end", help="end revision (default: a fresh snapshot)")
     parser.add_argument("--out", type=Path, required=True, help="diff file to write")
-    parser.add_argument("--paths", nargs="*", default=[], help="limit the diff to these paths")
+    parser.add_argument("--paths", nargs="*", help="limit the diff to these paths")
+    parser.add_argument("--exclude", nargs="*", default=[], help="leave these paths out")
     args = parser.parse_args()
+    if args.paths == []:
+        # `--paths` with nothing after it would review the whole project.
+        parser.error("--paths needs at least one path")
 
     project = args.project.resolve()
     out = args.out if args.out.is_absolute() else project / args.out
     try:
         end = args.end or snapshot(project)
-        if args.start == "HEAD" and not head_exists(project):
+        if args.start == "empty" or (args.start == "HEAD" and not head_exists(project)):
             # No commits yet: everything in the project is the change.
             args.start = git(["hash-object", "-t", "tree", "--stdin"], project, stdin="")
-        scope = ["--", *(args.paths or ["."]), ":!loc"]
-        files = git(["diff", "--name-only", args.start, end, *scope], project).splitlines()
+        scope = ["--", *(args.paths or ["."]), ":!loc", *(f":!{path}" for path in args.exclude)]
+        files = git(["-c", "core.quotePath=false", "diff", "--name-only", args.start, end, *scope],
+                    project).splitlines()
         skipped = skipped_files(project, end, files)
         left_out = {item["file"] for item in skipped}
         files = [path for path in files if path not in left_out]
-        scope += [f":(exclude,literal){path}" for path in sorted(left_out)]
-        diff = git(["diff", args.start, end, *scope], project, strip=False)
+        # The kept files in batches, so no command line grows with the project.
+        diff = "".join(git(["diff", args.start, end, "--", *(f":(literal){path}" for path in files[i:i + BATCH])],
+                           project, strip=False) for i in range(0, len(files), BATCH))
         header = "".join(f"skipped: {item['file']} ({item['size']}, {item['reason']})\n" for item in skipped)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_bytes((header + diff).encode("utf-8"))

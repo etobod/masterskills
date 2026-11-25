@@ -14,12 +14,19 @@ Parse `$ARGUMENTS`:
 
 - **Level**: `low`, `medium`, `high` or `max`; default `medium`. **`ultra` is recognised and dropped, never forwarded**: it sends the code to the cloud. Say so; use `medium`.
 - **`plan <NNN>`, called by `loc-orchestrate`** → **orchestrated mode**. Requirements: the plan file. Scope: from `milestones[0].start` in `loc/state/<NNN>.json` to a fresh snapshot. Gate: `final-review` in that state file.
-- **Anything else** → **standalone mode**, report only, no edits. Requirements: what the user named (a plan, an inbox file, their words); if nothing, "the change is correct and consistent with the project's rules". Scope: the git range given (`a..b`), else the named paths from `HEAD` (`--paths`), else everything uncommitted from `HEAD`.
+- **Anything else** → **standalone mode**, report only, no edits. Requirements: what the user named (a plan, an inbox file, their words); if nothing, "the change is correct and consistent with the project's rules". Scope: the git range given (`a..b`), else the named paths from `HEAD` (`--paths`), else, when requirements were named, everything uncommitted from `HEAD`.
+- **Standalone with no range, paths or requirements** (a level alone is fine): ask with `AskUserQuestion`, "What should the review cover?":
+  - `Recent changes` (recommended): everything uncommitted from `HEAD`; requirements as above.
+  - `Whole product`: `--from empty --exclude <test paths>`; requirements: `loc/PRD.md` (if it exists) and `CLAUDE.md`, "does the product do what they say".
+  - `Whole test suite`: `--from empty --paths <test paths>`; requirements: `loc/TEST-PLAN.md` and `loc/PRD.md` (those that exist, else `CLAUDE.md`), "does each test prove the behaviour it claims, can it fail on wrong code, does it test the project's code, does TEST-PLAN run it after the changes it guards".
+  - Other: the user's words are the requirements, and the scope when they name one.
+
+  Test paths: those `loc/TEST-PLAN.md` or `## Commands` of `CLAUDE.md` names, else those found at any depth (`**/tests/`, `**/test/`, `**/*.test.*`, `**/*.spec.*`, `**/*_test.*`, `**/test_*`), each passed by its path. None found: `Whole test suite` says the project has no tests and stops. A whole-product or whole-suite review first says how many files `files` holds; over 150, ask with `AskUserQuestion` which top-level directories to cover (one review each) or to narrow it. `## Scope` and `--source` (§5) name it `whole product` or `whole test suite`, not the empty-tree hash.
 
 Write the diff to a file and list the changed files (`loc/inbox/` is left out; without `--to` the end is a fresh snapshot):
 
 ```sh
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/review_diff.py --from <from> [--to <to>] --out loc/review/<NNN or date>.diff [--paths <paths>]
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/review_diff.py --from <from|empty> [--to <to>] --out loc/review/<NNN or date>.diff [--paths <paths>] [--exclude <paths>]
 ```
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.

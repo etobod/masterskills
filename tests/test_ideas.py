@@ -35,7 +35,7 @@ class BudgetTest(unittest.TestCase):
         overrides = measure().OVERRIDES
         expected = {
             "skills/loc-planning/SKILL.md": 2950,
-            "skills/loc-review/SKILL.md": 1000, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
+            "skills/loc-review/SKILL.md": 1200, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
             "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1200,
             "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1500,
@@ -191,6 +191,17 @@ class LeanReviewTest(unittest.TestCase):
                      "fewer findings than announced", "`judge`", "never clean",
                      "same agent again, up to 3 times", "never a relaunch", "still lost fails the round"):
             self.assertIn(part, rule)
+
+    def test_a_bare_review_asks_what_to_cover(self):
+        review = self.read("skills/loc-review/SKILL.md")
+        for part in ("**Standalone with no range, paths or requirements**", "`AskUserQuestion`",
+                     "`Recent changes` (recommended)", "`Whole product`: `--from empty --exclude <test paths>`",
+                     "`Whole test suite`: `--from empty --paths <test paths>`", "can it fail on wrong code",
+                     "first says how many files `files` holds", "`**/tests/`",
+                     "`Whole test suite` says the project has no tests and stops",
+                     "else, when requirements were named, everything uncommitted from `HEAD`",
+                     "over 150, ask with `AskUserQuestion`", "[--exclude <paths>]"):
+            self.assertIn(part, review)
 
     def test_tests_are_reviewed_as_tests(self):
         # A review of a real project found tests comparing with literals copied from the source and
