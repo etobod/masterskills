@@ -27,13 +27,13 @@ class OrchestratorAgentTest(unittest.TestCase):
     def test_the_agent_reads_the_procedure_and_never_asks(self):
         agent = read("agents/orchestrator.md")
         self.assertIn("Agent", tools(agent))
+        self.assertIn("TaskStop", tools(agent))  # rule 7 stops background commands
         self.assertIn("Skill", tools(agent))
         for part in ("**Plan**", "**State**", "**Procedure**: `run.md`. Read it first",
                      "You implement every milestone yourself", "**Never ask the user.**",
                      "`questions` in the state file", "`Status: waiting: questions`", "End of report.",
                      "Write it out in every command", "`rules/core.md`", "**No forgotten shells.**",
-                     "with a deadline", "killed included", "never an endless `until` loop",
-                     "stop every background command you started"):
+                     "follow **Long commands** in `run.md`", "only with a deadline", "stopped (`TaskStop`)"):
             self.assertIn(part, agent)
         for worker in ("test-author", "designer", "design-critic", "searcher", "researcher", "rubber-duck", "judge", "architect"):
             self.assertIn(f"`{worker}`", agent)
@@ -41,8 +41,14 @@ class OrchestratorAgentTest(unittest.TestCase):
     def test_a_proof_runs_in_the_foreground(self):
         # A proof sent to the background and polled forever kept shells running into the final review.
         run = read("skills/loc-orchestrate/references/run.md")
-        self.assertIn("Run it in the foreground, with the command tool's longest timeout", run)
-        self.assertIn("never the same command twice at once", run)
+        for part in ("**Long commands.**", "in any step or reference (search, divergent, a rerun after a fix, QA)",
+                     "timeout at its maximum, `600000` ms", "never start one while another still runs",
+                     "A foreground run the timeout kills is no failure", "never with `&` or a detached start",
+                     "No fourth round or code change: stop your background commands", "killed included, never an endless `until` loop",
+                     "count the round as failed, cause `exceeds the time limit`, never a code fix",
+                     "Before a milestone becomes `done` or `stuck`, before the QA gate, the final review and every stop or report",
+                     "Run it as **Long commands** above says.", "7. Stop your background commands (**Long commands**)"):
+            self.assertIn(part, run)
 
     def test_only_the_orchestrator_starts_agents(self):
         # Two levels: the orchestrator and its workers; a worker never starts another agent.

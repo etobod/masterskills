@@ -4,7 +4,7 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 
 ## 2.32.3 — 2026-11-25
 
-- The orchestrator no longer leaves background shells running: a proof runs in the foreground with the longest timeout and never twice at once, a background command is waited for with a deadline that also ends on a kill (no endless `until` loop), and every background command still running is stopped before a milestone is marked done and before the final review.
+- The orchestrator no longer leaves background shells running. A new **Long commands** rule in `run.md` covers every proof, test run and metric (search, divergent, reruns, QA included): the foreground with a `600000` ms timeout, never two at once; only one that cannot finish in time goes to the background, waited for at most three times 10 minutes, then stopped and counted as a failed round (`exceeds the time limit`). Background commands are stopped before a milestone becomes done or stuck, before the QA gate, the final review and every stop or report; the orchestrator gets the `TaskStop` tool for it.
 
 ## 2.32.2 — 2026-11-25
 
