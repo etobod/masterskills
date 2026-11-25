@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.29.7 — 2026-11-24
+
+- Session start no longer calls every brainstorm "still the empty template": the template's HTML comment line, which stays in a filled file, is not taken as an unfilled placeholder.
+- `snapshot.py` starts from a copy of the git index instead of an empty one, so each snapshot rehashes only changed files instead of the whole tree.
+
 ## 2.29.6 — 2026-11-10
 
 - `check_plan.py --ready` no longer fails a plan that passed its gate because of the one-command proof rule added in 2.29.3: its proofs still run. Planning still enforces the rule.

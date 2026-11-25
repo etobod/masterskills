@@ -341,6 +341,24 @@ class SessionStartTest(unittest.TestCase):
         self.assertIn("still the empty template", empty)
         self.assertNotIn("template", full)
 
+    def test_filled_brainstorm_keeps_its_comment_and_is_not_marked(self):
+        # The brainstorm template starts with an HTML comment line; it stays in every filled file.
+        project = scratch_dir(self)
+        inbox = project / "loc" / "inbox"
+        inbox.mkdir(parents=True)
+        template = (ROOT / "templates" / "loc" / "inbox" / "brainstorm.md").read_text(encoding="utf-8")
+        self.assertIn("\n<!--", template)
+        (inbox / "011-U-brainstorm-empty.md").write_text(
+            template.replace("{NNN}", "011").replace("{TITLE}", "Empty"), encoding="utf-8")
+        filled = template.replace("<what the conversation is about, in one paragraph>", "Renaming the export.")
+        (inbox / "012-U-brainstorm-filled.md").write_text(
+            filled.replace("{NNN}", "012").replace("{TITLE}", "Filled"), encoding="utf-8")
+        text = self.context(project)
+        empty = next(line for line in text.splitlines() if "011-U-brainstorm-empty" in line)
+        full = next(line for line in text.splitlines() if "012-U-brainstorm-filled" in line)
+        self.assertIn("still the empty template", empty)
+        self.assertNotIn("template", full)
+
     def test_session_start_tells_the_user_about_migration(self):
         """The model may skip the request in its context; the user sees systemMessage in the terminal."""
         project = scratch_dir(self)
