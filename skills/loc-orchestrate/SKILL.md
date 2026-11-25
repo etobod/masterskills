@@ -41,7 +41,7 @@ Do not do the plan's work here, and do not read its diffs: the state file and th
 
 The state file's `questions` lists each matter, `{"file", "ask"}`. Read each file and ask every matter in one `AskUserQuestion` round: a `question` file's `### ` choices with their options, the recommended option first, named by file, letter and content (`088 A: finish the entry`); the checks sheet (`NNN-U-checks.html`): its path, and ask for the ratings by number ("3 ok, 5 fix: …").
 
-Record each answer as core rule 8 says: under `## Resolution` and the file moved to `loc/inbox/done/`, a rating with `checks.py --rate`, an answer other than the interim option also as a `deferred` file. Then set `questions` to `[]` and `next_action` to what follows the answers, and go back to §2: the agent resumes from the state file.
+Record each answer as core rule 8 says: under `## Resolution` and the file moved to `loc/inbox/done/`, a rating with `checks.py --rate`, an answer other than the interim option also as a `deferred` file; a divergent pick also with `divergent_log.py --pick --by user` (`references/divergent.md`). Then set `questions` to `[]` and `next_action` to what follows the answers, and go back to §2: the agent resumes from the state file.
 
 In a `loc-director` course the director goes on after the answers: never ask to continue.
 

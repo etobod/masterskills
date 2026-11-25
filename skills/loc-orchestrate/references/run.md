@@ -12,7 +12,7 @@ Read the state file (`references/state.md`) and continue from its `next_action`:
 
 Update the state file before and after every step.
 
-A milestone with `**Kind:** search` runs the search loop of `references/search.md` instead of steps 2 and 3; a missed target is its accepted result, never stuck. A milestone that changes what the user sees, and the plan's end, follow `references/design.md` (the `designer` agent, `ui_check.py`, the `design-critic` gate).
+A milestone with `**Kind:** search` runs the search loop of `references/search.md` instead of steps 2 and 3; a missed target is its accepted result, never stuck. A milestone with `**Kind:** divergent` follows `references/divergent.md` instead of steps 2 and 3: variants, the critic, an interim pick; its proof's `waiting: user pick` is done, never stuck. A milestone that changes what the user sees, and the plan's end, follow `references/design.md` (the `designer` agent, `ui_check.py`, the `design-critic` gate).
 
 1. **Snapshot** `--point start`.
 2. **Implement** exactly this milestone yourself, code and its tests together. With `**Criteria:**`: tests first, red gate `M<n>/red`, then the code (`references/tests.md`). Before writing code, climb the ladder and stop at the first rung that works: is it needed at all, already in the project, in the standard library, a platform feature (the browser's date picker), an installed dependency, one line; only then the minimum that works. Never cut validation, error handling, security or accessibility. Scratch files only in `loc/tmp/`; delete only files you created there, never the directory.

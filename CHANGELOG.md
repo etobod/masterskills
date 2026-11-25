@@ -2,6 +2,12 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.31.0 — 2026-11-25
+
+- **Divergent milestones.** A third kind next to proof and search, for a name, a text, a visual direction or a concept the user has not decided. The plan writes down the `**Default:**` answer, the `**Facts:**` the variants start from and the `**Working parts:**` that must keep working; the run makes 2 to 4 variants that differ in kind, the `design-critic` judges them in its new `divergent` mode, the recommended one is built and the user picks in the plan's round of questions. `divergent_log.py` keeps the log and is the proof; `check_plan.py` checks the fields.
+- `seed.py visual|text|idea`: a random start from project-free axes, skipping the values of the last 12 seeds (`loc/seeds.jsonl`). `moves.py`: the means past divergent milestones used, in `loc/moves.md`, so a new variant does not repeat one.
+- Whole-plugin review fixes: the proof checks the working parts (`--built --working pass`), that the user's pick was built after it was picked, and at least 2 variants the critic passed; a reworked variant loses its old verdict; a move must be an entry of `loc/moves.md`, and `moves.py remove` takes back a move the user did not pick; "None of them" is recorded; the critic lists every variant's pass; `seed.py --keep` works with `--only`; `templates/loc/moves.md` ships with the plugin.
+
 ## 2.30.0 — 2026-11-25
 
 - **The orchestrator is an agent.** `loc-orchestrate` checks the frame and the plan, starts the `orchestrator` agent and asks its questions in one round; the agent builds the milestones, runs the gates and the workers, and resumes from the state file. The main session no longer carries the plan's work. The procedure moved to `references/run.md`; the state file gains `"mode": "agent"` and `questions`. In OpenCode the orchestrator is a subagent with `task`; every other agent has it denied.

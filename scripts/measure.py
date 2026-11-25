@@ -30,7 +30,7 @@ LIMITS = {
 
 # Per-file limits approved by the user; everything else uses LIMITS.
 OVERRIDES = {
-    "skills/loc-planning/SKILL.md": 2900,
+    "skills/loc-planning/SKILL.md": 2950,
     "skills/loc-review/SKILL.md": 950,
     "skills/loc-diagram/SKILL.md": 850,
     "skills/loc-qa/SKILL.md": 1050,
@@ -41,9 +41,10 @@ OVERRIDES = {
     "skills/loc-orchestrate/references/stuck.md": 900,
     "skills/loc-orchestrate/references/search.md": 900,
     "skills/loc-orchestrate/references/run.md": 1400,
+    "skills/loc-orchestrate/references/divergent.md": 850,
     "skills/loc-planning/references/prd.md": 850,
     "agents/architect.md": 700,
-    "agents/design-critic.md": 650,
+    "agents/design-critic.md": 800,
     "agents/designer.md": 650,
     "agents/rubber-duck.md": 720,
     "agents/judge.md": 750,

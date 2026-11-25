@@ -34,17 +34,71 @@ class BudgetTest(unittest.TestCase):
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
         expected = {
-            "skills/loc-planning/SKILL.md": 2900,
+            "skills/loc-planning/SKILL.md": 2950,
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
             "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 950,
             "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1400,
+            "skills/loc-orchestrate/references/divergent.md": 850,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
-            "agents/architect.md": 700, "agents/design-critic.md": 650, "agents/designer.md": 650,
+            "agents/architect.md": 700, "agents/design-critic.md": 800, "agents/designer.md": 650,
             "agents/rubber-duck.md": 720, "agents/judge.md": 750,
         }
         self.assertEqual(overrides, expected)
         self.assertEqual(measure().LIMITS["rule"], 595)
+
+
+class DivergentCriticTest(unittest.TestCase):
+    """plan 86, B-03: the critic judges divergent variants; it never picks."""
+
+    def test_the_critic_has_a_divergent_mode(self):
+        text = read("agents/design-critic.md")
+        section = re.search(r"## Divergent\n(.*?)\n## ", text, re.S).group(1)
+        for phrase in ("fit another project", "make it first", "names a fact from `**Facts:**`",
+                       "known opposite", "`loc/moves.md`", "working parts are whole", "never pick"):
+            self.assertIn(phrase, section)
+        self.assertIn("`<name>: pass` or `<name>: fail`", text)
+        self.assertIn("light, full or divergent", text)
+        # a divergent report lists every pass; the "never list what passed" rule is for light and full
+        self.assertIn("outside `divergent`, never list what passed", text)
+
+    def test_the_designer_sketches_variants_then_builds_the_pick(self):
+        text = read("agents/designer.md")
+        self.assertIn("as a sketch", text)
+        self.assertIn("only the picked one in full", text)
+
+
+class DivergentFlowTest(unittest.TestCase):
+    """plan 86, B-02 and B-05: where a divergent milestone comes from and how it runs."""
+
+    def test_planning_marks_creative_results_divergent(self):
+        text = read("skills/loc-planning/SKILL.md")
+        for phrase in ("**divergent** (`**Kind:** divergent`)", "a name, a text, a visual direction or a concept",
+                       "never for identifiers in code", "references/divergent.md"):
+            self.assertIn(phrase, text)
+
+    def test_run_routes_divergent_milestones(self):
+        text = read("skills/loc-orchestrate/references/run.md")
+        self.assertIn("`**Kind:** divergent` follows `references/divergent.md`", text)
+        self.assertIn("`waiting: user pick` is done, never stuck", text)
+
+    def test_the_flow_has_its_six_steps_and_never_waits(self):
+        text = read("skills/loc-orchestrate/references/divergent.md")
+        for step in ("1. **Default.**", "2. **Start.**", "3. **Variants.**", "4. **Critic.**", "5. **Pick.**",
+                     "6. **Build.**"):
+            self.assertIn(step, text)
+        for phrase in ("seed.py visual|text|idea", "moves.py show --last 12", "`design-critic` agent in `divergent` mode",
+                       "--by interim", "the plan never waits for the pick", "added to `questions`",
+                       "moves.py add", "At most one is the **safe** variant", "reworked once"):
+            self.assertIn(phrase, text)
+        answer = text.split("## The user's answer", 1)[1]
+        self.assertIn("--by user", answer)
+        self.assertIn("**None of them** (`--name none`): a `deferred` file asks for new variants once", answer)
+        self.assertIn("a second `None of them` becomes a `question` file", answer)
+
+    def test_the_skill_records_the_users_pick(self):
+        self.assertIn("a divergent pick also with `divergent_log.py --pick --by user`",
+                      read("skills/loc-orchestrate/SKILL.md"))
 
 
 class LadderTest(unittest.TestCase):

@@ -26,10 +26,12 @@ Checks, in order:
     `## Commands`, since a stub file alone proves nothing runs;
   - `**Performer:**`, when present, is `auto`, `agent`, or `user` with
     `(blocking)` or `(deferrable)`;
-  - `**Kind:**`, when present, is `proof` (the default) or `search`; a search milestone
+  - `**Kind:**`, when present, is `proof` (the default), `search` or `divergent`; a search milestone
     has `**Metric:**`, `**Target:**` (`>= <n>` or `<= <n>`), `**Budget:**` (a number; over 50
     only with `user approved <date>`), `**Give up:**`, `**May change:**`, `**Measure:**` and
     `**Hold-out:**`, needs no criteria, and its proof is `search_log.py --check` → `ok`;
+  - a divergent milestone has `**Default:**`, `**Facts:**`, `**Working parts:**` and
+    `**Variants:**` (2 to 4), needs no criteria, and its proof is `divergent_log.py --check` → `ok`;
   - a criterion's test is not a shell check (`grep`, `test -f`, `open`...) and
     names a test (`test` or `spec` in it), not a source file;
   - a proof (any performer but `agent`) reads `` `<command>` → `<output>` `` and does not just
@@ -97,7 +99,9 @@ PERFORMERS = re.compile(r"^(auto|agent|user \((blocking|deferrable)\))$")
 MANUAL_CHECK = re.compile(r"^\*\*Manual check:\*\*")
 KIND = re.compile(r"^\*\*Kind:\*\*\s*(?P<value>.*?)\s*$")
 SEARCH_FIELDS = ["Metric", "Quick metric", "Baseline", "Target", "Budget", "Give up", "May change", "Measure", "Hold-out"]
-SEARCH_FIELD = re.compile(r"^\*\*(?P<key>" + "|".join(SEARCH_FIELDS) + r"):\*\*\s*(?P<value>.*?)\s*$")
+DIVERGENT_FIELDS = ["Default", "Facts", "Working parts", "Variants"]
+SEARCH_FIELD = re.compile(r"^\*\*(?P<key>" + "|".join(SEARCH_FIELDS + DIVERGENT_FIELDS)
+                          + r"):\*\*\s*(?P<value>.*?)\s*$")
 SEARCH_TARGET = re.compile(r"^`?\s*(>=|<=|≥|≤)\s*-?\d+(\.\d+)?\s*%?\s*`?$")
 SEARCH_BUDGET = re.compile(r"^(?P<n>\d+)\b(?P<rest>.*)$")
 BUDGET_LIMIT = 50
@@ -185,10 +189,13 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
     """criteria: [(line number, text)]; performer: (line number, value) or None;
     tested: {"criteria", "no_tests" (reason or None), "suite"} seen in the milestone."""
     kind = tested.get("kind")
-    if kind is not None and kind[1] not in ("proof", "search"):
-        issues.append({"line": kind[0], "problem": f"{name}: **Kind:** is proof or search"})
+    if kind is not None and kind[1] not in ("proof", "search", "divergent"):
+        issues.append({"line": kind[0], "problem": f"{name}: **Kind:** is proof, search or divergent"})
     if kind is not None and kind[1] == "search":
         check_search(name, tested, issues)
+        return
+    if kind is not None and kind[1] == "divergent":
+        check_divergent(name, tested, issues)
         return
     if tested["no_tests"] == "":
         issues.append({"line": 0, "problem": f"{name}: **No tests:** needs a reason, e.g. 'documents only'"})
@@ -287,6 +294,28 @@ def check_search(name: str, tested: dict, issues: list) -> None:
                            "--log loc/state/<NNN>/search-M<n>.md` → `ok`'"})
     if len(tested.get("proofs", [])) > 1:
         issues.append({"line": tested["proofs"][1][0], "problem": f"{name}: a search milestone has one proof, "
+                       "its log check"})
+
+
+def check_divergent(name: str, tested: dict, issues: list) -> None:
+    """A divergent milestone: its fields, 2 to 4 variants and a proof that checks the divergent log."""
+    fields = tested.get("fields", {})
+    for key in DIVERGENT_FIELDS:
+        if not fields.get(key, (0, ""))[1]:
+            issues.append({"line": 0, "problem": f"{name}: a divergent milestone needs **{key}:** "
+                           "(${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/divergent.md)"})
+    variants = fields.get("Variants", (0, ""))
+    if variants[1] and not re.match(r"^[2-4](\s|$)", variants[1]):
+        issues.append({"line": variants[0], "problem": f"{name}: **Variants:** is 2 to 4, 3 by default"})
+    for proof in tested.get("proofs", [])[:1]:
+        if not ("divergent_log.py" in proof[1] and "--check" in proof[1] and CHECKABLE_PROOF.match(proof[1])):
+            issues.append({"line": proof[0], "problem": f"{name}: a divergent milestone's proof checks its log: "
+                           "'**Proof:** `sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" scripts/divergent_log.py --check "
+                           "--log loc/state/<NNN>/divergent-M<n>.md` → `ok`'"})
+    if not tested.get("proofs"):
+        issues.append({"line": 0, "problem": f"{name}: no **Proof:** line"})
+    elif len(tested["proofs"]) > 1:
+        issues.append({"line": tested["proofs"][1][0], "problem": f"{name}: a divergent milestone has one proof, "
                        "its log check"})
 
 

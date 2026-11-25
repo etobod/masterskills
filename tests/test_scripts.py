@@ -31,10 +31,19 @@ class InitProjectTest(unittest.TestCase):
         self.project = scratch_dir(self)
         subprocess.run(["git", "init", "-q"], cwd=self.project, check=True)
 
+    def test_every_template_is_in_git(self):
+        # The repository ignores `loc/`, which also matches `templates/loc/`: a new template left
+        # untracked is missing from the installed plugin, and init_project.py fails on it.
+        tracked = set(subprocess.run(["git", "ls-files", "templates"], cwd=ROOT, capture_output=True,
+                                     text=True, check=True).stdout.splitlines())
+        on_disk = {p.relative_to(ROOT).as_posix() for p in (ROOT / "templates").rglob("*")
+                   if p.is_file() and "__pycache__" not in p.parts}
+        self.assertEqual(sorted(on_disk - tracked), [])
+
     def test_creates_loc_and_one_ignore_line_idempotently(self):
         first = json.loads(run("init_project.py", "--project", ".", cwd=self.project).stdout)
         second = json.loads(run("init_project.py", "--project", ".", cwd=self.project).stdout)
-        for rel in ("loc/inbox/done", "loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"):
+        for rel in ("loc/inbox/done", "loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md", "loc/moves.md"):
             self.assertTrue((self.project / rel).exists(), rel)
         self.assertFalse((self.project / "inbox").exists())
         self.assertFalse((self.project / "docs").exists())

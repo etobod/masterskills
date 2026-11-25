@@ -87,7 +87,7 @@ flowchart TD
 
 `loc-orchestrate` checks the frame and the plan, then hands the plan to the `orchestrator` agent: the plan's whole work runs in the agent's context, and your session sees only the start, one round of questions and the report. No work starts without the project's frame: its goal, core idea and scenarios in `loc/PRD.md` and a test command in `CLAUDE.md`. Each plan's journal entry ends with its cost, e.g. `1.8M tokens: orchestrator 55%, rubber-duck 25%, main 5%`.
 
-### Proof and search milestones
+### Proof, search and divergent milestones
 
 Most milestones are **proof** milestones: a command that must pass. When the goal is a number to improve with no known ceiling, `loc-planning` makes a **search** milestone instead, and only then: never as a way out of a hard proof.
 
@@ -107,6 +107,19 @@ Most milestones are **proof** milestones: a command that must pass. When the goa
 Measuring stays in proportion to the work: a result the project already has is the baseline, tries run on a quick metric, and the full one only confirms a gain that meets the target and runs once at the end. Each try is one change with a hypothesis from a fresh `searcher` agent; `search_log.py` decides keep or revert and keeps the log, so a search resumes after `/clear`. The budget is 50 tries by default and more only with your consent. The metric changes only when the `judge` agrees it was wrong, at most twice. The result reads `64 → 78 (target >= 80), stopped: budget`, with ideas for going further kept as a deferred item.
 
 A search also follows a stuck gate: when what a gate could not fix in its rounds is a number short of its target (a proof threshold, a time, a pass rate), the `architect` can order a search plan of 20 tries instead of asking you.
+
+The third kind is **divergent**: a name, a tagline, a visual direction or a concept you have not decided, where the risk is the first answer everyone gives.
+
+```markdown
+### M3 — app name and tagline
+**Kind:** divergent
+**Default:** a made-up two-syllable word; "Your text, simplified."
+**Facts:** PRD Goal: counts and cleans text for one user; a terminal tool
+**Working parts:** `python -m unittest` still passes
+**Variants:** 3
+```
+
+The milestone writes the default answer down so it can be avoided, makes two to four variants that differ in kind (each with its reason from a project fact, at most one safe), and has the `design-critic` judge them: would it fit another project, would most people make it first, is it only the default's opposite, does it repeat a move from `loc/moves.md`. The run builds the recommended variant and goes on; you pick in the round of questions at the plan's end, and another pick becomes a deferred item. `seed.py` gives a random start when the project offers no facts, and `divergent_log.py --check` is the proof.
 
 Everything the workflow writes stays in `loc/`, ignored by git with one line:
 
@@ -144,7 +157,7 @@ Agents are spawned with a clean context and narrow tools, so each one judges onl
 | ✍️ | **Test author** | `test-author` | Writes tests from a milestone's behaviour criteria before the code exists | writes tests only, never reads the code |
 | 🎯 | **Searcher** | `searcher` | One try of a search milestone: one change with its hypothesis, read from the log of earlier tries | changes only the files the plan allows, never the metric |
 | 🎨 | **Designer** | `designer` | Builds a screen that looks good: plans the tokens, challenges the plan against the generated look, builds from the tokens | changes only the files it is given and the tokens, never takes screenshots |
-| 👁️ | **Design critic** | `design-critic` | Looks at the screenshots: light after a UI milestone, full at the end against the direction, the references and a checklist | read-only |
+| 👁️ | **Design critic** | `design-critic` | Looks at the screenshots: light after a UI milestone, full at the end against the direction, the references and a checklist; judges the variants of a divergent milestone | read-only |
 | 🔎 | **Researcher** | `researcher` | Maps what exists before a change: files, call sites, tests, commands, with `file:line` | documents, never judges |
 | 🔍 | **Code reviewer** | `code-review` | Reviews the whole plan's diff once, at its end; lock, minified and generated files are left out | read-only |
 

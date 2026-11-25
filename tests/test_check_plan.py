@@ -415,7 +415,51 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(plan("### M1 — x\n**Kind:** tuning\n**No tests:** documents only\n"
                                         "**Proof:** `python -m unittest` → `OK`\n"))
         self.assertEqual(code, 1)
-        self.assertIn("proof or search", self.problems(out))
+        self.assertIn("proof, search or divergent", self.problems(out))
+
+    # A divergent milestone (plan 86, B-01): creative work whose result must not be the first template answer.
+    DIVERGENT = ("### M1 — app name and tagline\n"
+                 "**Kind:** divergent\n"
+                 "**Default:** a two-syllable made-up word with a gradient logo and \"Your X, simplified\"\n"
+                 "**Facts:** PRD Goal: counts and cleans text for one user; CLAUDE.md: a command line tool\n"
+                 "**Working parts:** the name is typed in a terminal: `python -B check_name.py` exits 0\n"
+                 "**Variants:** {variants}\n"
+                 "**Proof:** {proof}\n")
+    DIVERGENT_PROOF = ('`sh "${{CLAUDE_PLUGIN_ROOT}}/scripts/py.sh" scripts/divergent_log.py --check '
+                       '--log loc/state/007/divergent-M1.md` → `ok`')
+
+    def divergent(self, variants="3", proof=None) -> str:
+        return plan(self.DIVERGENT.format(variants=variants, proof=proof or self.DIVERGENT_PROOF.format()))
+
+    def test_divergent_milestone_needs_no_criteria(self):
+        code, out = self.run_check(self.divergent())
+        self.assertEqual(code, 0, out)
+        for variants in ("2", "4"):
+            code, out = self.run_check(self.divergent(variants=variants))
+            self.assertEqual(code, 0, (variants, out))
+
+    def test_divergent_milestone_needs_its_fields(self):
+        text = self.divergent().replace(
+            "**Default:** a two-syllable made-up word with a gradient logo and \"Your X, simplified\"\n", "")
+        code, out = self.run_check(text)
+        self.assertEqual(code, 1)
+        self.assertIn("**Default:**", self.problems(out))
+        self.assertIn("references/divergent.md", self.problems(out))
+        text = self.divergent().replace(
+            "**Facts:** PRD Goal: counts and cleans text for one user; CLAUDE.md: a command line tool", "**Facts:**")
+        problems = self.problems(self.run_check(text)[1])
+        self.assertIn("**Facts:**", problems)
+
+    def test_divergent_variants_are_two_to_four(self):
+        for variants in ("6", "1", "many", "3-10", "4.5"):
+            code, out = self.run_check(self.divergent(variants=variants))
+            self.assertEqual(code, 1, variants)
+            self.assertIn("**Variants:** is 2 to 4", self.problems(out))
+
+    def test_divergent_proof_checks_its_log(self):
+        code, out = self.run_check(self.divergent(proof="`python -m unittest` → `OK`"))
+        self.assertEqual(code, 1)
+        self.assertIn("divergent_log.py --check", self.problems(out))
 
     def test_ready_needs_a_recorded_gate(self):
         for record in ("", "<zapis rund bramki: runda, wynik `check_plan.py`>\n"):

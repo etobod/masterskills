@@ -2,7 +2,7 @@
 """Set up the masterskills structure in a project, adding only what is missing.
 
 Creates `loc/inbox/`, `loc/inbox/done/`, `loc/PRD.md`, `loc/PATTERNS.md`,
-`loc/MEMORY.md`, the standard `CLAUDE.md` sections, a `loc/` entry in
+`loc/MEMORY.md`, `loc/moves.md`, the standard `CLAUDE.md` sections, a `loc/` entry in
 `.gitignore` and `.claude/settings.json` (no auto memory, no AI
 attribution). Existing files are never overwritten: a missing `CLAUDE.md` section,
 `.gitignore` entry or settings value is added, everything else is left alone,
@@ -46,7 +46,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates"
 
 DIRS = ["loc/inbox", "loc/inbox/done", "loc/diagrams", "loc/diagrams/tmp"]
-DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md"]
+DOCS = ["loc/PRD.md", "loc/PATTERNS.md", "loc/MEMORY.md", "loc/moves.md"]
 LOC_ENTRY = re.compile(r"^/?loc(/(\*\*?)?)?\s*$")
 PRD_FRAME = ["Goal", "Core idea", "Scenarios"]  # Directions is work to plan, not the project's frame
 POLISH = re.compile("[\u0104\u0105\u0106\u0107\u0118\u0119\u0141\u0142\u0143\u0144\u00d3\u00f3\u015a\u015b\u0179\u017a\u017b\u017c]")

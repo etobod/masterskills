@@ -228,6 +228,18 @@ console.log(JSON.stringify({ counts, sent }))
         review = (out / "skills" / "loc-review" / "SKILL.md").read_text(encoding="utf-8")
         self.assertRegex(review, r'\S -B "' + re.escape(out.resolve().as_posix()) + r'/masterskills/scripts/review_diff\.py"')
 
+    def test_divergent_milestones_translate_unchanged(self):
+        # plan 86: the new scripts and the critic's divergent mode need nothing of their own in OpenCode.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        root = out.resolve().as_posix()
+        divergent = (out / "skills" / "loc-orchestrate" / "references" / "divergent.md").read_text(encoding="utf-8")
+        for script in ("divergent_log.py", "seed.py", "moves.py"):
+            self.assertIn(f'{root}/masterskills/scripts/{script}"', divergent)
+            self.assertTrue((out / "masterskills" / "scripts" / script).is_file(), script)
+        critic = (out / "agents" / "design-critic.md").read_text(encoding="utf-8")
+        self.assertIn("## Divergent", critic)
+
     def test_install_keeps_the_users_files_and_replaces_its_own(self):
         home = self.scratch()
         config = home / "opencode"
