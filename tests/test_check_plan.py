@@ -690,18 +690,34 @@ class MilestoneLimitTest(unittest.TestCase):
         return "milestones, the limit" in self.problems(out)
 
     def test_limit_follows_the_difficulty(self):
-        for difficulty, count, over in (("hard", 4, True), ("hard", 3, False), ("easy", 6, False),
-                                        ("easy", 7, True), ("medium", 5, True), ("medium", 4, False)):
+        # poe: 3 milestones a plan on average, each plan paid its gate, review and journal (B-19).
+        for difficulty, count, over in (("hard", 7, True), ("hard", 6, False), ("easy", 12, False),
+                                        ("easy", 13, True), ("medium", 9, True), ("medium", 8, False)):
             with self.subTest(difficulty=difficulty, count=count):
                 self.assertEqual(self.over(difficulty, count), over)
 
     def test_suite_milestone_is_not_counted(self):
-        self.assertFalse(self.over("hard", 3, suite=True))
-        self.assertTrue(self.over("hard", 4, suite=True))
+        self.assertFalse(self.over("hard", 6, suite=True))
+        self.assertTrue(self.over("hard", 7, suite=True))
 
     def test_ready_skips_the_limit(self):
-        self.assertFalse(self.over("hard", 5, ready=True))
+        self.assertFalse(self.over("hard", 8, ready=True))
 
     def test_planning_states_the_limits(self):
         text = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("`easy` 6, `medium` 4, `hard` 3", text)
+        self.assertIn("`easy` 12, `medium` 8, `hard` 6", text)
+        self.assertIn("One input goes to one plan", text)
+        self.assertIn("a plan has no minimum size", text)
+        self.assertIn("A `join` note", text)
+
+    def test_a_second_open_plan_from_the_same_input_gets_a_join_note(self):
+        # Two plans from one brainstorm each paid a gate, a review and a journal (B-25).
+        body = self.milestones(1).replace("### M1", "**Source:** loc/inbox/005-brainstorm-x.md\n\n### M1", 1)
+        other = "# 008 Other\n**Source:** loc/inbox/005-brainstorm-x.md, B-02\n"
+        code, out = self.run_check(plan(body), contents={"loc/inbox/008-plan-1-easy-other.md": other})
+        self.assertEqual(code, 0, self.problems(out))
+        self.assertEqual([note["plan"] for note in out.get("notes", [])], ["008-plan-1-easy-other.md"])
+        self.assertEqual(out["notes"][0]["note"], "join")
+        apart = other.replace("005-brainstorm-x", "006-brainstorm-y")
+        code, out = self.run_check(plan(body), contents={"loc/inbox/008-plan-1-easy-other.md": apart})
+        self.assertNotIn("notes", out)

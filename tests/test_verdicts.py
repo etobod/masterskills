@@ -28,9 +28,6 @@ class VerdictTextTest(unittest.TestCase):
             self.assertIn(part, body)
 
     def test_skills_give_verdicts_before_the_judge(self):
-        orchestrate = read("skills/loc-orchestrate/SKILL.md")
-        step5 = [line for line in orchestrate.splitlines() if line.startswith("5. **Code-review gate**")][0]
-        self.assertIn("verdict", step5)
         merge = section(read("skills/loc-review/SKILL.md"), "## 3. Merge")
         self.assertIn("verdict", merge)
         self.assertIn('"Verdicts"', merge)

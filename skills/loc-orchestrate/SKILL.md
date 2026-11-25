@@ -1,12 +1,12 @@
 ---
 name: loc-orchestrate
-description: Use when the user asks to execute a plan from loc/inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in loc/state/. Builds it milestone by milestone with a proof and a code-review per milestone, then a final review.
+description: Use when the user asks to execute a plan from loc/inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in loc/state/. Builds it milestone by milestone with a proof per milestone, then one review of the whole plan.
 argument-hint: "<plan number or file>"
 ---
 
 # loc-orchestrate
 
-Executes `loc/inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the contract: build it, prove it with its `Proof` lines, review each milestone, then the whole. Do not redesign it.
+Executes `loc/inbox/NNN-plan-<topic>.md` milestone by milestone. The plan is the contract: build it, prove each milestone with its `Proof` lines, then review the whole plan once. Do not redesign it.
 
 **Do not ask "shall I continue?" between milestones.**
 
@@ -32,10 +32,9 @@ A milestone with `**Kind:** search` runs the search loop of `references/search.m
    - *inline*: do it yourself.
    - *subagent*: a fresh general-purpose sub-agent per milestone with the plan path, the milestone's heading and text, `Code context`, and the rules: only this milestone, the ladder, follow the project's `CLAUDE.md`, scratch files only in `loc/tmp/` and delete only files you created there, never the directory, report the files changed and the proof output.
 3. **Proof gate** (`M<n>/proof`). Increase `rounds`, run each `Proof` line exactly as written, one at a time, and compare each with its expected result. Pass → next step. Fail → fix the cause (not the proof) and start the next round. After the third failed round: **stuck** (below).
-4. **Snapshot** `--point end`. It prints the changed files.
-5. **Code-review gate** (`M<n>/code-review`). Increase `rounds`, then `Skill(skill: "code-review", args: "<changed files> medium — also flag new code the project, its standard library, platform or dependencies already provide")`: always explicit files and level, **never `ultra`** (it leaves the machine). It runs once per round. A lost agent report is asked for again (core rule 6a), never a relaunch. Give each finding a verdict (`references/gates.md`), then the `judge` agent weighs the Blocking and Non-blocking ones; fix those it marks `fix`. Suggestions, Unrealistic findings and its `enough` verdicts are not fixed: one line each in the plan's `## Review notes`. Rounds 2 and 3 review only the fixes (`references/gates.md`). Rerun the proof after the fixes and take a new `end` snapshot. Passed when the judge leaves nothing to fix. After the third failed round: **stuck**.
-6. **Manual check**, only for a `user` performer, after the proof and the review passed: put the milestone's `**Manual check:**` on the checks sheet, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/checks.py --add --plan <NNN> --milestone M<n> --title "<what>" --step "<what to open or click>" --look "<what to look at>"` (`--image "<png> | <caption>"` per screenshot; `--blocking` for `user (blocking)`). Blocking: give the user the sheet path and wait; deferrable: go on. Record the user's answer by number: `checks.py --rate --ok <n> --fix <n> "<what>"`. A fix first becomes a test that fails on it, then the fix, the proof and the review again, then a new point with `--again <n>`. The answer with the date goes under the milestone in the plan.
-7. Mark the milestone `done`, move to the next one.
+4. **Snapshot** `--point end`. It prints the changed files. No review here: the plan is reviewed once, at the end.
+5. **Manual check**, only for a `user` performer, after the proof passed: put the milestone's `**Manual check:**` on the checks sheet, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/checks.py --add --plan <NNN> --milestone M<n> --title "<what>" --step "<what to open or click>" --look "<what to look at>"` (`--image "<png> | <caption>"` per screenshot; `--blocking` for `user (blocking)`). Blocking: give the user the sheet path and wait; deferrable: go on. Record the user's answer by number: `checks.py --rate --ok <n> --fix <n> "<what>"`. A fix first becomes a test that fails on it, then the fix and the proof again, then a new point with `--again <n>`. The answer with the date goes under the milestone in the plan.
+6. Mark the milestone `done`, move to the next one.
 
 **Stuck gate.** No fourth round or code change: record the gate in the plan's `## Stuck gates` (`references/stuck.md`), set its `stuck` to `"plan"` and the milestone to `stuck`, and go on with the next milestone.
 
@@ -43,7 +42,7 @@ A milestone with `**Kind:** search` runs the search loop of `references/search.m
 
 - **Rules 1–3** (a bug, a missing critical piece like validation, a blocker like a missing dependency): fix it, record a deviation, carry on.
 - **A blocker only the user can remove** (a file outside the project is gone): a `question` file at once, never only in chat; the milestone `stuck`, then the next one.
-- A step of this skill you skipped (the red gate, the `test-author` agent, a review) is not a deviation: go back and do it; if it cannot be done, the gate is **stuck**.
+- A step of this skill you skipped (the red gate, the `test-author` agent, a proof) is not a deviation: go back and do it; if it cannot be done, the gate is **stuck**.
 - **Rule 4** (architecture: a new component, a changed interface or data model, a different library): call the `architect` agent in Decide mode with options, costs and your recommendation; record the deviation with its ruling, or, when it escalates, with its options as a `### <choice>` in the plan's one `question` file (the first creates it: `next_number.py --type question --title "Plan <NNN>: questions" --by "architect (Decide)"`), and continue on the recommendation.
 
 ## 4. When to stop
@@ -63,6 +62,6 @@ A failed gate ends in `stuck`, not in a stop.
 2. `phase: final-review`. `Skill(skill: "masterskills:loc-review", args: "plan <NNN>")` (orchestrated mode, gate `final-review`).
 3. **Close what the plan resolved**, then **triage** (`references/stuck.md`): mark the fixed points of `## Stuck gates`; a stuck final review or a point still open goes to the architect, whose `triage` decides between more rounds, a `deferred` file and a question.
 4. **Close the plan.** Under `## Resolution`: `done <date>`, one line per milestone (`M1 ✅`, or `M2 ⚠️ → loc/inbox/NNN-deferred-…`), deviations and new `question` files. `**Status:**` → `done <date>` and move it to `loc/inbox/done/` with `mv`; with a stuck `qa` gate → `open — QA failed`, not moved. Update `plan` in the state file, set `phase: journal`.
-5. **Journal.** First, add to `loc/PATTERNS.md` what failed during the plan and worked another way (rule 10). Then one command, your text (English, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Details: <plan path>"`. Then `Skill(skill: "masterskills:loc-diagram", args: "overview")`.
+5. **Journal.** First, add to `loc/PATTERNS.md` what failed during the plan and worked another way (rule 10). Then `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_cost.py --state loc/state/<NNN>.json` and one command, your text (English, at most 3 sentences: what was done, what did not work out): `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/memory_index.py --type Plan --title "<title>" --text "<sentences> Cost: <its line>. Details: <plan path>"`. Then `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/diagram_needed.py --state loc/state/<NNN>.json`, and `Skill(skill: "masterskills:loc-diagram", args: "overview")` only when it prints `"needed": true`.
 6. **Commit** the plan's files, never push: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/commit_plan.py --state loc/state/<NNN>.json --message "<type(scope): summary>"`, or `--skip "<reason>"` when the project's `CLAUDE.md` says the user commits. A new directory git tracks nothing in stops it: run again with `--add <dir>` for the plan's own work or `--leave <dir>` for files it did not make (e.g. manual-check data), then a `question` file asks whether `<dir>` goes into `.gitignore`. Rejected: report it, never bypass. Then `phase: done`, validate.
 7. **Report** in the user's language, briefly: the commit, milestones with proof results, gates that went stuck, files closed in step 3, deviations, new inbox files, the checks sheet with its open points, QA verdict, final review result. Then **"Judge: enough"**: every `enough` line, numbered in plan order, grouped by its PRD point; "fix 2" goes to `loc-planning`. The plan's `question` file: every matter in one `AskUserQuestion` round. In a `loc-director` course the director goes on: never ask to continue.

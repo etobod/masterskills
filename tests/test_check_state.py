@@ -185,17 +185,17 @@ class CheckStateTest(unittest.TestCase):
                                    "**Proof:** `grep x` → `1`\n")
         self.assertEqual(code, 0, out)
 
-    def test_done_milestone_needs_a_passed_code_review(self):
+    def test_done_milestone_needs_no_code_review(self):
+        # poe: 419 code-review runs, mostly per milestone; the review now runs once per plan.
         qa = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
-        for review in (None, {"rounds": 1, "passed": False, "stuck": None}):
+        for review in (None, {"rounds": 1, "passed": True, "stuck": None}):  # a new run, an old run
             data = self.finished("done", qa)
             if review is None:
                 del data["gates"]["M1/code-review"]
             else:
                 data["gates"]["M1/code-review"] = review
             code, out = self.run_check(data, PLAN_WITH_CRITERIA)
-            self.assertEqual(code, 1, review)
-            self.assertIn("M1 is done without a passed code review", "\n".join(out["problems"]))
+            self.assertEqual(code, 0, out)
 
     def test_done_milestone_with_criteria_needs_a_red_gate_or_a_deviation(self):
         data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
@@ -324,6 +324,11 @@ class CheckStateTest(unittest.TestCase):
             code, out = self.run_check(self.finished("done", gates), self.with_notes(note))
             self.assertEqual(code, 1, note)
             self.assertIn("Who produces it", "\n".join(out["problems"]))
+
+    def test_non_blocking_note_is_valid(self):
+        plan = self.with_notes("- non-blocking (final-review): `sync.py:52` — ponowienie po timeoucie loguje błąd dwa razy")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
 
     def test_enough_note_is_valid(self):
         plan = self.with_notes(

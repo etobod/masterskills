@@ -8,7 +8,7 @@
 <!-- How a person checks the result by hand. -->
 
 ## Developer notes
-<!-- Project conventions the code does not state by itself. -->
+<!-- Project conventions the code does not state by itself. A `Generated:` line names files reviews skip, e.g. `Generated: api/client_gen.py, build/`. -->
 
 ## Limits
 <!-- What is not allowed: e.g. no cloud services, sensitive data. -->

@@ -555,7 +555,27 @@ def own_issues(path: Path) -> list:
 NAME = re.compile(r"^\d{3,}-plan-(\d+)-(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")
 
 
-LIMITS = {"easy": 6, "medium": 4, "hard": 3}
+LIMITS = {"easy": 12, "medium": 8, "hard": 6}
+
+
+def source_numbers(text: str) -> set:
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    return {match.group(0).split("-", 1)[0] for match in INPUT.finditer(source.group(1) if source else "")}
+
+
+def check_join(plan: Path, text: str, result: dict) -> None:
+    """A `join` note, never an issue: another open plan comes from the same input, so the two may be one."""
+    numbers = source_numbers(text)
+    for other in sorted((project_dir() / "loc" / "inbox").glob("*-plan-*.md")):
+        if other.name == plan.name:
+            continue
+        shared = numbers & source_numbers(other.read_text(encoding="utf-8", errors="replace"))
+        if shared:
+            result.setdefault("notes", []).append({
+                "note": "join", "plan": other.name, "source": sorted(shared),
+                "message": f"{other.name} comes from the same input ({', '.join(sorted(shared))}): "
+                           "one input goes to one plan, so add this work to it unless its limit or an order "
+                           "between them forbids (loc-planning step 5)"})
 
 
 def check_name(name: str, result: dict) -> None:
@@ -590,6 +610,7 @@ def main() -> int:
     check_decisions(text, result["issues"])
     check_brainstorm(text, result["issues"])
     check_stuck(text, result["issues"])
+    check_join(args.plan, text, result)
     if not args.ready:
         check_name(args.plan.name, result)
     result["ok"] = not result["issues"]

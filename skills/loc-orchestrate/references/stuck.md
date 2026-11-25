@@ -5,9 +5,9 @@
 Do not start a fourth round, and **change no more code**: a fix after the last round is never reviewed. No inbox file and no architect now: the record goes into the plan, and the architect weighs it once, in the triage at the end. Add the plan's section `## Stuck gates` above `## Resolution` if it has none, then one subsection per gate:
 
 ```
-### M2 code-review
+### M2 proof
 **Remains:**
-- `parse.py:41` — "around five" still parses as 05:00
+- `parse.py:41` — "around five" still parses as 05:00 (proof `test_parse` fails)
 **Rounds:**
 1. <the failure output word for word>; changed <what>; <result>
 2. <the same, even when it repeats round 1>

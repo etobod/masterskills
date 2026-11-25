@@ -30,7 +30,7 @@
 Gate rules: at most 3 rounds. A milestone or QA gate that used 3 rounds without
 passing has `"stuck": "plan"` and a `### M<n> <gate>` (or `### qa`) heading under
 the plan's `## Stuck gates`; an open `**Remains:**` point there needs a final
-triage of plan, search or ask. A stuck final review names its `stuck` file, which must
+triage of plan, search, let go or ask. A stuck final review names its `stuck` file, which must
 exist in `loc/inbox/` or `loc/inbox/done/` (an older run's milestone may too).
 Only `final-review` has `triage`: the architect's verdicts after a stuck final
 review, in order, each `retry`, `plan`, `search` or `ask`. One `retry` allows rounds 4-6;
@@ -46,15 +46,15 @@ failing test output in `output`; when the plan's milestone has a
 those tests (`test_author: true`), and `false` needs a deviation for that
 milestone explaining why. A plan with `**Criteria:**` reaches `journal`
 or `done` only after a `qa` gate that passed or went stuck. A `done` milestone
-needs a passed `M<n>/code-review` gate and, when it has `**Criteria:**`, a passed
-`M<n>/red` gate (or a deviation for it). `journal` and `done` need a `final-review`
+with `**Criteria:**` needs a passed `M<n>/red` gate (or a deviation for it); it needs
+no `M<n>/code-review` gate (the review runs once per plan; old runs may still have one). `journal` and `done` need a `final-review`
 gate that passed or went stuck; `done` needs the plan's `**Status:**` closed
 (`done <date>` or `open — QA failed`). `deferred`, when
 set (runs started before 1.6), names the plan's `deferred` file of milestone
 Suggestions, which must exist in `loc/inbox/` or `loc/inbox/done/`.
 
 The plan's `## Review notes` section, when present, holds review findings
-that are not fixed, one per line: `- suggestion (<gate>): <finding>` or
+that are not fixed, one per line: `- non-blocking (<gate>): <finding>`, `- suggestion (<gate>): <finding>`,
 `- unrealistic (<gate>): <finding> Who produces it: <answer, 3+ words>` or
 `- enough (<gate>): <finding> Reason: <the judge's reason, 3+ words>`, where
 <gate> is `M<n> code-review`, `M<n> design`, `final-review` or `planning` (judged by `loc-planning`).
@@ -77,8 +77,8 @@ MODES = {"inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "search", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
-TRIAGE = {"retry", "plan", "search", "ask"}
-FINAL = ("plan", "search", "ask")  # a verdict that ends the triage
+TRIAGE = {"retry", "plan", "search", "let go", "ask"}
+FINAL = ("plan", "search", "let go", "ask")  # a verdict that ends the triage
 VERDICTS = {"confirmed", "needs_validation", "rejected"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
@@ -86,7 +86,7 @@ GATE = re.compile(r"^(M\d+)/(red|proof|code-review|search|design)$|^(qa|final-re
 SEARCH_LOG = re.compile(r"^loc/state/\d{3,}/search-M\d+\.md$")
 STUCK = re.compile(r"^loc/inbox/(done/)?(\d{3,})-(U-)?stuck-[^/]+\.md$")
 NOTES = "Review notes"
-NOTE = re.compile(r"^- (suggestion|unrealistic|enough) \((M\d+ (?:code-review|design)|final-review|planning)\): (.+)$")
+NOTE = re.compile(r"^- (non-blocking|suggestion|unrealistic|enough) \((M\d+ (?:code-review|design)|final-review|planning)\): (.+)$")
 PRODUCER = re.compile(r"Who produces it:\s*(.+)$")
 REASON = re.compile(r"Reason:\s*(.+)$")
 DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-deferred-[^/]+\.md$")
@@ -268,7 +268,7 @@ def finished_gate(gate) -> bool:
 
 
 def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
-    """A done milestone went through its review (and its red gate when it has criteria);
+    """A done milestone with criteria went through its red gate (the review runs once per plan);
     a finished run went through the final review and closed the plan."""
     gates = data.get("gates") if isinstance(data.get("gates"), dict) else {}
     plan = data.get("plan")
@@ -278,9 +278,6 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
         if not isinstance(item, dict) or item.get("status") != "done":
             continue
         name = item.get("id")
-        review = gates.get(f"{name}/code-review")
-        if not (isinstance(review, dict) and review.get("passed") is True):
-            problems.append(f"gates.{name}/code-review: {name} is done without a passed code review")
         red = gates.get(f"{name}/red")
         if name in tested and name not in deviated and not (isinstance(red, dict) and red.get("passed") is True):
             problems.append(f"gates.{name}/red: {name} has **Criteria:** but no passed red gate "
@@ -292,10 +289,10 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
         problems.append("gates.final-review: journal and done need a final review that passed or went stuck")
     elif final.get("passed") is not True and (final.get("triage") or ["retry"])[-1] not in FINAL:
         problems.append("gates.final-review.triage: a stuck final review needs the architect's last verdict, "
-                        "plan, search or ask (references/stuck.md)")
+                        "plan, search, let go or ask (references/stuck.md)")
     elif open_points(project, plan) and (final.get("triage") or ["retry"])[-1] not in FINAL:
         problems.append("gates.final-review.triage: ## Stuck gates of the plan still has an open point; "
-                        "the architect's triage must end in plan, search or ask (references/stuck.md)")
+                        "the architect's triage must end in plan, search, let go or ask (references/stuck.md)")
     status = STATUS.search(plan_text(project, plan))
     if data.get("phase") == "done" and not (status and CLOSED.match(status.group(1))):
         problems.append("plan: phase done but the plan's **Status:** is not 'done <date>' "
@@ -346,7 +343,8 @@ def check_notes(data: dict, project: Path, problems: list) -> None:
         match = NOTE.match(line)
         if not match:
             problems.append(f"plan line {number}: in ## {NOTES} expected "
-                            "'- suggestion (<gate>): ...', '- unrealistic (<gate>): ... Who produces it: ...' "
+                            "'- non-blocking (<gate>): ...', '- suggestion (<gate>): ...', "
+                            "'- unrealistic (<gate>): ... Who produces it: ...' "
                             "or '- enough (<gate>): ... Reason: ...'")
         elif match.group(1) == "unrealistic":
             producer = PRODUCER.search(match.group(3))

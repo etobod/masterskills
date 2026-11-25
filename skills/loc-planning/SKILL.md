@@ -62,7 +62,7 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --sl
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
-`<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 6, `medium` 4, `hard` 3, not counting an M1 that sets up the test suite. Never merge milestones to fit: work over the limit becomes several plans.
+`<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 12, `medium` 8, `hard` 6, not counting an M1 that sets up the test suite. Never merge milestones to fit. One input goes to one plan: split only over the limit or where one part must run first; a plan has no minimum size.
 
 `<group>`: the highest group in the queue of open plans (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py`) + 1, an empty queue gives `1`; the `pm` agent sets its real place in step 7. Several plans from one input: create them in dependency order.
 
@@ -127,7 +127,7 @@ Fixtures committed to git are written by hand. Data recorded from real runs goes
 
 Each round, recorded as one line in `## Plan gate`:
 
-1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge.
+1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge. A `join` note (another open plan from the same input) is no issue: move this work into that plan unless its limit or an order forbids, and say which in the gate.
 2. The `rubber-duck` agent with **what was asked** (the input) and **what was produced** (the plan path); ask it also whether a milestone does several independent things, and whether the plan contradicts a `D-NN` of `loc/PRD.md` without saying it replaces it (blocking). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
 
 The round passes when the script exits `0` and the critic reports nothing blocking. A lost agent report is asked for again (core rule 6a), never a relaunch. After a failed third round, no fourth: a `stuck` file and the `architect` agent's Triage decide what follows (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`, `## Plan gate`).

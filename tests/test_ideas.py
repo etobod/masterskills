@@ -34,10 +34,10 @@ class BudgetTest(unittest.TestCase):
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
         expected = {
-            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2850,
+            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2900,
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
-            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 850,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 950,
             "skills/loc-orchestrate/references/stuck.md": 900,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
             "agents/architect.md": 700, "agents/design-critic.md": 650, "agents/designer.md": 650,
@@ -66,7 +66,8 @@ class LadderTest(unittest.TestCase):
         self.assertIn("ladder", subagent)
 
     def test_code_review_flags_code_that_already_exists(self):
-        for rel in ("skills/loc-orchestrate/SKILL.md", "skills/loc-review/SKILL.md"):
+        self.assertNotIn('Skill(skill: "code-review"', read("skills/loc-orchestrate/SKILL.md"))  # once per plan
+        for rel in ("skills/loc-review/SKILL.md",):
             text = read(rel)
             calls = re.findall(r'Skill\(skill: "code-review", args: "[^"]*"\)', text)
             self.assertTrue(calls, rel)
@@ -123,18 +124,14 @@ class LeanReviewTest(unittest.TestCase):
 
     def test_reviewers_run_once_per_round(self):
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
-        step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
-                 if line.startswith("5. **Code-review gate**")][0]
-        for text in (review, step5):
+        for text in (review,):
             self.assertIn("once per round", text)
             self.assertIn("never a relaunch", text)
 
     def test_an_empty_agent_answer_is_a_lost_report(self):
         gate = self.read("skills/loc-planning/SKILL.md").split("## 6. Gate", 1)[1].split("\n## ", 1)[0]
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
-        step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
-                 if line.startswith("5. **Code-review gate**")][0]
-        for text in (gate, review, step5):
+        for text in (gate, review):
             self.assertIn("lost agent report is asked for again (core rule 6a)", text)
         rule = read("rules/core.md").split("6a. ", 1)[1].split("\n7. ", 1)[0]
         for part in ("`Findings: <n>`", "`End of report.`", "empty answer", "no end line",
@@ -142,12 +139,32 @@ class LeanReviewTest(unittest.TestCase):
                      "same agent again, up to 3 times", "never a relaunch", "still lost fails the round"):
             self.assertIn(part, rule)
 
-    def test_final_code_review_skips_reviewed_milestones(self):
+    def test_the_plan_is_reviewed_once_with_its_whole_diff(self):
+        # poe: 419 code-review runs, mostly one per milestone (B-01).
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("Orchestrated", review)
-        self.assertIn("how the milestones work together", review)
-        self.assertIn("after the last milestone's `end`", review)
+        self.assertIn("Orchestrated, the whole plan's diff: no milestone was reviewed before.", review)
+        steps = self.read("skills/loc-orchestrate/SKILL.md").split("## 2. Each milestone", 1)[1].split("\n## ", 1)[0]
+        self.assertNotIn("Code-review gate", steps)
+        self.assertIn("No review here: the plan is reviewed once, at the end.", steps)
+        self.assertNotIn("M<n>/code-review", self.read("skills/loc-orchestrate/references/search.md"))
 
+
+    def test_only_blocking_findings_start_a_fix_round(self):
+        # poe: about 240 fix rounds and 345 judge calls (B-22).
+        gates = self.read("skills/loc-orchestrate/references/gates.md")
+        for part in ("a wrong result", "data lost or distorted", "a crash or a hang", "a failing proof or test",
+                     "a broken `## Invariants` entry", "Nothing else is blocking.",
+                     "Only a round with Blocking findings calls the `judge`", '"is it really blocking?"',
+                     "Non-blocking findings never go to the judge", "- non-blocking (final-review):",
+                     "### Repeated non-blocking findings", "## Rounds 2 and 3"):
+            self.assertIn(part, gates)
+        review = self.read("skills/loc-review/SKILL.md").split("## 4. Orchestrated mode", 1)[1].split("\n## ", 1)[0]
+        for part in ("Only Blocking findings", '"is it really blocking?"', "Rounds 2 and 3 review only the fixes' diff",
+                     "get no judge and no fix", "a repeat of an earlier plan's non-blocking line"):
+            self.assertIn(part, review)
+        judge = self.read("agents/judge.md")
+        self.assertIn("A review gate gives you only Blocking findings", judge)
+        self.assertIn("**is it really blocking?**", judge)
 
 class AgentAnswerTest(unittest.TestCase):
     """An agent ends with its report alone, and says so when it found nothing."""
