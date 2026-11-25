@@ -114,7 +114,7 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertNotIn("the user tracks their own questions", rules)
         self.assertIn("a question the user may miss never does", rules)
         self.assertIn("When work waits on one, also ask it with `AskUserQuestion`", rules)
-        self.assertIn("consent in a `PRD:` `question` file, also outside a plan", rules)
+        self.assertIn("a filled one changes only with the user's consent in a `PRD:` `question` file", rules)
         orchestrate = read("skills/loc-orchestrate/SKILL.md")
         for marker in ("--add <dir>", "--leave <dir>", ".gitignore"):
             self.assertIn(marker, orchestrate)
@@ -127,8 +127,7 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn('Skill(skill: "masterskills:loc-brainstorm"', init)
         self.assertIn("`for <skill>`", init)
         brainstorm = read("skills/loc-brainstorm/SKILL.md")
-        self.assertIn('Skill(skill: "masterskills:loc-init", args: "<NNN>")', brainstorm)
-        self.assertIn("`Keep talking`", brainstorm)
+        self.assertIn("skills/loc-init/references/frame.md", brainstorm)
         self.assertIn("→ moved to <file> <section>", read("skills/loc-init/references/brainstorm.md"))
 
     def test_init_harvests_after_migration(self):

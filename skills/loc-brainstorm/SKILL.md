@@ -43,7 +43,7 @@ When the project has a user interface (a filled `## Frontend` in `CLAUDE.md`, HT
 
 Answer the user normally: discuss, weigh the options, ask what is needed. End with one line naming the file, e.g. "Notes: `loc/inbox/004-U-brainstorm-greeting-language.md` (B-01…B-03)."
 
-When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. When `## Goal` in `loc/PRD.md` is still only the template and the notes already say what the project is for, the points it stands on and how it is used, ask with `AskUserQuestion`: `Fill the project from <NNN> now` (recommended: `loc-init` writes the PRD frame and `CLAUDE.md`, the rest stays here for a plan) or `Keep talking`. Fill: `Skill(skill: "masterskills:loc-init", args: "<NNN>")`. Never start `loc-planning` yourself.
+When the open list is empty or the user says the idea is ready, mention that `/masterskills:loc-planning <NNN>` makes a plan from it. When `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/frame.py` is not `ok` and the notes already say what the project is for, draft the frame and ask at once, as `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md` says; mark each note it took `→ moved to loc/PRD.md <section>`. Never start `loc-planning` yourself.
 
 ## Grill mode
 

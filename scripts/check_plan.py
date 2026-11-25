@@ -40,6 +40,8 @@ Checks, in order:
     or an `enough` line in `## Review notes`; Suggestion and Unrealistic ones
     only in `## Review notes`; either may instead be under the review's
     `## Resolution` when already fixed;
+  - a plan whose `**Source:**` names a `brainstorm` names at least one of its
+    current decisions (`B-NN`), the ones it covers (`brainstorm_close.py`);
   - with `--ready` (before execution): `## Plan gate` records a round, and
     the input file named in `**Source:**` is no longer open in `loc/inbox/`;
   - the file name gives the queue group and the difficulty,
@@ -62,6 +64,10 @@ import os
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import frame  # noqa: E402
 
 REQUIRED = ["Goal", "Out of scope", "Not defended against", "Code context", "Milestones", "Risks and decisions"]
 DEFENCE = "Not defended against"
@@ -292,15 +298,7 @@ def project_dir() -> Path:
 def has_suite(project: Path) -> bool:
     """A test suite is `loc/TEST-PLAN.md` plus a test command in `CLAUDE.md` `## Commands`:
     the file alone can be written in a minute and proves nothing runs."""
-    if not (project / "loc" / SUITE).is_file():
-        return False
-    try:
-        text = (project / "CLAUDE.md").read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return False
-    section = re.search(r"(?ms)^## Commands\s*?$(.*?)(?=^## |\Z)", text)
-    body = COMMENT.sub("", section.group(1)) if section else ""
-    return any(TEST_NAME.search(line) for line in body.splitlines())
+    return (project / "loc" / SUITE).is_file() and frame.has_test_command(project)
 
 
 def check_ready(text: str, issues: list) -> None:
@@ -315,9 +313,13 @@ def check_ready(text: str, issues: list) -> None:
         issues.append({"line": 0, "problem": f"## {GATE_RECORD} records no round: the plan never went "
                        "through the loc-planning gate; run loc-planning on it"})
     source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    own = re.match(r"#\s*(\d{3,})", text)
     for match in INPUT.finditer(source.group(1) if source else ""):
         number = match.group(0).split("-", 1)[0]
         for path in (project_dir() / "loc" / "inbox").glob(f"{number}-*.md"):
+            if (match.group(1) == "brainstorm" and own  # decisions left for other plans keep it open
+                    and f"→ plan {own.group(1)}" in path.read_text(encoding="utf-8", errors="replace")):
+                continue
             issues.append({"line": 0, "problem": f"input loc/inbox/{path.name} is still open: loc-planning "
                            "did not close it (its step 7); run loc-planning on the plan"})
 
@@ -379,6 +381,24 @@ def check_review(text: str, issues: list) -> None:
                     if judged else
                     f"review {ref} ({category}) is not accounted for: record it in ## Review notes as "
                     f"`- {category.lower()} (planning): {ref} …`")})
+
+
+BRAINSTORM_DECISION = re.compile(r"^- (~~)?(B-\d{2,})\b", re.M)
+
+
+def check_brainstorm(text: str, issues: list) -> None:
+    """A plan made from a brainstorm names the decisions it covers, so brainstorm_close.py can mark them."""
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    for match in INPUT.finditer(source.group(1) if source else ""):
+        path = find_input(match.group(0)) if match.group(1) == "brainstorm" else None
+        if not path:
+            continue
+        decisions = "\n".join(sections_of(path.read_text(encoding="utf-8", errors="replace")).get("Decisions", []))
+        current = {m.group(2) for m in BRAINSTORM_DECISION.finditer(decisions) if not m.group(1)}
+        if current and not current & set(re.findall(r"\bB-\d{2,}\b", text)):
+            issues.append({"line": 0, "format": True, "problem": (
+                f"the plan names no decision of {match.group(0)}: list those it covers in **Source:** "
+                f"(e.g. `{match.group(0)} B-01, B-03`)")})
 
 
 DECISION = re.compile(r"\bD-\d{2,}\b")
@@ -547,6 +567,7 @@ def main() -> int:
     result = check(text)
     check_review(text, result["issues"])
     check_decisions(text, result["issues"])
+    check_brainstorm(text, result["issues"])
     if not args.ready:
         check_name(args.plan.name, result)
     result["ok"] = not result["issues"]
@@ -554,6 +575,10 @@ def main() -> int:
         # A plan that passed its gate is not failed by a format rule added since: its proofs still run.
         result["issues"] = [issue for issue in result["issues"] if not issue.pop("format", False)]
         check_ready(text, result["issues"])
+        gaps = frame.missing(project_dir())
+        if gaps:  # no goal, no work: never filtered as format
+            result["issues"].append({"line": 0, "problem": "project frame missing: " + ", ".join(gaps)
+                                     + " (draft and ask: ${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md)"})
         result["ok"] = not result["issues"]
     print(json.dumps({"plan": args.plan.as_posix(), **result}, indent=2))
     return 0 if result["ok"] else 1

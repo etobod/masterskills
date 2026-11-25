@@ -34,7 +34,7 @@ class BudgetTest(unittest.TestCase):
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
         expected = {
-            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2770,
+            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2850,
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
             "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 850,
@@ -259,6 +259,36 @@ class SearchMilestoneTest(unittest.TestCase):
         self.assertIn("Never touch the metric", searcher)
         self.assertIn("never whether it reaches the target", read("agents/rubber-duck.md"))
         self.assertIn("metric, cases, hold-out or guard", read("agents/judge.md"))
+
+
+class ProjectFrameTest(unittest.TestCase):
+    """No goal, no work: the skills that start work check the frame and ask in the main session."""
+
+    def test_skills_check_the_frame_before_their_work(self):
+        for skill in ("loc-planning", "loc-orchestrate", "loc-director"):
+            with self.subTest(skill=skill):
+                text = read(f"skills/{skill}/SKILL.md")
+                self.assertIn("scripts/frame.py", text)
+                self.assertIn("skills/loc-init/references/frame.md", text)
+
+    def test_frame_reference_asks_three_ways(self):
+        text = read("skills/loc-init/references/frame.md")
+        for part in ("AskUserQuestion", "**Accept**", "**Correct in my words**", "**Reject**", "Test command",
+                     "next_number.py --type brainstorm"):
+            self.assertIn(part, text)
+
+    def test_loc_init_takes_a_description_in_one_pass(self):
+        init = read("skills/loc-init/SKILL.md")
+        self.assertIn("any other text → a **description**", init)
+        self.assertIn('"From a description"', init)
+        self.assertIn("After their first answer, draft the frame", init)
+        self.assertIn("nothing they wrote may be lost", read("skills/loc-init/references/frame.md"))
+        brainstorm = read("skills/loc-brainstorm/SKILL.md")
+        self.assertIn("skills/loc-init/references/frame.md", brainstorm)
+        self.assertNotIn("Fill the project from", brainstorm)
+
+    def test_rule_nine_asks_for_an_empty_frame(self):
+        self.assertIn("an empty one is filled by asking", read("rules/core.md"))
 
 
 if __name__ == "__main__":

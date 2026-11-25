@@ -18,7 +18,7 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 
 ## 1. Agree the course
 
-1. Read the open `loc/inbox/` files and `loc/PRD.md`.
+1. The frame: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/frame.py`; not `ok`: `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md` first. Read the open `loc/inbox/` files and `loc/PRD.md`.
 2. In one step, call the `pm` agent (order of the plans and of the `deferred`, `stuck` and `review` files) and the `architect` agent in Triage mode (what each `stuck`, `deferred` and `review` file needs: a plan, a decision, nothing).
 3. Show a table in the user's language: item, source file, what follows (`loc-planning`, `loc-orchestrate`, waits for you), in the pm's order. `U` files wait for the user; they are not items. Never start without it, even when the agents answer late.
 4. The limit, from the user's words:

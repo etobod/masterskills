@@ -10,6 +10,8 @@ prints hookSpecificOutput.additionalContext as JSON. An old `loc/` format also
 gets a systemMessage, shown to the user whatever the model does with its context.
 A project without the overview diagram, or with one drawn by another plugin
 version (its `**Plugin:**` line), is asked to draw it before other work.
+A project whose frame (PRD Goal, Core idea, Scenarios, a test command) is empty
+gets that first, before the inbox: no goal, no work.
 """
 
 import json
@@ -21,6 +23,7 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
+import frame  # noqa: E402
 from inbox_summary import summarize  # noqa: E402
 from migrate import FORMAT, read_format  # noqa: E402
 from mutate import restore  # noqa: E402
@@ -109,6 +112,17 @@ def plugin_version() -> str:
         return ""
 
 
+def frame_section(project: Path) -> str:
+    if not (project / "loc" / "inbox").is_dir():
+        return ""
+    gaps = frame.missing(project)
+    if not gaps:
+        return ""
+    return ("## Project frame missing\n" + ", ".join(f"`{gap}`" for gap in gaps) + ". The frame first, before "
+            "any plan or other work: draft it and ask the user, as `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/"
+            "references/frame.md` says.\n\n")
+
+
 def overview_section(project: Path) -> str:
     if not (project / "loc" / "inbox").is_dir():
         return ""
@@ -133,7 +147,7 @@ def main() -> int:
     rules = (PLUGIN_ROOT / "rules" / "core.md").read_text(encoding="utf-8").strip()
     summary = summarize(project)
 
-    context = f"{rules}\n\n{inbox_section(summary)}{migration_section(project)}{overview_section(project)}{mutation}\n"
+    context = f"{rules}\n\n{frame_section(project)}{inbox_section(summary)}{migration_section(project)}{overview_section(project)}{mutation}\n"
     output = {
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",

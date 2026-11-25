@@ -25,7 +25,7 @@ No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask
 1. The input, the project's `CLAUDE.md` (`Commands` gives the proof commands; `Invariants`, `Limits`, `Manual verification / UAT`) and `loc/PATTERNS.md` (entries whose **When to use** matches).
 2. The code the change touches. For more than a couple of files, delegate to the `researcher` agent with the question "what exists today for <change>" and use its `file:line` report. Documents are not evidence; code is.
 3. If the project has no `CLAUDE.md` `Commands` section, say so in the plan's risks and use the commands you verified by running them. A run leaves no files behind: nothing new in `git status --short` (Python: `python -B`).
-4. Gaps in the frame: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --check` (writes nothing). Empty PRD sections: `references/prd.md`. Empty `CLAUDE.md` sections never stop you: what the plan can establish goes into a milestone, the rest into the report. Sections that contradict each other ("two separate chains" vs "one complex chain") become a `question` (step 4).
+4. The frame first: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/frame.py`; not `ok`: `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md`, before writing anything. Other gaps: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --check` (writes nothing). Empty `CLAUDE.md` sections never stop you: what the plan can establish goes into a milestone, the rest into the report. Sections that contradict each other ("two separate chains" vs "one complex chain") become a `question` (step 4).
 
 ## 3. The judge decides which findings become work
 
@@ -136,7 +136,9 @@ The round passes when the script exits `0` and the critic reports nothing blocki
 
 Also after a plan that did not pass the gate, except a stuck `## plan gate` (`stuck.md`). Take the date with `date "+%Y-%m-%d"`; never from memory. Move files with `mv` (`loc/` is not in git). Nothing is ever deleted.
 
-**Input file in `loc/inbox/`** (`brainstorm`, `review`, `deferred`, `stuck`, answered `question`):
+**A brainstorm**: `**Source:**` names the decisions the plan covers (`loc/inbox/004-brainstorm-x.md B-01, B-03`); run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/brainstorm_close.py --brainstorm <NNN> --plan <plan NNN> --covers B-01,B-03`. It marks them and closes the file once nothing is left; `closed: true` → `**Source:**` points to `loc/inbox/done/`. Report its `unplanned` decisions.
+
+**Other input files** (`review`, `deferred`, `stuck`, answered `question`):
 
 1. Under `## Resolution` write `→ plan loc/inbox/NNN-plan-<topic>.md (<date>)`. Never rewrite the original content.
 2. Set `**Status:**` to `closed <date>`.

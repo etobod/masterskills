@@ -57,9 +57,14 @@ def plan(milestones: str) -> str:
     return HEAD + milestones + TAIL
 
 
+FRAME_PRD = ("# PRD\n\n## Goal\nGreet visitors in their language.\n\n## Core idea\n- One greeting per visit.\n\n"
+             "## Scenarios\n1. A visitor opens the page and is greeted.\n")
+
+
 class CheckPlanTest(unittest.TestCase):
     def run_check(self, text: str, suite: bool = True, ready: bool = False, files: tuple = (),
-                  claude: str = None, name: str = "007-plan-1-easy-powitania.md") -> tuple:
+                  claude: str = None, name: str = "007-plan-1-easy-powitania.md", prd: str = FRAME_PRD,
+                  contents: dict = None) -> tuple:
         """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md` and a test
         command in `CLAUDE.md`) or not; `files` are created in the project first, `claude` is its
         `CLAUDE.md`, `ready` adds `--ready`."""
@@ -71,9 +76,13 @@ class CheckPlanTest(unittest.TestCase):
             (directory / "loc" / "TEST-PLAN.md").write_text("# TEST-PLAN\n", encoding="utf-8")
             (directory / "CLAUDE.md").write_text(COMMANDS.format(command="`python -m unittest`"),
                                                  encoding="utf-8")
+            (directory / "loc" / "PRD.md").write_text(prd, encoding="utf-8")
         for rel in files:
             (directory / rel).parent.mkdir(parents=True, exist_ok=True)
             (directory / rel).write_text("# 001\n", encoding="utf-8")
+        for rel, body in (contents or {}).items():
+            (directory / rel).parent.mkdir(parents=True, exist_ok=True)
+            (directory / rel).write_text(body, encoding="utf-8")
         if claude is not None:
             (directory / "CLAUDE.md").write_text(claude, encoding="utf-8")
         path = directory / name
@@ -420,12 +429,42 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(self.ready_plan(""))
         self.assertEqual(code, 0, out)
 
+    def test_a_plan_from_a_brainstorm_names_its_decisions(self):
+        brainstorm = ("# 001 — Fourier\n\n## Decisions\n- B-01 — FFT first.\n- ~~B-02 — DCT.~~ → replaced by B-03\n"
+                      "- B-03 — Windowing.\n\n## Open\n")
+        files = {"loc/inbox/001-brainstorm-fourier.md": brainstorm}
+        base = plan("### M1 — x\n**No tests:** documents only\n**Proof:** `python -m unittest` → `OK`\n")
+        for source, ok in (("loc/inbox/001-brainstorm-fourier.md", False),
+                           ("loc/inbox/001-brainstorm-fourier.md B-02", False),
+                           ("loc/inbox/001-brainstorm-fourier.md B-01, B-03", True)):
+            with self.subTest(source=source):
+                text = base.replace("**Status:** open", f"**Status:** open\n**Source:** {source}")
+                code, out = self.run_check(text, contents=files)
+                self.assertEqual(code == 0, ok, out)
+                if not ok:
+                    self.assertIn("names no decision of 001-brainstorm-fourier.md", self.problems(out))
+
+    def test_ready_needs_the_project_frame(self):
+        # The analysed project ran for a week on the empty template plus a Decisions list.
+        done = self.ready_plan("- round 1: ok\n")
+        empty = "# PRD\n\n## Goal\n<what this project is for>\n\n## Decisions\n- D-01: x\n"
+        code, out = self.run_check(done, ready=True, prd=empty)
+        problems = self.problems(out)
+        self.assertEqual(code, 1)
+        self.assertIn("project frame missing: loc/PRD.md ## Goal, loc/PRD.md ## Core idea, loc/PRD.md ## Scenarios",
+                      problems)
+        self.assertIn("frame.md", problems)
+
     def test_ready_needs_the_input_closed(self):
         text = self.ready_plan("- round 1: skan czysty\n")
         code, out = self.run_check(text, ready=True, files=("loc/inbox/001-brainstorm-fourier.md",))
         self.assertEqual(code, 1)
         self.assertIn("input loc/inbox/001-brainstorm-fourier.md is still open", self.problems(out))
         code, out = self.run_check(text, ready=True, files=("loc/inbox/done/001-brainstorm-fourier.md",))
+        self.assertEqual(code, 0, out)
+        # brainstorm_close.py marked this plan's decisions; others still wait for a plan
+        marked = {"loc/inbox/001-brainstorm-fourier.md": "## Decisions\n- B-01 — x → plan 007\n- B-02 — y\n"}
+        code, out = self.run_check(text, ready=True, contents=marked)
         self.assertEqual(code, 0, out)
 
     def test_ready_finds_the_input_by_number(self):
