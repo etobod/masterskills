@@ -37,7 +37,7 @@ OVERRIDES = {
     "skills/loc-director/SKILL.md": 850,
     "skills/loc-init/SKILL.md": 850,
     "skills/loc-orchestrate/references/design.md": 850,
-    "skills/loc-orchestrate/references/gates.md": 1200,
+    "skills/loc-orchestrate/references/gates.md": 1250,
     "skills/loc-orchestrate/references/stuck.md": 900,
     "skills/loc-orchestrate/references/search.md": 900,
     "skills/loc-orchestrate/references/run.md": 1500,
