@@ -66,7 +66,7 @@ class DiagramNeededTest(unittest.TestCase):
         self.assertTrue(self.needed()["needed"])
 
     def test_orchestrate_draws_only_when_needed(self):
-        text = (ROOT / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
+        text = (ROOT / "skills" / "loc-orchestrate" / "references" / "run.md").read_text(encoding="utf-8")
         journal = [line for line in text.splitlines() if line.startswith("5. **Journal.**")][0]
         self.assertIn("scripts/diagram_needed.py --state loc/state/<NNN>.json", journal)
         self.assertIn('only when it prints `"needed": true`', journal)

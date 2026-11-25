@@ -61,11 +61,32 @@ class PlanCostTest(unittest.TestCase):
         self.assertEqual(self.cost("--logs", "logs", "--until", "2026-11-20T11:15:00Z"),
                          "900k tokens: rubber-duck 67%, main 33%")
 
+    def test_logs_are_found_through_a_linked_project_path(self):
+        # orch-test lives under a junction (C:/BC/tmp -> D:/tmp); Claude Code names the log directory
+        # after the unresolved path, so resolving it first found no logs: "cost unknown".
+        base = scratch_dir(self)
+        link = base / "linked"
+        if os.name == "nt":
+            made = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(self.project)], capture_output=True)
+            if made.returncode:
+                self.skipTest("no junction")
+        else:
+            os.symlink(self.project, link)
+        config = base / "config"
+        name = "".join(c if c.isalnum() else "-" for c in os.path.abspath(link))
+        (config / "projects").mkdir(parents=True)
+        os.rename(self.logs, config / "projects" / name)
+        out = subprocess.run([sys.executable, str(ROOT / "scripts" / "plan_cost.py"), "--project", str(link),
+                              "--state", "loc/state/001.json", "--until", "2026-11-21T00:00:00Z"],
+                             cwd=self.project, capture_output=True, text=True, encoding="utf-8",
+                             env={**os.environ, "CLAUDE_CONFIG_DIR": str(config)})
+        self.assertEqual(out.stdout.strip(), "1M tokens: rubber-duck 60%, main 30%, judge 10%", out.stderr)
+
     def test_no_logs_is_cost_unknown(self):
         self.assertEqual(self.cost("--logs", "missing"), "cost unknown")
 
     def test_the_journal_records_the_cost(self):
-        text = (ROOT / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
+        text = (ROOT / "skills" / "loc-orchestrate" / "references" / "run.md").read_text(encoding="utf-8")
         journal = [line for line in text.splitlines() if line.startswith("5. **Journal.**")][0]
         self.assertIn("scripts/plan_cost.py --state loc/state/<NNN>.json", journal)
         self.assertIn("Cost: <its line>", journal)

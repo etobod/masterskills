@@ -30,8 +30,12 @@ from snapshot import git  # noqa: E402
 
 
 def logs_dir(project: Path) -> Path:
+    """Claude Code names the directory after the path it was started in, a link or junction unresolved;
+    the resolved path is the fallback."""
     config = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
-    return config / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(project))
+    names = [Path(os.path.abspath(project)), project.resolve()]
+    dirs = [config / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(name)) for name in names]
+    return next((path for path in dirs if path.is_dir()), dirs[0])
 
 
 def moment(text: str) -> datetime:
@@ -111,7 +115,8 @@ def main() -> int:
     parser.add_argument("--logs", type=Path, help="session log directory (default: the project's)")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    project = args.project.resolve()
+    given = Path(os.path.abspath(args.project))
+    project = given.resolve()
     state = args.state if args.state.is_absolute() else project / args.state
     try:
         if args.since:
@@ -126,7 +131,7 @@ def main() -> int:
     except (OSError, ValueError, RuntimeError) as error:
         print(json.dumps({"ok": False, "error": str(error)}))
         return 2
-    logs = args.logs or logs_dir(project)
+    logs = args.logs or logs_dir(given)
     result = cost(logs, since, until) if logs.is_dir() else {"total": 0, "by": {}}
     print(json.dumps(result, indent=2) if args.json else line(result))
     return 0

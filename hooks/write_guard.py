@@ -35,6 +35,8 @@ DEVICES = {"/dev/null", "/dev/stdout", "/dev/stderr", "/dev/tty", "nul", "con", 
 OPERATORS = ";|&()\n"
 VARIABLE = re.compile(r"\$(?:env:)?\{?(HOME|TMPDIR|TEMP|TMP|USERPROFILE)\}?(?![A-Za-z0-9_])", re.I)
 PS_WRITERS = {"out-file", "set-content", "add-content", "new-item", "tee-object"}
+# Their PowerShell aliases; only in PowerShell, where a Bash command of the same name means nothing else.
+PS_ALIASES = {"sc", "ac", "ni"}
 PS_PATH_PARAMS = ("-filepath", "-path", "-literalpath")
 PS_SWITCHES = {"-force", "-append", "-nonewline", "-noclobber", "-whatif", "-confirm", "-passthru"}
 
@@ -137,7 +139,7 @@ def command_targets(command: str, powershell: bool = False) -> list:
     def close():
         if name == "tee":
             targets.extend(a for a in args if not a.startswith("-"))
-        elif name in PS_WRITERS:
+        elif name in PS_WRITERS or (powershell and name in PS_ALIASES):
             targets.extend(ps_path(args))
 
     for kind, text in tokens(command, "`" if powershell else "\\"):

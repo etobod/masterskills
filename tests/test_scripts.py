@@ -62,7 +62,7 @@ class InitProjectTest(unittest.TestCase):
         self.assertTrue((self.project / "loc" / "diagrams" / "tmp").is_dir())
         self.assertIn("## Diagrams", (self.project / "CLAUDE.md").read_text(encoding="utf-8"))
         root = Path(__file__).resolve().parent.parent
-        orchestrate = (root / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
+        orchestrate = (root / "skills" / "loc-orchestrate" / "references" / "run.md").read_text(encoding="utf-8")
         self.assertIn('Skill(skill: "masterskills:loc-diagram", args: "overview")', orchestrate)
 
     def test_reports_the_empty_sections_a_brainstorm_may_fill(self):

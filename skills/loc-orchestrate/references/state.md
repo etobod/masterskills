@@ -9,7 +9,7 @@ One entry in `milestones` per `### ` heading under `## Milestones`, in order:
 ```json
 {
   "plan": "loc/inbox/018-plan-csv-export.md",
-  "mode": "inline",
+  "mode": "agent",
   "milestone": 1,
   "phase": "start",
   "milestones": [
@@ -25,7 +25,8 @@ One entry in `milestones` per `### ` heading under `## Milestones`, in order:
 
 ## Fields
 
-- `mode`: `inline` or `subagent`. When you switch mid-run, change it and add a deviation (rule 3) saying why.
+- `mode`: `agent`, the `orchestrator` agent runs the plan. Older runs have `inline` or `subagent`.
+- `questions` (optional): what waits for the user, each `{"file": "loc/inbox/NNN-U-question-....md", "ask": "<one line>"}`; the file may be the checks sheet `loc/inbox/NNN-U-checks.html`. `loc-orchestrate` asks them in one round and empties the list.
 - `milestone`, `phase`: where the run is. Phases in order: `start`, then per milestone `implement` → `proof` (a search milestone: `search`), then `qa` (plans with `**Criteria:**`), `final-review`, `journal`, `done`.
 - `milestones[].status`: `pending`, `in_progress`, `done` (proof passed, review passed) or `stuck` (a gate gave up; the run went on). `start` and `end` are snapshot hashes, written only by the snapshot script:
 

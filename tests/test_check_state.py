@@ -347,6 +347,12 @@ class CheckStateTest(unittest.TestCase):
         code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
         self.assertEqual(code, 0, out)
 
+    def test_let_go_note_from_triage_is_valid(self):
+        # stuck.md: the architect's "let go" verdict writes its open points as review notes.
+        plan = self.with_notes("- let go (architect): `app.py:9` — retry loop on timeout — the goal needs no retry")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
+
     def test_enough_note_needs_a_reason(self):
         gates = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
         for note in ("- enough (M1 code-review): `app.py:7` — godzina przybliżona",

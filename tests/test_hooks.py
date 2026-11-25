@@ -242,6 +242,13 @@ class WriteGuardTest(unittest.TestCase):
         self.assertIn("loc/PATTERNS.md", reason)
         self.assertIn("loc/tmp/", reason)
 
+    def test_powershell_aliases_of_writers_are_checked(self):
+        outside = (Path.home() / "notes.txt").as_posix()
+        for command in (f"'x' | sc {outside}", f"'x' | ac -Path {outside}", f"ni {outside}"):
+            self.assertEqual(decision(self.check("PowerShell", {"command": command})), "deny", command)
+        inside = (Path(self.project) / "loc" / "tmp" / "a.txt").as_posix()
+        self.assertEqual(self.check("PowerShell", {"command": f"'x' | sc {inside}"}), {})
+
     def test_allows_writes_inside_the_project(self):
         self.assertEqual(self.check("Write", {"file_path": str(Path(self.project) / "loc" / "tmp" / "a.txt")}), {})
 

@@ -34,11 +34,11 @@ class BudgetTest(unittest.TestCase):
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
         expected = {
-            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2900,
+            "skills/loc-planning/SKILL.md": 2900,
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
             "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 950,
-            "skills/loc-orchestrate/references/stuck.md": 900,
+            "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1400,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
             "agents/architect.md": 700, "agents/design-critic.md": 650, "agents/designer.md": 650,
             "agents/rubber-duck.md": 720, "agents/judge.md": 750,
@@ -49,7 +49,7 @@ class BudgetTest(unittest.TestCase):
 
 class LadderTest(unittest.TestCase):
     def implement_step(self) -> str:
-        text = read("skills/loc-orchestrate/SKILL.md")
+        text = read("skills/loc-orchestrate/references/run.md")
         return re.search(r"2\. \*\*Implement\*\*.*?\n3\. ", text, re.S).group(0)
 
     def test_orchestrate_climbs_the_ladder_before_code(self):
@@ -60,10 +60,9 @@ class LadderTest(unittest.TestCase):
         for kept in ("validation", "error handling", "security", "accessibility"):
             self.assertIn(kept, step)
 
-    def test_subagent_gets_the_ladder(self):
-        step = self.implement_step()
-        subagent = re.search(r"\*subagent\*:.*", step).group(0)
-        self.assertIn("ladder", subagent)
+    def test_the_orchestrator_builds_and_climbs_the_ladder_itself(self):
+        # The main session carried the plan's whole work (B-02): the orchestrator agent builds it.
+        self.assertIn("exactly this milestone yourself", self.implement_step())
 
     def test_code_review_flags_code_that_already_exists(self):
         self.assertNotIn('Skill(skill: "code-review"', read("skills/loc-orchestrate/SKILL.md"))  # once per plan
@@ -143,7 +142,7 @@ class LeanReviewTest(unittest.TestCase):
         # poe: 419 code-review runs, mostly one per milestone (B-01).
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
         self.assertIn("Orchestrated, the whole plan's diff: no milestone was reviewed before.", review)
-        steps = self.read("skills/loc-orchestrate/SKILL.md").split("## 2. Each milestone", 1)[1].split("\n## ", 1)[0]
+        steps = self.read("skills/loc-orchestrate/references/run.md").split("## 2. Each milestone", 1)[1].split("\n## ", 1)[0]
         self.assertNotIn("Code-review gate", steps)
         self.assertIn("No review here: the plan is reviewed once, at the end.", steps)
         self.assertNotIn("M<n>/code-review", self.read("skills/loc-orchestrate/references/search.md"))
@@ -217,7 +216,7 @@ class PlanGateLoopTest(unittest.TestCase):
         planning = read("skills/loc-planning/SKILL.md")
         self.assertIn("one command each (never chained: `;`, `&&`, `if ($?)`)", planning)
         self.assertNotIn("exactly one `**Proof:**` line", planning)
-        self.assertIn("run each `Proof` line exactly as written, one at a time", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("run each `Proof` line exactly as written, one at a time", read("skills/loc-orchestrate/references/run.md"))
         self.assertIn("One command per `**Proof:**` line", read("templates/loc/inbox/plan.md"))
 
     def test_documents_are_proved_by_their_sections(self):
@@ -241,7 +240,7 @@ class SearchMilestoneTest(unittest.TestCase):
         for part in ("**Kind:** search", "search_log.py --start", "search_log.py --add", "--metric-change",
                      "`searcher`", "`judge`", "Could go further", "`deferred`", "never stuck"):
             self.assertIn(part, reference)
-        self.assertIn("references/search.md", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("references/search.md", read("skills/loc-orchestrate/references/run.md"))
         planning = read("skills/loc-planning/SKILL.md")
         self.assertIn("references/search.md", planning)
         self.assertIn("never a way out of a hard proof", planning)
@@ -328,7 +327,7 @@ class StuckLadderTest(unittest.TestCase):
 
     def test_questions_of_a_plan_come_together(self):
         self.assertIn("a plan keeps one, a `###` per matter, asked together at its end", read("rules/core.md"))
-        self.assertIn("one `AskUserQuestion` round", read("skills/loc-orchestrate/references/stuck.md"))
+        self.assertIn("asks them all in one round when the plan ends", read("skills/loc-orchestrate/references/stuck.md"))
         self.assertIn("every matter in one `AskUserQuestion` round", read("skills/loc-orchestrate/SKILL.md"))
         self.assertIn("`Plan <NNN>: questions`", read("templates/loc/inbox/question.md"))
 
