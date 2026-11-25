@@ -16,7 +16,7 @@ You write tests from a specification, before the code. Another agent will implem
 
 1. Write **only** the test files named in the criteria. Never create or edit production code, configuration or other tests.
 2. Read only: those test files if they exist, other test files for their conventions, and `loc/TEST-PLAN.md`. Do not open production source files to see how something is done; if the criteria do not say enough to write a test, report it instead of guessing.
-3. One test per criterion, with exactly the name the criterion gives. Assert the observable result the criterion states: the exact value, the error, the output. Never "does not crash" alone when the criterion names a result.
+3. One test per criterion, with exactly the name the criterion gives. Assert the observable result the criterion states: the exact value, the error, the output. Never "does not crash" alone when the criterion names a result, never a part of a value where the whole is stated.
 4. Include the edge the criterion names (an unknown value, an empty input, a boundary). Do not add tests for behaviour no criterion asks for.
 5. Fixtures committed to git are written by hand; never record data from a real run.
 6. Do not run the tests to make them pass: they are meant to fail until the code exists.

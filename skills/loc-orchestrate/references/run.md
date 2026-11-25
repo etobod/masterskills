@@ -4,6 +4,8 @@ The procedure of the `orchestrator` agent. `loc-orchestrate` has checked the fra
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it. **Never ask the user anything and never ask "shall I continue?"**: what needs the user goes into the state file's `questions` (below).
 
+**Long commands.** Every proof, test run and metric, in any step or reference (search, divergent, a rerun after a fix, QA), runs in the foreground with the command tool's timeout at its maximum, `600000` ms; never start one while another still runs. A foreground run the timeout kills is no failure: run it again in the background, as below, never with `&` or a detached start: wait for it at most three times 10 minutes, a wait that ends when the command ends, killed included, never an endless `until` loop. Still running after that: stop it and count the round as failed, cause `exceeds the time limit`, never a code fix. Before a milestone becomes `done` or `stuck`, before the QA gate, the final review and every stop or report, stop every background command you started that still runs.
+
 ## 1. Resume
 
 Read the state file (`references/state.md`) and continue from its `next_action`: never repeat a recorded step or reset a round counter. Read the plan, the project's `CLAUDE.md` (`Commands`, `Invariants`, `Limits`) and `loc/PATTERNS.md`. Answers the user gave since your last run are under `## Resolution` of the files in `loc/inbox/done/` and in the plan; follow them.
@@ -16,13 +18,13 @@ A milestone with `**Kind:** search` runs the search loop of `references/search.m
 
 1. **Snapshot** `--point start`.
 2. **Implement** exactly this milestone yourself, code and its tests together. With `**Criteria:**`: tests first, red gate `M<n>/red`, then the code (`references/tests.md`). Before writing code, climb the ladder and stop at the first rung that works: is it needed at all, already in the project, in the standard library, a platform feature (the browser's date picker), an installed dependency, one line; only then the minimum that works. Never cut validation, error handling, security or accessibility. Scratch files only in `loc/tmp/`; delete only files you created there, never the directory.
-3. **Proof gate** (`M<n>/proof`). Increase `rounds`, run each `Proof` line exactly as written, one at a time, and compare each with its expected result. Pass → next step. Fail → fix the cause (not the proof) and start the next round. After the third failed round: **stuck** (below).
+3. **Proof gate** (`M<n>/proof`). Increase `rounds`, run each `Proof` line exactly as written, one at a time, and compare each with its expected result. Run it as **Long commands** above says. Pass → next step. Fail → fix the cause (not the proof) and start the next round. After the third failed round: **stuck** (below).
 4. **Snapshot** `--point end`. It prints the changed files.
 5. **Quick code-review gate** (`M<n>/code-review`, `phase: code-review`; `references/gates.md`, "The milestone gate"): code-review `low` on the changed files, only Blocking findings fixed, the judge only when there is one, no rubber-duck; Non-blocking findings and the Blocking ones the judge called `enough` wait in the gate's `pending` for the final review. Only when the state file has `"review": "milestone"`; a state file without it (a run before 2.32) skips it.
 6. **Manual check**, only for a `user` performer, after the proof passed: put the milestone's `**Manual check:**` on the checks sheet, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/checks.py --add --plan <NNN> --milestone M<n> --title "<what>" --step "<what to open or click>" --look "<what to look at>"` (`--image "<png> | <caption>"` per screenshot; `--blocking` for `user (blocking)`). Blocking: add the sheet to `questions` and stop with `waiting: questions`; deferrable: go on. A rating the user gave (`checks.py --rate`) with a `fix` first becomes a test that fails on it, then the fix, the proof and step 5 again, then a new point with `--again <n>`. The answer with the date goes under the milestone in the plan.
-7. Mark the milestone `done`, move to the next one.
+7. Stop your background commands (**Long commands**), mark the milestone `done`, move to the next one.
 
-**Stuck gate.** No fourth round or code change: record the gate in the plan's `## Stuck gates` (`references/stuck.md`), set its `stuck` to `"plan"` and the milestone to `stuck`, and go on with the next milestone.
+**Stuck gate.** No fourth round or code change: stop your background commands (**Long commands**), record the gate in the plan's `## Stuck gates` (`references/stuck.md`), set its `stuck` to `"plan"` and the milestone to `stuck`, and go on with the next milestone.
 
 ## 3. Deviations from the plan
 
