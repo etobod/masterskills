@@ -8,7 +8,9 @@
 
 <!-- The headings stay in English. Write the text under Question, Context, Options
 and Interim in the `User language` of `CLAUDE.md` (English when it is empty).
-Only options get letters; points inside one option are not lettered (use `-`). -->
+Only options get letters; points inside one option are not lettered (use `-`).
+A plan's escalations share one file (`Plan <NNN>: questions`): one `### <matter>`
+per matter under Question, with its own Context and Options. -->
 
 ## Question
 <one question; the first sentence says what it is about>

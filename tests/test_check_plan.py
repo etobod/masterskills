@@ -444,6 +444,22 @@ class CheckPlanTest(unittest.TestCase):
                 if not ok:
                     self.assertIn("names no decision of 001-brainstorm-fourier.md", self.problems(out))
 
+    def test_a_second_plan_from_a_stuck_file_needs_the_user(self):
+        # poe: stuck 017 became plan 024, which got stuck again; the ladder allows one new plan.
+        stuck = "# 017 — x — stuck gates\n\n**Type:** stuck\n**Replanned:** 024\n\n## final-review\n"
+        files = {"loc/inbox/done/017-stuck-x.md": stuck}
+        base = plan("### M1 — x\n**No tests:** documents only\n**Proof:** `python -m unittest` → `OK`\n")
+        base = base.replace("**Status:** open", "**Status:** open\n**Source:** loc/inbox/done/017-stuck-x.md")
+        for text, ok in ((base, False),
+                         (base.replace("# 007", "# 024", 1), True),
+                         (base.replace("**Status:** open", "**Status:** open\n**Approved by user:** 2026-11-25 — "
+                                       "plan it once more"), True)):
+            with self.subTest(text=text[:40]):
+                code, out = self.run_check(text, contents=files)
+                self.assertEqual(code == 0, ok, out)
+                if not ok:
+                    self.assertIn("already replanned as plan 024", self.problems(out))
+
     def test_ready_needs_the_project_frame(self):
         # The analysed project ran for a week on the empty template plus a Decisions list.
         done = self.ready_plan("- round 1: ok\n")

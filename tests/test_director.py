@@ -285,7 +285,7 @@ class SkillTest(unittest.TestCase):
 
     def test_skill_stops_and_reports(self):
         skill = (ROOT / "skills" / "loc-director" / "SKILL.md").read_text(encoding="utf-8")
-        for marker in ("inbox_owner.py --number", "--user", "Done:", "Skipped:", "Left:",
+        for marker in ("`course.py` refuses a stuck file", "Done:", "Skipped:", "Left:",
                        "/masterskills:loc-director", "should I continue", "never invent"):
             self.assertIn(marker, skill)
 

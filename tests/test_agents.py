@@ -76,12 +76,14 @@ class DecisionSkillsTest(unittest.TestCase):
         for part in ("printed by a command", "20 tries", "Never for a finding without such a number",
                      "never for a plan gate"):
             self.assertIn(part, search)
-        self.assertIn("After round 6: only **plan**, **search** or **ask**.", architect)
+        self.assertIn("After round 6: only **plan**, **search**, **let go** or **ask**.", architect)
+        self.assertIn("got stuck again: only **ask**; never a second **plan**", architect)
         stuck = read("skills/loc-orchestrate/references/stuck.md")
         self.assertIn("## Triage", stuck)
         triage = stuck.split("## Triage", 1)[1]
         for part in ("- **search**: as plan", "`**Kind:** search`", "`**Budget:** 20`", "(architect: search)",
-                     "now only `plan`, `search` or `ask`"):
+                     "now only `plan`, `search`, `let go` or `ask`", "one replan per stuck file",
+                     "one `AskUserQuestion` round"):
             self.assertIn(part, triage)
         self.assertNotIn("search", stuck.split("## Plan gate", 1)[1].split("\n## ", 1)[0])
         self.assertIn("20 from a Triage `search`", read("skills/loc-orchestrate/references/search.md"))

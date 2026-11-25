@@ -42,6 +42,8 @@ Checks, in order:
     `## Resolution` when already fixed;
   - a plan whose `**Source:**` names a `brainstorm` names at least one of its
     current decisions (`B-NN`), the ones it covers (`brainstorm_close.py`);
+  - a plan whose `**Source:**` names a `stuck` file already replanned as another
+    plan (`**Replanned:** NNN`) has `**Approved by user:** <date> — <words>`;
   - with `--ready` (before execution): `## Plan gate` records a round, and
     the input file named in `**Source:**` is no longer open in `loc/inbox/`;
   - the file name gives the queue group and the difficulty,
@@ -401,6 +403,25 @@ def check_brainstorm(text: str, issues: list) -> None:
                 f"(e.g. `{match.group(0)} B-01, B-03`)")})
 
 
+REPLANNED = re.compile(r"^\*\*Replanned:\*\*\s*(\d{3,})", re.M)
+APPROVED = re.compile(r"^\*\*Approved by user:\*\*\s*\S", re.M)
+
+
+def check_stuck(text: str, issues: list) -> None:
+    """One new plan per stuck file: a second needs the user's words, or the work goes in circles."""
+    if APPROVED.search(text):
+        return
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    own = re.match(r"#\s*(\d{3,})", text)
+    for match in INPUT.finditer(source.group(1) if source else ""):
+        path = find_input(match.group(0)) if match.group(1) == "stuck" else None
+        replanned = path and REPLANNED.search(path.read_text(encoding="utf-8", errors="replace"))
+        if replanned and not (own and replanned.group(1) == own.group(1)):
+            issues.append({"line": 0, "problem": (
+                f"{match.group(0)} was already replanned as plan {replanned.group(1)}: a second plan from it "
+                "needs the user's consent, `**Approved by user:** <date> — <their words>` (loc-director's stuck list)")})
+
+
 DECISION = re.compile(r"\bD-\d{2,}\b")
 QUESTION = re.compile(r"\b\d{3,}-(?:U-)?question-")
 
@@ -568,6 +589,7 @@ def main() -> int:
     check_review(text, result["issues"])
     check_decisions(text, result["issues"])
     check_brainstorm(text, result["issues"])
+    check_stuck(text, result["issues"])
     if not args.ready:
         check_name(args.plan.name, result)
     result["ok"] = not result["issues"]

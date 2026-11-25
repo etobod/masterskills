@@ -140,7 +140,7 @@ Also after a plan that did not pass the gate, except a stuck `## plan gate` (`st
 
 **Other input files** (`review`, `deferred`, `stuck`, answered `question`):
 
-1. Under `## Resolution` write `→ plan loc/inbox/NNN-plan-<topic>.md (<date>)`. Never rewrite the original content.
+1. Under `## Resolution` write `→ plan loc/inbox/NNN-plan-<topic>.md (<date>)`; a `stuck` also gets `**Replanned:** <plan NNN>` under `**Status:**`. Never rewrite the original content.
 2. Set `**Status:**` to `closed <date>`.
 3. Move it to `loc/inbox/done/` under the same name.
 4. Point the plan's `**Source:**` to `loc/inbox/done/<name>`.

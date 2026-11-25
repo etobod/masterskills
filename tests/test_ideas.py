@@ -38,9 +38,9 @@ class BudgetTest(unittest.TestCase):
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
             "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 850,
-            "skills/loc-orchestrate/references/stuck.md": 850,
+            "skills/loc-orchestrate/references/stuck.md": 900,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
-            "agents/architect.md": 650, "agents/design-critic.md": 650, "agents/designer.md": 650,
+            "agents/architect.md": 700, "agents/design-critic.md": 650, "agents/designer.md": 650,
             "agents/rubber-duck.md": 720, "agents/judge.md": 750,
         }
         self.assertEqual(overrides, expected)
@@ -289,6 +289,31 @@ class ProjectFrameTest(unittest.TestCase):
 
     def test_rule_nine_asks_for_an_empty_frame(self):
         self.assertIn("an empty one is filled by asking", read("rules/core.md"))
+
+
+class StuckLadderTest(unittest.TestCase):
+    """poe: 28 architect calls, no question to the user after day one, stuck 017 -> plan 024 -> stuck 021."""
+
+    def test_one_replan_per_stuck_file_then_only_ask(self):
+        triage = read("agents/architect.md").split("## Triage", 1)[1].split("## Report", 1)[0]
+        self.assertIn("A plan made from a stuck file that got stuck again: only **ask**", triage)
+        stuck = read("skills/loc-orchestrate/references/stuck.md")
+        self.assertIn("A plan whose `**Source:**` is a stuck file gets only **ask**", stuck)
+        self.assertIn("after Triage (now only **ask**) the new plan", stuck)
+        self.assertIn("a `stuck` also gets `**Replanned:** <plan NNN>`", read("skills/loc-planning/SKILL.md"))
+
+    def test_architect_escalates_by_a_checkable_list(self):
+        competence = read("agents/architect.md").split("## Competence", 1)[1].split("## Decide", 1)[0]
+        for point in ("changes what the user sees or reads", "changes what counts as correct data",
+                      "closes or drops work", "is empty", "When unsure, escalate", "name the point"):
+            self.assertIn(point, competence)
+        self.assertEqual(len(re.findall(r"(?m)^\d\. ", competence)), 5)
+
+    def test_questions_of_a_plan_come_together(self):
+        self.assertIn("a plan keeps one, a `###` per matter, asked together at its end", read("rules/core.md"))
+        self.assertIn("one `AskUserQuestion` round", read("skills/loc-orchestrate/references/stuck.md"))
+        self.assertIn("every matter in one `AskUserQuestion` round", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("`Plan <NNN>: questions`", read("templates/loc/inbox/question.md"))
 
 
 if __name__ == "__main__":

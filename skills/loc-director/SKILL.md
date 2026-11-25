@@ -20,7 +20,8 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 
 1. The frame: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/frame.py`; not `ok`: `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md` first. Read the open `loc/inbox/` files and `loc/PRD.md`.
 2. In one step, call the `pm` agent (order of the plans and of the `deferred`, `stuck` and `review` files) and the `architect` agent in Triage mode (what each `stuck`, `deferred` and `review` file needs: a plan, a decision, nothing).
-3. Show a table in the user's language: item, source file, what follows (`loc-planning`, `loc-orchestrate`, waits for you), in the pm's order. `U` files wait for the user; they are not items. Never start without it, even when the agents answer late.
+3. Show a table in the user's language: item, source file, what follows (`loc-planning`, `loc-orchestrate`, waits for you), in the pm's order. `U` files wait for the user; they are not items. Never start without it.
+   Stuck files are not items either: under the table show the `text` of `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/stuck_list.py`. The user answers in one line ("1 and 3 plan, the rest let go"); per file, `stuck_list.py --approve <NNN> --words "<their words>"` (then an item) or `--let-go <NNN>` with the same (its points go to the source plan's `## Review notes`).
 4. The limit, from the user's words:
 
 | User says | `--limit` | Which files you take |
@@ -50,7 +51,7 @@ Stop only when:
 - every item is done (with `goal`, also what they produced, within the limit);
 - what is left waits for the user (`U` files), and nothing else can go on;
 - a blocking checks sheet point waits (`checks.py --list`);
-- the same stuck point comes back after a plan made for it: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/inbox_owner.py --number <NNN> --user` instead of a third plan, then go on with the rest;
+- `course.py` refuses a stuck file: it waits in the stuck list; go on with the rest;
 - the Stop hook or `course.py next` says the time limit or step cap is reached; a running task is finished first.
 
 Then `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py stop --reason "<which rule>"` and the stop report.

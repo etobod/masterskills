@@ -2,7 +2,7 @@
 
 1. **Language.** English for everything in the project, `loc/` included. A `question` file's text is in the `User language` of `CLAUDE.md`. Talk to the user in their language.
 2. **Stay in the project.** Write only inside the project. Scratch files go to `loc/tmp/`, never `/tmp`, `%TEMP%` or the scratchpad. Delete only files you created there. `permissions.additionalDirectories` count as the project.
-3. **Inbox.** A file in `loc/inbox/` is open work; `U` after its number (`088-U-question-…`) marks the user's. Create them with `next_number.py` (Inbox). A decision for the user, in a skill or not, goes first to the `architect` agent (Decide): within its competence apply its ruling; beyond it, a `question` file at once, and work continues on the recommended option unless that is expensive to undo. Deferred work becomes a `deferred` file. A quick clarification stays in chat; a question the user may miss never does.
+3. **Inbox.** A file in `loc/inbox/` is open work; `U` after its number (`088-U-question-…`) marks the user's. Create them with `next_number.py` (Inbox). A decision for the user, in a skill or not, goes first to the `architect` agent (Decide): within its competence apply its ruling; beyond it, a `question` file at once (a plan keeps one, a `###` per matter, asked together at its end); work continues on the recommended option unless expensive to undo. Deferred work becomes a `deferred` file. A quick clarification stays in chat; a question the user may miss never does.
 4. **Code is the only source of truth.** Never document the current state of the code.
 5. **Commits.** Never add `Co-authored-by`, session links or any mention of AI.
 6. **Gates.** Every gate gets at most 3 rounds, then record them and carry on.
