@@ -1,7 +1,7 @@
 ---
 name: loc-init
 description: Use when the user wants to set up masterskills in a project (optionally filling CLAUDE.md and the PRD's goal from a brainstorm, e.g. "loc-init 001"), or to bring an existing project up to date with the current plugin version (missing loc/ files, CLAUDE.md sections, the loc/ ignore entry or .claude/settings.json keys). Safe to run again.
-argument-hint: "[project directory] [brainstorm number or file]"
+argument-hint: "[project directory] [brainstorm number or file | project description]"
 ---
 
 # loc-init
@@ -33,9 +33,10 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 - a directory → `<dir>`; none → `${CLAUDE_PROJECT_DIR}`;
 - a number `NNN` → `loc/inbox/NNN-brainstorm-*.md` (or in `loc/inbox/done/`);
 - a path to a `.md` file → that file;
-- `for <skill>`: another skill asked for the setup; after the report, go back to that skill, with no project brainstorm.
+- `for <skill>`: another skill asked for the setup; after the report, go back to that skill, with no project brainstorm;
+- any other text → a **description** of the project: after the report, `references/frame.md`, "From a description".
 
-Run each script exactly once (a brainstorm adds the read-only `--check`). Do not create, rename or move any file yourself: the scripts decide what is missing and never overwrite anything. The only exceptions are translating and the decisions `question` after a migration (above), and filling sections from a brainstorm (below).
+Run each script exactly once (a brainstorm adds the read-only `--check`). Do not create, rename or move any file yourself: the scripts decide what is missing and never overwrite anything. The only exceptions are translating and the decisions `question` after a migration (above), and filling sections from a brainstorm (below) or a description (`references/frame.md`).
 
 ## From a brainstorm
 
@@ -53,6 +54,6 @@ The script prints JSON.
   `.claude/settings.json` turns off Claude's auto memory (lessons go to `loc/PATTERNS.md`) and AI attribution in commits and pull requests. If `created` and `updated` are empty, say nothing changed. With a user interface (HTML, UI framework, canvas), fill an empty `## Frontend` yourself (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/design.md`, "Filled by loc-init"). Then point out the next step:
   - fill the empty `CLAUDE.md` sections (`Commands` first: skills run those commands and never guess them);
   - write in `loc/PRD.md` what the project is for (`Goal`), the few points it stands on (`Core idea`), how it is used (`Scenarios`) and its ideas (`Directions`); the review judge weighs findings against the first three.
-- **Project brainstorm.** No brainstorm given, no `for <skill>`, and `empty` lists `Goal`: right after the report, `Skill(skill: "masterskills:loc-brainstorm", args: "the project: what it is for, who uses it and how")`, and ask the user to describe the project. Everything they write goes into that brainstorm; `loc-brainstorm` offers to fill the project from it when it is enough.
+- **Project brainstorm.** No brainstorm, description or `for <skill>`, and `empty` lists `Goal`: right after the report, `Skill(skill: "masterskills:loc-brainstorm", args: "the project: what it is for, who uses it and how")`, and ask the user to describe the project. After their first answer, draft the frame from it at once (`references/frame.md`).
 - **`ok: false`.** Show `message` as it is, in the user's language. With `no-git`, ask with `AskUserQuestion`: `Run git init in <dir>` (recommended) or `No`. Run: `git init "<dir>"`, then the script again. No, or any other error: stop; nothing was created.
 

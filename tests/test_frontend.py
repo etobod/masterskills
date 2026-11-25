@@ -87,16 +87,16 @@ class DesignFlowTest(unittest.TestCase):
     def test_reference_wires_the_agents_the_checks_and_the_sheet(self):
         text = read("skills/loc-orchestrate/references/design.md")
         for part in ("`designer` agent", "`design-critic` agent in `light` mode", "`design-critic` agent in `full` mode",
-                     "ui_check.py --detect", "--check", "--tokens <Tokens>", "AskUserQuestion", "declined <date>",
+                     "ui_check.py --detect", "--check", "--tokens <Tokens>", "added to the state file's `questions`", "declined <date>",
                      "loc/tmp/design/references", "general words", "never assets", "checks.py --add", "--reference",
                      "--again", "at most 3 rounds"):
             self.assertIn(part, text)
 
     def test_skills_point_to_the_reference(self):
-        for rel in ("skills/loc-orchestrate/SKILL.md", "skills/loc-planning/SKILL.md", "skills/loc-review/SKILL.md",
+        for rel in ("skills/loc-orchestrate/references/run.md", "skills/loc-planning/SKILL.md", "skills/loc-review/SKILL.md",
                     "skills/loc-brainstorm/SKILL.md", "skills/loc-init/SKILL.md"):
             self.assertIn("references/design.md", read(rel), rel)
-        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        orchestrate = read("skills/loc-orchestrate/references/run.md")
         self.assertIn("`designer` agent", orchestrate)
         self.assertIn("`design-critic` gate", orchestrate)
         self.assertIn("ui_check.py", read("skills/loc-planning/SKILL.md"))

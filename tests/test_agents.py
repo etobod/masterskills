@@ -76,18 +76,20 @@ class DecisionSkillsTest(unittest.TestCase):
         for part in ("printed by a command", "20 tries", "Never for a finding without such a number",
                      "never for a plan gate"):
             self.assertIn(part, search)
-        self.assertIn("After round 6: only **plan**, **search** or **ask**.", architect)
+        self.assertIn("After round 6: only **plan**, **search**, **let go** or **ask**.", architect)
+        self.assertIn("got stuck again: only **ask**; never a second **plan**", architect)
         stuck = read("skills/loc-orchestrate/references/stuck.md")
         self.assertIn("## Triage", stuck)
         triage = stuck.split("## Triage", 1)[1]
         for part in ("- **search**: as plan", "`**Kind:** search`", "`**Budget:** 20`", "(architect: search)",
-                     "now only `plan`, `search` or `ask`"):
+                     "now only `plan`, `search`, `let go` or `ask`", "one replan per stuck file",
+                     "added to the state file's `questions`"):
             self.assertIn(part, triage)
         self.assertNotIn("search", stuck.split("## Plan gate", 1)[1].split("\n## ", 1)[0])
         self.assertIn("20 from a Triage `search`", read("skills/loc-orchestrate/references/search.md"))
         self.assertIn("--type deferred", stuck)
         self.assertIn("--type question", stuck)
-        self.assertIn("`triage`", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("`triage`", read("skills/loc-orchestrate/references/run.md"))
         self.assertIn("`retry`", read("skills/loc-review/SKILL.md"))
 
     def test_every_inbox_file_names_its_author(self):
@@ -114,12 +116,12 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertNotIn("the user tracks their own questions", rules)
         self.assertIn("a question the user may miss never does", rules)
         self.assertIn("When work waits on one, also ask it with `AskUserQuestion`", rules)
-        self.assertIn("consent in a `PRD:` `question` file, also outside a plan", rules)
-        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        self.assertIn("a filled one changes only with the user's consent in a `PRD:` `question` file", rules)
+        orchestrate = read("skills/loc-orchestrate/references/run.md")
         for marker in ("--add <dir>", "--leave <dir>", ".gitignore"):
             self.assertIn(marker, orchestrate)
         self.assertIn("**A blocker only the user can remove**", orchestrate)
-        self.assertIn("a `question` file at once, never only in chat", orchestrate)
+        self.assertIn("a `question` file at once, added to `questions`", orchestrate)
 
     def test_init_offers_git_and_a_project_brainstorm(self):
         init = read("skills/loc-init/SKILL.md")
@@ -127,8 +129,7 @@ class DecisionSkillsTest(unittest.TestCase):
         self.assertIn('Skill(skill: "masterskills:loc-brainstorm"', init)
         self.assertIn("`for <skill>`", init)
         brainstorm = read("skills/loc-brainstorm/SKILL.md")
-        self.assertIn('Skill(skill: "masterskills:loc-init", args: "<NNN>")', brainstorm)
-        self.assertIn("`Keep talking`", brainstorm)
+        self.assertIn("skills/loc-init/references/frame.md", brainstorm)
         self.assertIn("→ moved to <file> <section>", read("skills/loc-init/references/brainstorm.md"))
 
     def test_init_harvests_after_migration(self):
@@ -174,7 +175,7 @@ class ArchitectFirstTest(unittest.TestCase):
     def test_skills_call_the_architect_before_a_question(self):
         planning = read("skills/loc-planning/SKILL.md").split("## 4.")[1].split("## 5.")[0]
         self.assertIn("Decide", planning)
-        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        orchestrate = read("skills/loc-orchestrate/references/run.md")
         rule4 = orchestrate.split("**Rule 4**")[1].splitlines()[0]
         self.assertIn("Decide", rule4)
 
@@ -195,7 +196,7 @@ class StuckInPlanTest(unittest.TestCase):
         self.assertNotIn("Challenge", milestone)
         triage = stuck.split("## Triage")[1]
         self.assertIn("even though the final review passed", triage)
-        orchestrate = read("skills/loc-orchestrate/SKILL.md")
+        orchestrate = read("skills/loc-orchestrate/references/run.md")
         self.assertIn("## Stuck gates", orchestrate)
         self.assertNotIn("single `stuck` file", orchestrate)
         template = read("templates/loc/inbox/stuck.md")

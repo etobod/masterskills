@@ -242,6 +242,13 @@ class WriteGuardTest(unittest.TestCase):
         self.assertIn("loc/PATTERNS.md", reason)
         self.assertIn("loc/tmp/", reason)
 
+    def test_powershell_aliases_of_writers_are_checked(self):
+        outside = (Path.home() / "notes.txt").as_posix()
+        for command in (f"'x' | sc {outside}", f"'x' | ac -Path {outside}", f"ni {outside}"):
+            self.assertEqual(decision(self.check("PowerShell", {"command": command})), "deny", command)
+        inside = (Path(self.project) / "loc" / "tmp" / "a.txt").as_posix()
+        self.assertEqual(self.check("PowerShell", {"command": f"'x' | sc {inside}"}), {})
+
     def test_allows_writes_inside_the_project(self):
         self.assertEqual(self.check("Write", {"file_path": str(Path(self.project) / "loc" / "tmp" / "a.txt")}), {})
 
@@ -303,6 +310,22 @@ class SessionStartTest(unittest.TestCase):
         out = run_hook("session_start.py", {"cwd": str(project)}, {**env, "MASTERSKILLS_PYTHON": ""})
         self.assertIn('`sh "C:/oc/masterskills/scripts/py.sh" scripts/next_number.py --type',
                       out["hookSpecificOutput"]["additionalContext"])
+
+    def test_session_start_puts_a_missing_frame_first(self):
+        project = scratch_dir(self)
+        (project / "loc" / "inbox").mkdir(parents=True)
+        (project / "loc" / "inbox" / "001-question-a.md").write_text("# 001 — A\n\n**Type:** question\n",
+                                                                     encoding="utf-8")
+        text = self.context(project)
+        self.assertIn("## Project frame missing\n`loc/PRD.md ## Goal`", text)
+        self.assertIn("frame.md", text)
+        self.assertLess(text.index("## Project frame missing"), text.index("## Inbox"))
+        (project / "loc" / "PRD.md").write_text("# PRD\n\n## Goal\nGreet.\n\n## Core idea\n- Fast.\n\n"
+                                                "## Scenarios\n1. A visitor is greeted.\n", encoding="utf-8")
+        (project / "CLAUDE.md").write_text("## Commands\n- Tests: `npm test`\n", encoding="utf-8")
+        self.assertNotIn("frame missing", self.context(project))
+        bare = scratch_dir(self)
+        self.assertNotIn("frame missing", self.context(bare))
 
     def test_session_start_asks_for_migration(self):
         project = scratch_dir(self)

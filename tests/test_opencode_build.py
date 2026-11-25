@@ -104,8 +104,27 @@ class OpenCodeBuildTest(unittest.TestCase):
         duck = front((out / "agents" / "rubber-duck.md").read_text(encoding="utf-8")).splitlines()
         self.assertIn(f'    "{base}/skills/**": deny', duck, "an agent without Skill never reads the skills")
         for path in (ROOT / "agents").glob("*.md"):
-            if path.name != "qa.md":
+            if "Skill" not in front(path.read_text(encoding="utf-8")):  # qa and orchestrator run skills
                 self.assertIn("Never read the plugin's skills", path.read_text(encoding="utf-8"), path.name)
+
+    def test_only_the_orchestrator_starts_agents(self):
+        # The orchestrator runs workers with `task`; code-review is one of them, so no third level.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        orchestrator = front((out / "agents" / "orchestrator.md").read_text(encoding="utf-8")).splitlines()
+        self.assertIn("mode: subagent", orchestrator)
+        self.assertIn("  task: allow", orchestrator)
+        body = (out / "agents" / "orchestrator.md").read_text(encoding="utf-8")
+        self.assertNotIn("`code-review`, `loc-review`", body)  # code-review is an agent here, not a skill
+        self.assertIn("`code-review` you run as the procedure calls it", body)
+        for path in (out / "agents").glob("*.md"):
+            if path.name != "orchestrator.md":
+                self.assertNotIn("  task: allow", front(path.read_text(encoding="utf-8")).splitlines(), path.name)
+        skill = (out / "skills" / "loc-orchestrate" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn('task(subagent_type: "orchestrator"', skill)
+        self.assertNotIn("Agent(", skill)
+        review = (out / "skills" / "loc-review" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn('task(subagent_type: "code-review"', review)
 
     def test_date_runs_in_powershell_too(self):
         # OpenCode on Windows runs commands in PowerShell, where `date "+%Y-%m-%d"` fails.
@@ -126,8 +145,7 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.run_build("--out", str(out))
         for path in out.rglob("*.md"):
             self.assertNotIn('Skill(skill: "code-review"', path.read_text(encoding="utf-8"), path)
-        for rel, args in (("skills/loc-orchestrate/SKILL.md", '"<changed files> medium —'),
-                          ("skills/loc-orchestrate/references/gates.md", '"<files review_diff listed> medium'),
+        for rel, args in (("skills/loc-orchestrate/references/gates.md", '"<changed files> low'),
                           ("skills/loc-review/SKILL.md", '"<changed files> <level> —')):
             text = (out / rel).read_text(encoding="utf-8")
             self.assertIn('task(subagent_type: "code-review", prompt: ' + args, text, rel)
@@ -213,6 +231,18 @@ console.log(JSON.stringify({ counts, sent }))
         review = (out / "skills" / "loc-review" / "SKILL.md").read_text(encoding="utf-8")
         self.assertRegex(review, r'\S -B "' + re.escape(out.resolve().as_posix()) + r'/masterskills/scripts/review_diff\.py"')
 
+    def test_divergent_milestones_translate_unchanged(self):
+        # plan 86: the new scripts and the critic's divergent mode need nothing of their own in OpenCode.
+        out = self.scratch()
+        self.run_build("--out", str(out))
+        root = out.resolve().as_posix()
+        divergent = (out / "skills" / "loc-orchestrate" / "references" / "divergent.md").read_text(encoding="utf-8")
+        for script in ("divergent_log.py", "seed.py", "moves.py"):
+            self.assertIn(f'{root}/masterskills/scripts/{script}"', divergent)
+            self.assertTrue((out / "masterskills" / "scripts" / script).is_file(), script)
+        critic = (out / "agents" / "design-critic.md").read_text(encoding="utf-8")
+        self.assertIn("## Divergent", critic)
+
     def test_install_keeps_the_users_files_and_replaces_its_own(self):
         home = self.scratch()
         config = home / "opencode"
@@ -257,6 +287,17 @@ console.log(JSON.stringify({ counts, sent }))
         self.assertEqual(data["instructions"], ["CLAUDE.md"])
         self.assertIn("add by hand", result.stdout)
         self.assertIn(f"{config.resolve().as_posix()}/masterskills/**", result.stdout)
+
+    def test_install_leaves_a_single_instructions_value(self):
+        home = self.scratch()
+        config = home / "opencode"
+        config.mkdir()
+        (config / "opencode.json").write_text(json.dumps({"instructions": "AGENTS.md"}), encoding="utf-8")
+        result = self.run_build("--install", config_home=home)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads((config / "opencode.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["instructions"], "AGENTS.md")
+        self.assertIn('"instructions": ["CLAUDE.md"]', result.stdout)
 
     def test_install_does_not_touch_a_config_with_comments(self):
         home = self.scratch()

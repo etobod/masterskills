@@ -25,7 +25,7 @@ No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask
 1. The input, the project's `CLAUDE.md` (`Commands` gives the proof commands; `Invariants`, `Limits`, `Manual verification / UAT`) and `loc/PATTERNS.md` (entries whose **When to use** matches).
 2. The code the change touches. For more than a couple of files, delegate to the `researcher` agent with the question "what exists today for <change>" and use its `file:line` report. Documents are not evidence; code is.
 3. If the project has no `CLAUDE.md` `Commands` section, say so in the plan's risks and use the commands you verified by running them. A run leaves no files behind: nothing new in `git status --short` (Python: `python -B`).
-4. Gaps in the frame: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --check` (writes nothing). Empty PRD sections: `references/prd.md`. Empty `CLAUDE.md` sections never stop you: what the plan can establish goes into a milestone, the rest into the report. Sections that contradict each other ("two separate chains" vs "one complex chain") become a `question` (step 4).
+4. The frame first: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/frame.py`; not `ok`: `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md`, before writing anything. Other gaps: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --check` (writes nothing). Empty `CLAUDE.md` sections never stop you: what the plan can establish goes into a milestone, the rest into the report. Sections that contradict each other ("two separate chains" vs "one complex chain") become a `question` (step 4).
 
 ## 3. The judge decides which findings become work
 
@@ -62,7 +62,7 @@ sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type plan --sl
 
 Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`, so the plugin's permissions cover it.
 
-`<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 6, `medium` 4, `hard` 3, not counting an M1 that sets up the test suite. Never merge milestones to fit: work over the limit becomes several plans.
+`<difficulty>` tells the user which model can run the plan: `easy` (each milestone a local change to existing code, no new file, interface or data model), `hard` (a new component, a changed interface or data model, or a risky change to code many callers rely on), otherwise `medium`. Milestone limit: `easy` 12, `medium` 8, `hard` 6, not counting an M1 that sets up the test suite. Never merge milestones to fit. One input goes to one plan: split only over the limit or where one part must run first; a plan has no minimum size.
 
 `<group>`: the highest group in the queue of open plans (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/plan_queue.py`) + 1, an empty queue gives `1`; the `pm` agent sets its real place in step 7. Several plans from one input: create them in dependency order.
 
@@ -77,7 +77,7 @@ The file comes from the template with all sections. Fill them in English:
 
 ### Search milestones
 
-A milestone is a **proof** milestone unless the requirement is a number to improve with an unknown ceiling (a pass rate, a speed), or the user or brainstorm asked for a search; never a way out of a hard proof. Unsure: the `architect` (Decide). First ask whether a measurement is needed at all: a result that already exists is the baseline. A search milestone (`**Kind:** search`, its fields, the budget, `**Leads:**` from the `researcher`): `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/search.md`.
+A milestone is a **proof** milestone unless the requirement is a number to improve with an unknown ceiling (a pass rate, a speed), or the user or brainstorm asked for a search; never a way out of a hard proof. Unsure: the `architect` (Decide). First ask whether a measurement is needed at all: a result that already exists is the baseline. A search milestone (`**Kind:** search`, its fields, the budget, `**Leads:**` from the `researcher`): `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/search.md`. A milestone is **divergent** (`**Kind:** divergent`) when its result is a name, a text, a visual direction or a concept the user has not decided; never for identifiers in code, bug fixes or texts whose form a project rule sets (README, commit, changelog). Its fields: `${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/divergent.md`.
 
 ### Tests in the plan
 
@@ -127,7 +127,7 @@ Fixtures committed to git are written by hand. Data recorded from real runs goes
 
 Each round, recorded as one line in `## Plan gate`:
 
-1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge.
+1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py <plan>` must exit `0`. Fix every issue it lists. An unaccounted review finding means step 3 was skipped: do it now, with the judge. A `join` note (another open plan from the same input) is no issue: move this work into that plan unless its limit or an order forbids, and say which in the gate.
 2. The `rubber-duck` agent with **what was asked** (the input) and **what was produced** (the plan path); ask it also whether a milestone does several independent things, and whether the plan contradicts a `D-NN` of `loc/PRD.md` without saying it replaces it (blocking). Fix every Blocking and Non-blocking finding; a finding you reject goes into `## Risks and decisions` with the reason.
 
 The round passes when the script exits `0` and the critic reports nothing blocking. A lost agent report is asked for again (core rule 6a), never a relaunch. After a failed third round, no fourth: a `stuck` file and the `architect` agent's Triage decide what follows (`${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/stuck.md`, `## Plan gate`).
@@ -136,9 +136,11 @@ The round passes when the script exits `0` and the critic reports nothing blocki
 
 Also after a plan that did not pass the gate, except a stuck `## plan gate` (`stuck.md`). Take the date with `date "+%Y-%m-%d"`; never from memory. Move files with `mv` (`loc/` is not in git). Nothing is ever deleted.
 
-**Input file in `loc/inbox/`** (`brainstorm`, `review`, `deferred`, `stuck`, answered `question`):
+**A brainstorm**: `**Source:**` names the decisions the plan covers (`loc/inbox/004-brainstorm-x.md B-01, B-03`); run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/brainstorm_close.py --brainstorm <NNN> --plan <plan NNN> --covers B-01,B-03`. It marks them and closes the file once nothing is left; `closed: true` → `**Source:**` points to `loc/inbox/done/`. Report its `unplanned` decisions.
 
-1. Under `## Resolution` write `→ plan loc/inbox/NNN-plan-<topic>.md (<date>)`. Never rewrite the original content.
+**Other input files** (`review`, `deferred`, `stuck`, answered `question`):
+
+1. Under `## Resolution` write `→ plan loc/inbox/NNN-plan-<topic>.md (<date>)`; a `stuck` also gets `**Replanned:** <plan NNN>` under `**Status:**`. Never rewrite the original content.
 2. Set `**Status:**` to `closed <date>`.
 3. Move it to `loc/inbox/done/` under the same name.
 4. Point the plan's `**Source:**` to `loc/inbox/done/<name>`.

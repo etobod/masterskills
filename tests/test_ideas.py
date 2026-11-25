@@ -34,22 +34,76 @@ class BudgetTest(unittest.TestCase):
     def test_raised_limits(self):
         overrides = measure().OVERRIDES
         expected = {
-            "skills/loc-orchestrate/SKILL.md": 1400, "skills/loc-planning/SKILL.md": 2770,
+            "skills/loc-planning/SKILL.md": 2950,
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
-            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 850,
-            "skills/loc-orchestrate/references/stuck.md": 850,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1100,
+            "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1400,
+            "skills/loc-orchestrate/references/divergent.md": 850,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
-            "agents/architect.md": 650, "agents/design-critic.md": 650, "agents/designer.md": 650,
-            "agents/rubber-duck.md": 720, "agents/judge.md": 750,
+            "agents/architect.md": 700, "agents/design-critic.md": 800, "agents/designer.md": 650,
+            "agents/rubber-duck.md": 720, "agents/judge.md": 770,
         }
         self.assertEqual(overrides, expected)
         self.assertEqual(measure().LIMITS["rule"], 595)
 
 
+class DivergentCriticTest(unittest.TestCase):
+    """plan 86, B-03: the critic judges divergent variants; it never picks."""
+
+    def test_the_critic_has_a_divergent_mode(self):
+        text = read("agents/design-critic.md")
+        section = re.search(r"## Divergent\n(.*?)\n## ", text, re.S).group(1)
+        for phrase in ("fit another project", "make it first", "names a fact from `**Facts:**`",
+                       "known opposite", "`loc/moves.md`", "working parts are whole", "never pick"):
+            self.assertIn(phrase, section)
+        self.assertIn("`<name>: pass` or `<name>: fail`", text)
+        self.assertIn("light, full or divergent", text)
+        # a divergent report lists every pass; the "never list what passed" rule is for light and full
+        self.assertIn("outside `divergent`, never list what passed", text)
+
+    def test_the_designer_sketches_variants_then_builds_the_pick(self):
+        text = read("agents/designer.md")
+        self.assertIn("as a sketch", text)
+        self.assertIn("only the picked one in full", text)
+
+
+class DivergentFlowTest(unittest.TestCase):
+    """plan 86, B-02 and B-05: where a divergent milestone comes from and how it runs."""
+
+    def test_planning_marks_creative_results_divergent(self):
+        text = read("skills/loc-planning/SKILL.md")
+        for phrase in ("**divergent** (`**Kind:** divergent`)", "a name, a text, a visual direction or a concept",
+                       "never for identifiers in code", "references/divergent.md"):
+            self.assertIn(phrase, text)
+
+    def test_run_routes_divergent_milestones(self):
+        text = read("skills/loc-orchestrate/references/run.md")
+        self.assertIn("`**Kind:** divergent` follows `references/divergent.md`", text)
+        self.assertIn("`waiting: user pick` is done, never stuck", text)
+
+    def test_the_flow_has_its_six_steps_and_never_waits(self):
+        text = read("skills/loc-orchestrate/references/divergent.md")
+        for step in ("1. **Default.**", "2. **Start.**", "3. **Variants.**", "4. **Critic.**", "5. **Pick.**",
+                     "6. **Build.**"):
+            self.assertIn(step, text)
+        for phrase in ("seed.py visual|text|idea", "moves.py show --last 12", "`design-critic` agent in `divergent` mode",
+                       "--by interim", "the plan never waits for the pick", "added to `questions`",
+                       "moves.py add", "At most one is the **safe** variant", "reworked once"):
+            self.assertIn(phrase, text)
+        answer = text.split("## The user's answer", 1)[1]
+        self.assertIn("--by user", answer)
+        self.assertIn("**None of them** (`--name none`): a `deferred` file asks for new variants once", answer)
+        self.assertIn("a second `None of them` becomes a `question` file", answer)
+
+    def test_the_skill_records_the_users_pick(self):
+        self.assertIn("a divergent pick also with `divergent_log.py --pick --by user`",
+                      read("skills/loc-orchestrate/SKILL.md"))
+
+
 class LadderTest(unittest.TestCase):
     def implement_step(self) -> str:
-        text = read("skills/loc-orchestrate/SKILL.md")
+        text = read("skills/loc-orchestrate/references/run.md")
         return re.search(r"2\. \*\*Implement\*\*.*?\n3\. ", text, re.S).group(0)
 
     def test_orchestrate_climbs_the_ladder_before_code(self):
@@ -60,13 +114,13 @@ class LadderTest(unittest.TestCase):
         for kept in ("validation", "error handling", "security", "accessibility"):
             self.assertIn(kept, step)
 
-    def test_subagent_gets_the_ladder(self):
-        step = self.implement_step()
-        subagent = re.search(r"\*subagent\*:.*", step).group(0)
-        self.assertIn("ladder", subagent)
+    def test_the_orchestrator_builds_and_climbs_the_ladder_itself(self):
+        # The main session carried the plan's whole work (B-02): the orchestrator agent builds it.
+        self.assertIn("exactly this milestone yourself", self.implement_step())
 
     def test_code_review_flags_code_that_already_exists(self):
-        for rel in ("skills/loc-orchestrate/SKILL.md", "skills/loc-review/SKILL.md"):
+        self.assertNotIn('Skill(skill: "code-review"', read("skills/loc-orchestrate/SKILL.md"))  # once per plan
+        for rel in ("skills/loc-review/SKILL.md",):
             text = read(rel)
             calls = re.findall(r'Skill\(skill: "code-review", args: "[^"]*"\)', text)
             self.assertTrue(calls, rel)
@@ -123,18 +177,14 @@ class LeanReviewTest(unittest.TestCase):
 
     def test_reviewers_run_once_per_round(self):
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
-        step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
-                 if line.startswith("5. **Code-review gate**")][0]
-        for text in (review, step5):
+        for text in (review,):
             self.assertIn("once per round", text)
             self.assertIn("never a relaunch", text)
 
     def test_an_empty_agent_answer_is_a_lost_report(self):
         gate = self.read("skills/loc-planning/SKILL.md").split("## 6. Gate", 1)[1].split("\n## ", 1)[0]
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
-        step5 = [line for line in self.read("skills/loc-orchestrate/SKILL.md").splitlines()
-                 if line.startswith("5. **Code-review gate**")][0]
-        for text in (gate, review, step5):
+        for text in (gate, review):
             self.assertIn("lost agent report is asked for again (core rule 6a)", text)
         rule = read("rules/core.md").split("6a. ", 1)[1].split("\n7. ", 1)[0]
         for part in ("`Findings: <n>`", "`End of report.`", "empty answer", "no end line",
@@ -142,12 +192,52 @@ class LeanReviewTest(unittest.TestCase):
                      "same agent again, up to 3 times", "never a relaunch", "still lost fails the round"):
             self.assertIn(part, rule)
 
-    def test_final_code_review_skips_reviewed_milestones(self):
+    def test_a_milestone_gets_a_quick_review_and_the_end_a_full_one(self):
+        # Brainstorm 011: quick review per milestone (B-01, B-02), the end as before 2.30.0 (B-03).
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("Orchestrated", review)
-        self.assertIn("how the milestones work together", review)
-        self.assertIn("after the last milestone's `end`", review)
+        self.assertIn("Orchestrated, the whole plan's diff: the milestone gates fixed only Blocking findings and kept the Non-blocking ones in `pending`.", review)
+        steps = self.read("skills/loc-orchestrate/references/run.md").split("## 2. Each milestone", 1)[1].split("\n## ", 1)[0]
+        for part in ("**Quick code-review gate** (`M<n>/code-review`", "code-review `low`",
+                     "only Blocking findings fixed, the judge only when there is one, no rubber-duck", "`pending`"):
+            self.assertIn(part, steps)
+        self.assertNotIn("reviewed once, at the end", steps)
+        run = self.read("skills/loc-orchestrate/references/run.md")
+        self.assertNotIn("review the whole plan once", run)
+        self.assertIn('a state file without it (a run before 2.32) skips it', run)
+        self.assertNotIn("one review of the whole plan", self.read("skills/loc-orchestrate/SKILL.md"))
+        self.assertNotIn("reviewed with the plan, in the final review", self.read("skills/loc-orchestrate/references/search.md"))
+        gates = self.read("skills/loc-orchestrate/references/gates.md")
+        milestone = gates.split("## The milestone gate", 1)[1].split("\n## ", 1)[0]
+        for part in ('args: "<changed files> low', "**never `ultra`**", "no rubber-duck", "Only a round with Blocking findings not `rejected` calls the `judge`",
+                     '"is it really blocking?"', "a Blocking one the judge called `enough`",
+                     '`"pending"`', "the final review's judge gets it",
+                     "gate `M<n> code-review`", "**stuck**", "No changed files: record", "<category>: <finding>",
+                     "A `challenges D-NN` follows", "leaves nothing the judge marked `fix`"):
+            self.assertIn(part, milestone)
 
+    def test_the_final_judge_weighs_blocking_and_non_blocking(self):
+        gates = self.read("skills/loc-orchestrate/references/gates.md")
+        for part in ("a wrong result", "data lost or distorted", "a crash or a hang", "a failing proof or test",
+                     "a broken `## Invariants` entry", "Nothing else is blocking.",
+                     "the `judge` gets the Blocking and Non-blocking findings not `rejected`",
+                     "in round 1 also every milestone gate's `pending` finding", "## Rounds 2 and 3",
+                     "**A challenged decision.**"):
+            self.assertIn(part, gates)
+        final = gates.split("## The judge", 1)[1]
+        for gone in ("Only a round with Blocking findings", "is it really blocking"):
+            self.assertNotIn(gone, final)
+        for gone in ("Repeated non-blocking",
+                     "Non-blocking findings never go to the judge"):
+            self.assertNotIn(gone, gates)
+        review = self.read("skills/loc-review/SKILL.md").split("## 4. Orchestrated mode", 1)[1].split("\n## ", 1)[0]
+        for part in ("give the Blocking and Non-blocking findings to the `judge` agent",
+                     "with the milestone gates' `pending` findings", "Rounds 2 and 3 review only the fixes' diff"):
+            self.assertIn(part, review)
+        self.assertIn("A milestone's quick review gives you only Blocking findings", self.read("agents/judge.md"))
+        self.assertIn("This replaces steps 2 and 3 below", self.read("agents/judge.md"))
+        self.assertIn("the fix, the proof and step 5 again", self.read("skills/loc-orchestrate/references/run.md"))
+        agent = self.read("opencode/agents/code-review.md")  # low is the quickest level, as in Claude Code
+        self.assertIn("- `low`: report only findings you are sure of", agent)
 
 class AgentAnswerTest(unittest.TestCase):
     """An agent ends with its report alone, and says so when it found nothing."""
@@ -200,7 +290,7 @@ class PlanGateLoopTest(unittest.TestCase):
         planning = read("skills/loc-planning/SKILL.md")
         self.assertIn("one command each (never chained: `;`, `&&`, `if ($?)`)", planning)
         self.assertNotIn("exactly one `**Proof:**` line", planning)
-        self.assertIn("run each `Proof` line exactly as written, one at a time", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("run each `Proof` line exactly as written, one at a time", read("skills/loc-orchestrate/references/run.md"))
         self.assertIn("One command per `**Proof:**` line", read("templates/loc/inbox/plan.md"))
 
     def test_documents_are_proved_by_their_sections(self):
@@ -224,7 +314,7 @@ class SearchMilestoneTest(unittest.TestCase):
         for part in ("**Kind:** search", "search_log.py --start", "search_log.py --add", "--metric-change",
                      "`searcher`", "`judge`", "Could go further", "`deferred`", "never stuck"):
             self.assertIn(part, reference)
-        self.assertIn("references/search.md", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("references/search.md", read("skills/loc-orchestrate/references/run.md"))
         planning = read("skills/loc-planning/SKILL.md")
         self.assertIn("references/search.md", planning)
         self.assertIn("never a way out of a hard proof", planning)
@@ -259,6 +349,61 @@ class SearchMilestoneTest(unittest.TestCase):
         self.assertIn("Never touch the metric", searcher)
         self.assertIn("never whether it reaches the target", read("agents/rubber-duck.md"))
         self.assertIn("metric, cases, hold-out or guard", read("agents/judge.md"))
+
+
+class ProjectFrameTest(unittest.TestCase):
+    """No goal, no work: the skills that start work check the frame and ask in the main session."""
+
+    def test_skills_check_the_frame_before_their_work(self):
+        for skill in ("loc-planning", "loc-orchestrate", "loc-director"):
+            with self.subTest(skill=skill):
+                text = read(f"skills/{skill}/SKILL.md")
+                self.assertIn("scripts/frame.py", text)
+                self.assertIn("skills/loc-init/references/frame.md", text)
+
+    def test_frame_reference_asks_three_ways(self):
+        text = read("skills/loc-init/references/frame.md")
+        for part in ("AskUserQuestion", "**Accept**", "**Correct in my words**", "**Reject**", "Test command",
+                     "next_number.py --type brainstorm"):
+            self.assertIn(part, text)
+
+    def test_loc_init_takes_a_description_in_one_pass(self):
+        init = read("skills/loc-init/SKILL.md")
+        self.assertIn("any other text → a **description**", init)
+        self.assertIn('"From a description"', init)
+        self.assertIn("After their first answer, draft the frame", init)
+        self.assertIn("nothing they wrote may be lost", read("skills/loc-init/references/frame.md"))
+        brainstorm = read("skills/loc-brainstorm/SKILL.md")
+        self.assertIn("skills/loc-init/references/frame.md", brainstorm)
+        self.assertNotIn("Fill the project from", brainstorm)
+
+    def test_rule_nine_asks_for_an_empty_frame(self):
+        self.assertIn("an empty one is filled by asking", read("rules/core.md"))
+
+
+class StuckLadderTest(unittest.TestCase):
+    """poe: 28 architect calls, no question to the user after day one, stuck 017 -> plan 024 -> stuck 021."""
+
+    def test_one_replan_per_stuck_file_then_only_ask(self):
+        triage = read("agents/architect.md").split("## Triage", 1)[1].split("## Report", 1)[0]
+        self.assertIn("A plan made from a stuck file that got stuck again: only **ask**", triage)
+        stuck = read("skills/loc-orchestrate/references/stuck.md")
+        self.assertIn("A plan whose `**Source:**` is a stuck file gets only **ask**", stuck)
+        self.assertIn("after Triage (now only **ask**) the new plan", stuck)
+        self.assertIn("a `stuck` also gets `**Replanned:** <plan NNN>`", read("skills/loc-planning/SKILL.md"))
+
+    def test_architect_escalates_by_a_checkable_list(self):
+        competence = read("agents/architect.md").split("## Competence", 1)[1].split("## Decide", 1)[0]
+        for point in ("changes what the user sees or reads", "changes what counts as correct data",
+                      "closes or drops work", "is empty", "When unsure, escalate", "name the point"):
+            self.assertIn(point, competence)
+        self.assertEqual(len(re.findall(r"(?m)^\d\. ", competence)), 5)
+
+    def test_questions_of_a_plan_come_together(self):
+        self.assertIn("a plan keeps one, a `###` per matter, asked together at its end", read("rules/core.md"))
+        self.assertIn("asks them all in one round when the plan ends", read("skills/loc-orchestrate/references/stuck.md"))
+        self.assertIn("every matter in one `AskUserQuestion` round", read("skills/loc-orchestrate/SKILL.md"))
+        self.assertIn("`Plan <NNN>: questions`", read("templates/loc/inbox/question.md"))
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@
 
     {
       "plan": "loc/inbox/018-plan-csv-export.md",   # or loc/inbox/done/..., NNN = file name
-      "mode": "inline" | "subagent",              # inline: 2 milestones at most, or a rule-3 deviation
+      "mode": "agent" | "inline" | "subagent",    # agent: the orchestrator agent; inline/subagent: older runs
       "milestone": 1,                            # current one, 1-based
       "phase": "start" | "implement" | "proof" | "code-review" | "search"
                | "qa" | "final-review" | "journal" | "done",
@@ -24,13 +24,14 @@
                       "question": "loc/inbox/NNN-U-question-....md"}],   # rule 4: question or ruling
       "next_action": "exactly what to do next",
       "updated": "YYYY-MM-DD HH:MM",
-      "deferred": "loc/inbox/NNN-deferred-....md" | null   # optional
+      "deferred": "loc/inbox/NNN-deferred-....md" | null,  # optional
+      "questions": [{"file": "loc/inbox/NNN-U-question-....md", "ask": "one line"}]  # optional
     }
 
 Gate rules: at most 3 rounds. A milestone or QA gate that used 3 rounds without
 passing has `"stuck": "plan"` and a `### M<n> <gate>` (or `### qa`) heading under
 the plan's `## Stuck gates`; an open `**Remains:**` point there needs a final
-triage of plan, search or ask. A stuck final review names its `stuck` file, which must
+triage of plan, search, let go or ask. A stuck final review names its `stuck` file, which must
 exist in `loc/inbox/` or `loc/inbox/done/` (an older run's milestone may too).
 Only `final-review` has `triage`: the architect's verdicts after a stuck final
 review, in order, each `retry`, `plan`, `search` or `ask`. One `retry` allows rounds 4-6;
@@ -46,15 +47,18 @@ failing test output in `output`; when the plan's milestone has a
 those tests (`test_author: true`), and `false` needs a deviation for that
 milestone explaining why. A plan with `**Criteria:**` reaches `journal`
 or `done` only after a `qa` gate that passed or went stuck. A `done` milestone
-needs a passed `M<n>/code-review` gate and, when it has `**Criteria:**`, a passed
-`M<n>/red` gate (or a deviation for it). `journal` and `done` need a `final-review`
+with `**Criteria:**` needs a passed `M<n>/red` gate (or a deviation for it). With
+`"review": "milestone"` a `done` milestone also needs a passed `M<n>/code-review`
+gate (runs before 2.32 have no `review`); that gate may keep `pending`, the
+findings that wait for the final review, a list of
+`"<file:line> — <blocking|non-blocking>: <finding>"`. `journal` and `done` need a `final-review`
 gate that passed or went stuck; `done` needs the plan's `**Status:**` closed
 (`done <date>` or `open — QA failed`). `deferred`, when
 set (runs started before 1.6), names the plan's `deferred` file of milestone
 Suggestions, which must exist in `loc/inbox/` or `loc/inbox/done/`.
 
 The plan's `## Review notes` section, when present, holds review findings
-that are not fixed, one per line: `- suggestion (<gate>): <finding>` or
+that are not fixed, one per line: `- non-blocking (<gate>): <finding>`, `- suggestion (<gate>): <finding>`,
 `- unrealistic (<gate>): <finding> Who produces it: <answer, 3+ words>` or
 `- enough (<gate>): <finding> Reason: <the judge's reason, 3+ words>`, where
 <gate> is `M<n> code-review`, `M<n> design`, `final-review` or `planning` (judged by `loc-planning`).
@@ -72,13 +76,15 @@ from pathlib import Path
 
 KEYS = {"plan", "mode", "milestone", "phase", "milestones", "gates", "deviations",
         "next_action", "updated"}
-OPTIONAL = {"deferred", "commit"}
-MODES = {"inline", "subagent"}
+OPTIONAL = {"deferred", "commit", "questions", "review"}
+REVIEWS = {"milestone"}
+PENDING = re.compile(r"^.+? — (blocking|non-blocking): \S")  # "<file:line> — <category>: <finding>"
+MODES = {"agent", "inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "search", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
 MAX_ROUNDS = 3
-TRIAGE = {"retry", "plan", "search", "ask"}
-FINAL = ("plan", "search", "ask")  # a verdict that ends the triage
+TRIAGE = {"retry", "plan", "search", "let go", "ask"}
+FINAL = ("plan", "search", "let go", "ask")  # a verdict that ends the triage
 VERDICTS = {"confirmed", "needs_validation", "rejected"}
 INLINE_MAX = 2
 PLAN = re.compile(r"^loc/inbox/(done/)?(\d{3,})-plan-[^/]+\.md$")
@@ -86,7 +92,7 @@ GATE = re.compile(r"^(M\d+)/(red|proof|code-review|search|design)$|^(qa|final-re
 SEARCH_LOG = re.compile(r"^loc/state/\d{3,}/search-M\d+\.md$")
 STUCK = re.compile(r"^loc/inbox/(done/)?(\d{3,})-(U-)?stuck-[^/]+\.md$")
 NOTES = "Review notes"
-NOTE = re.compile(r"^- (suggestion|unrealistic|enough) \((M\d+ (?:code-review|design)|final-review|planning)\): (.+)$")
+NOTE = re.compile(r"^- (non-blocking|suggestion|unrealistic|enough|let go) \((M\d+ (?:code-review|design)|final-review|planning|architect)\): (.+)$")
 PRODUCER = re.compile(r"Who produces it:\s*(.+)$")
 REASON = re.compile(r"Reason:\s*(.+)$")
 DEFERRED = re.compile(r"^loc/inbox/(done/)?\d{3,}-deferred-[^/]+\.md$")
@@ -98,6 +104,20 @@ CRITERIA = re.compile(r"^\*\*Criteria:\*\*")
 STATUS = re.compile(r"^\*\*Status:\*\*\s*(.*?)\s*$", re.MULTILINE)
 COMMIT = re.compile(r"^([0-9a-f]{7,64}|none|skipped: \S.*)$")
 CLOSED = re.compile(r"^(done\b|open — QA failed)")
+ASKED = re.compile(r"^loc/inbox/\d{3,}-U-(question-[^/]+\.md|checks\.html)$")
+
+
+def check_questions(data: dict, problems: list) -> None:
+    """What the orchestrator agent leaves for the user: a `question` file or the checks sheet each."""
+    items = data.get("questions") or []
+    if not isinstance(items, list):
+        problems.append("questions: expected a list")
+        return
+    for item in items:
+        if not (isinstance(item, dict) and set(item) == {"file", "ask"} and ASKED.match(str(item.get("file")))
+                and isinstance(item.get("ask"), str) and item["ask"].strip()):
+            problems.append(f'questions: {item!r}: expected {{"file": "loc/inbox/NNN-U-question-....md" '
+                            'or "loc/inbox/NNN-U-checks.html", "ask": "<one line>"}')
 
 
 def is_int(value) -> bool:
@@ -177,6 +197,12 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
             problems.append(f"gates.{name}.stuck: only a gate that failed {MAX_ROUNDS} rounds has one")
         if "verdicts" in gate:
             check_verdicts(name, match, gate["verdicts"], problems)
+        if "pending" in gate:
+            pending = gate["pending"]
+            if match.group(2) != "code-review":
+                problems.append(f"gates.{name}.pending: only a M<n>/code-review gate has it")
+            elif not (isinstance(pending, list) and all(isinstance(v, str) and PENDING.match(v) for v in pending)):
+                problems.append(f"gates.{name}.pending: expected a list of findings ('<file:line> — <blocking|non-blocking>: <finding>')")
         output = gate.get("output")
         if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
@@ -268,8 +294,8 @@ def finished_gate(gate) -> bool:
 
 
 def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
-    """A done milestone went through its review (and its red gate when it has criteria);
-    a finished run went through the final review and closed the plan."""
+    """A done milestone with criteria went through its red gate and, with "review": "milestone",
+    its quick code review; a finished run went through the final review and closed the plan."""
     gates = data.get("gates") if isinstance(data.get("gates"), dict) else {}
     plan = data.get("plan")
     tested = milestones_with(project, plan, CRITERIA)
@@ -278,13 +304,13 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
         if not isinstance(item, dict) or item.get("status") != "done":
             continue
         name = item.get("id")
-        review = gates.get(f"{name}/code-review")
-        if not (isinstance(review, dict) and review.get("passed") is True):
-            problems.append(f"gates.{name}/code-review: {name} is done without a passed code review")
         red = gates.get(f"{name}/red")
         if name in tested and name not in deviated and not (isinstance(red, dict) and red.get("passed") is True):
             problems.append(f"gates.{name}/red: {name} has **Criteria:** but no passed red gate "
                             "(tests first); a deviation for it must say why")
+        review = gates.get(f"{name}/code-review")
+        if data.get("review") == "milestone" and not (isinstance(review, dict) and review.get("passed") is True):
+            problems.append(f"gates.{name}/code-review: {name} is done without a passed quick code review")
     if data.get("phase") not in ("journal", "done"):
         return
     final = gates.get("final-review")
@@ -292,10 +318,10 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
         problems.append("gates.final-review: journal and done need a final review that passed or went stuck")
     elif final.get("passed") is not True and (final.get("triage") or ["retry"])[-1] not in FINAL:
         problems.append("gates.final-review.triage: a stuck final review needs the architect's last verdict, "
-                        "plan, search or ask (references/stuck.md)")
+                        "plan, search, let go or ask (references/stuck.md)")
     elif open_points(project, plan) and (final.get("triage") or ["retry"])[-1] not in FINAL:
         problems.append("gates.final-review.triage: ## Stuck gates of the plan still has an open point; "
-                        "the architect's triage must end in plan, search or ask (references/stuck.md)")
+                        "the architect's triage must end in plan, search, let go or ask (references/stuck.md)")
     status = STATUS.search(plan_text(project, plan))
     if data.get("phase") == "done" and not (status and CLOSED.match(status.group(1))):
         problems.append("plan: phase done but the plan's **Status:** is not 'done <date>' "
@@ -346,8 +372,9 @@ def check_notes(data: dict, project: Path, problems: list) -> None:
         match = NOTE.match(line)
         if not match:
             problems.append(f"plan line {number}: in ## {NOTES} expected "
-                            "'- suggestion (<gate>): ...', '- unrealistic (<gate>): ... Who produces it: ...' "
-                            "or '- enough (<gate>): ... Reason: ...'")
+                            "'- non-blocking (<gate>): ...', '- suggestion (<gate>): ...', "
+                            "'- unrealistic (<gate>): ... Who produces it: ...' "
+                            "'- enough (<gate>): ... Reason: ...' or '- let go (architect): ...'")
         elif match.group(1) == "unrealistic":
             producer = PRODUCER.search(match.group(3))
             if not producer or len(producer.group(1).split()) < 3:
@@ -411,9 +438,12 @@ def check(path: Path, data) -> list:
         problems.append(f"plan: number {match.group(2)} does not match the file name {path.name}")
     if data.get("mode") not in MODES:
         problems.append(f"mode: expected one of {sorted(MODES)}")
+    if "review" in data and data["review"] not in REVIEWS:
+        problems.append(f"review: expected one of {sorted(REVIEWS)}")
     if data.get("phase") not in PHASES:
         problems.append(f"phase: expected one of {sorted(PHASES)}")
 
+    check_questions(data, problems)
     ids = check_milestones(data, problems)
     switched = any(isinstance(item, dict) and item.get("rule") == 3 for item in data.get("deviations") or [])
     if data.get("mode") == "inline" and len(ids) > INLINE_MAX and not switched:

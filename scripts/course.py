@@ -26,7 +26,7 @@ Commands (times come from the clock, never from the model):
 `status` prints Markdown in fixed sections built from the course, loc/MEMORY.md
 and loc/inbox/ since the last report; `--mark` then moves the last report to now.
 The other commands print JSON {"course": [<section lines>]}; `next` adds "banner". Exit 1 when the
-course is missing, already open (start) or has no such item; 2 on a bad argument.
+course is missing, an item is a stuck file the user did not approve (`stuck_list.py`), already open (start) or has no such item; 2 on a bad argument.
 """
 
 import argparse
@@ -36,6 +36,9 @@ import os
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import stuck_list  # noqa: E402
 
 CAP = 10  # plans beyond the agreed items
 OPEN = "the first open item"
@@ -142,7 +145,21 @@ def check_limit(value: str) -> bool:
     return True
 
 
+def unapproved(project: Path, items: list) -> bool:
+    """A stuck file is an item only with the user's words, or as the first plan of a Triage `plan`."""
+    for item in items:
+        for match in stuck_list.STUCK.finditer(item):
+            path = stuck_list.find(project, match.group(1))
+            if path and not stuck_list.may_plan(path.read_text(encoding="utf-8", errors="replace")):
+                print(json.dumps({"error": f"{path.name} is not approved by the user: show stuck_list.py, then "
+                                  "`stuck_list.py --approve <NNN>` or `--let-go <NNN>` with their words"}))
+                return True
+    return False
+
+
 def start(project: Path, args) -> int:
+    if unapproved(project, args.item):
+        return 1
     path, (before, section, after) = read(project)
     if is_open(section):
         print(json.dumps({"error": "a course is already open: stop it first"}))
@@ -291,6 +308,8 @@ def main() -> int:
     if args.command == "next":
         return change(project, lambda s: next_step(s, args.text), lambda s: {"banner": banner(next_step(s, args.text), args.text, fields(s).get("Next", ""))})
     if args.command == "add":
+        if unapproved(project, [args.item]):
+            return 1
         return change(project, lambda s: add(s, args.item, args.source))
     if args.command == "done":
         return change(project, lambda s: done(s, args.item))

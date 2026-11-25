@@ -46,7 +46,7 @@ def snapshot(project: Path) -> str:
             head = ""  # no commits yet
         real = git_dir / "index"
         if real.is_file():
-            shutil.copyfile(real, index)  # keeps the stat cache: add -A rehashes only changed files
+            shutil.copy2(real, index)  # keeps the stat cache; copy2 keeps its mtime, so git still rechecks racy files
         elif head:
             git(["read-tree", head], project, env)
         git(["add", "-A"], project, env)

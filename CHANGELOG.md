@@ -2,6 +2,45 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.2 — 2026-11-25
+
+- Pre-release review fixes: a milestone gate passes when nothing the judge marked `fix` is left (an `enough` no longer makes it stuck), a `challenges D-NN` there goes to the architect, a milestone with no changed files skips the quick review, and a manual-check fix gets the quick review again.
+- A `pending` entry carries its category (`<file:line> — <blocking|non-blocking>: <finding>`); a location without a line is accepted.
+- The judge's milestone rule replaces its general steps 2 and 3.
+- OpenCode's code-review agent: `low` is now the quickest level, as in Claude Code.
+
+## 2.32.1 — 2026-11-25
+
+- The milestone's quick review calls the `judge` when a round has a Blocking finding, with one question, "is it really blocking?": the orchestrator no longer judges its own code alone. A finding the judge calls `enough` goes to `pending` and is weighed again in the final review.
+
+## 2.32.0 — 2026-11-25
+
+- **A quick review per milestone, the full review at the end.** Each milestone gets a `M<n>/code-review` gate again, quick: code-review `low` on its files, only Blocking findings fixed, no judge and no rubber-duck. Its Non-blocking findings wait in the gate's `pending` list. The final review is back to how it was before 2.30.0: rubber-duck and code-review on the whole plan; the judge weighs Blocking and Non-blocking findings, the milestones' `pending` ones included; everything it marks `fix` is fixed, and a challenged decision goes to the architect. A repeated non-blocking finding no longer goes to the question file.
+- The state file of a new run has `"review": "milestone"`; with it, `check_state.py` requires a passed `M<n>/code-review` gate for a `done` milestone and checks `pending`. A resumed run of 2.30-2.31 (no `review` key) skips the milestone gate and passes `check_state.py`; its final review follows the restored rules.
+
+## 2.31.1 — 2026-11-25
+
+- `commit_plan.py` passes the plan's files to git on stdin (`--pathspec-from-file`), so a plan of several hundred files no longer exceeds the Windows command line limit.
+
+## 2.31.0 — 2026-11-25
+
+- **Divergent milestones.** A third kind next to proof and search, for a name, a text, a visual direction or a concept the user has not decided. The plan writes down the `**Default:**` answer, the `**Facts:**` the variants start from and the `**Working parts:**` that must keep working; the run makes 2 to 4 variants that differ in kind, the `design-critic` judges them in its new `divergent` mode, the recommended one is built and the user picks in the plan's round of questions. `divergent_log.py` keeps the log and is the proof; `check_plan.py` checks the fields.
+- `seed.py visual|text|idea`: a random start from project-free axes, skipping the values of the last 12 seeds (`loc/seeds.jsonl`). `moves.py`: the means past divergent milestones used, in `loc/moves.md`, so a new variant does not repeat one.
+- Whole-plugin review fixes: the proof checks the working parts (`--built --working pass`), that the user's pick was built after it was picked, and at least 2 variants the critic passed; a reworked variant loses its old verdict; a move must be an entry of `loc/moves.md`, and `moves.py remove` takes back a move the user did not pick; "None of them" is recorded; the critic lists every variant's pass; `seed.py --keep` works with `--only`; `templates/loc/moves.md` ships with the plugin.
+
+## 2.30.0 — 2026-11-25
+
+- **The orchestrator is an agent.** `loc-orchestrate` checks the frame and the plan, starts the `orchestrator` agent and asks its questions in one round; the agent builds the milestones, runs the gates and the workers, and resumes from the state file. The main session no longer carries the plan's work. The procedure moved to `references/run.md`; the state file gains `"mode": "agent"` and `questions`. In OpenCode the orchestrator is a subagent with `task`; every other agent has it denied.
+- **One review per plan.** The per-milestone code-review gate is gone: `loc-review` reviews the whole plan's diff once, at its end. Only Blocking findings, now a checkable list (a wrong result, lost or distorted data, a crash or hang, a failing proof or test, a broken invariant), start a fix round, and the `judge` asks of each whether it really blocks. Non-blocking findings become review notes; one that repeats an earlier plan's goes to the plan's question file. Rounds 2 and 3 review only the fixes.
+- `review_diff.py` leaves lock, minified, `linguist-generated`, `Generated:` (listed in `CLAUDE.md` Developer notes) and over-100 KB files out of the review diff and names them at its top.
+- `diagram_needed.py`: the overview is redrawn only when a plan added or removed a code file or changed one of the diagram's sources.
+- `plan_cost.py`: each plan's journal entry ends with its token cost per session and agent, read from the Claude Code session logs.
+- Planning: milestone limits `easy` 12, `medium` 8, `hard` 6; one input goes to one plan, and `check_plan.py` adds a `join` note when another open plan comes from the same input.
+- **No goal, no work.** `frame.py` checks `loc/PRD.md` Goal, Core idea and Scenarios and a test command in `CLAUDE.md`; planning and orchestration stop on a missing frame and draft it with the user once. `loc-init` takes a project description in one pass, and `brainstorm_close.py` closes a brainstorm once its decisions are planned.
+- **Stuck work.** One replan per stuck file; a second needs the user's approval. The architect escalates by a checkable list, also when unsure, and may `let go`. A plan's questions share one file and are asked in one round at its end; `stuck_list.py` shows open stuck files with their ladder.
+- `snapshot.py` keeps the copied index's mtime, so git rechecks files changed in the same second.
+- Whole-plugin review fixes: the architect's `let go` notes pass the state check; a finished plan is never resumed and its last questions are only recorded; a lost orchestrator report stops instead of starting a second one; the design and triage questions go into the state file's `questions`; the orchestrator may start `researcher`, writes out the plugin root and reads the core rules; `"questions": null` is accepted; the write guard knows PowerShell's `sc`, `ac` and `ni`; the OpenCode install no longer crashes on a single `instructions` string; `plan_cost.py` finds the logs of a project under a junction or link.
+
 ## 2.29.7 — 2026-11-24
 
 - Session start no longer calls every brainstorm "still the empty template": the template's HTML comment line, which stays in a filled file, is not taken as an unfilled placeholder.

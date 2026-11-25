@@ -185,17 +185,48 @@ class CheckStateTest(unittest.TestCase):
                                    "**Proof:** `grep x` → `1`\n")
         self.assertEqual(code, 0, out)
 
-    def test_done_milestone_needs_a_passed_code_review(self):
+    def test_done_milestone_of_an_old_run_needs_no_code_review(self):
+        # Runs of 2.30-2.31 had no per-milestone review and no "review" key.
         qa = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
-        for review in (None, {"rounds": 1, "passed": False, "stuck": None}):
+        for review in (None, {"rounds": 1, "passed": True, "stuck": None}):  # a 2.30-2.31 run, a run older than 2.30
             data = self.finished("done", qa)
             if review is None:
                 del data["gates"]["M1/code-review"]
             else:
                 data["gates"]["M1/code-review"] = review
             code, out = self.run_check(data, PLAN_WITH_CRITERIA)
-            self.assertEqual(code, 1, review)
-            self.assertIn("M1 is done without a passed code review", "\n".join(out["problems"]))
+            self.assertEqual(code, 0, out)
+
+    def test_done_milestone_needs_a_quick_code_review(self):
+        qa = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
+        data = self.finished("done", qa)
+        data["review"] = "milestone"
+        del data["gates"]["M1/code-review"]
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        self.assertIn("gates.M1/code-review: M1 is done without a passed quick code review", out["problems"])
+        data["gates"]["M1/code-review"] = {"rounds": 1, "passed": True, "stuck": None,
+                                           "pending": ["app.py:3 — non-blocking: a retry logs twice",
+                                                       "README.md — blocking: the new flag is missing"]}
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 0, out)
+
+    def test_review_takes_only_milestone(self):
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
+        data["review"] = "plan"
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        self.assertIn("review: expected one of ['milestone']", out["problems"])
+
+    def test_pending_only_in_a_code_review_gate(self):
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — non-blocking: y"]}})
+        data["gates"]["M1/code-review"] = {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — blocking: ok", "a.py:2 — retry logs twice", 3]}
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        problems = " | ".join(out["problems"])
+        self.assertIn("gates.qa.pending: only a M<n>/code-review gate has it", problems)
+        self.assertNotIn("gates.M1/proof.pending", problems)
+        self.assertIn("gates.M1/code-review.pending: expected a list of findings", problems)
 
     def test_done_milestone_with_criteria_needs_a_red_gate_or_a_deviation(self):
         data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
@@ -325,6 +356,11 @@ class CheckStateTest(unittest.TestCase):
             self.assertEqual(code, 1, note)
             self.assertIn("Who produces it", "\n".join(out["problems"]))
 
+    def test_non_blocking_note_is_valid(self):
+        plan = self.with_notes("- non-blocking (final-review): `sync.py:52` — ponowienie po timeoucie loguje błąd dwa razy")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
+
     def test_enough_note_is_valid(self):
         plan = self.with_notes(
             "- enough (M1 code-review): `app.py:7` — „Rano, około siódmej” daje 08:00 przybliżoną. "
@@ -339,6 +375,12 @@ class CheckStateTest(unittest.TestCase):
             "- suggestion (planning): 012 #6 `app.py:98` — stała powtarza listę z text.py\n"
             "- enough (planning): 014 #3 — model dopisał nad listą własny nagłówek. "
             "Reason: kosmetyka, treść listy poprawna [plan Goal]")
+        code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
+        self.assertEqual(code, 0, out)
+
+    def test_let_go_note_from_triage_is_valid(self):
+        # stuck.md: the architect's "let go" verdict writes its open points as review notes.
+        plan = self.with_notes("- let go (architect): `app.py:9` — retry loop on timeout — the goal needs no retry")
         code, out = self.run_check(self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}}), plan)
         self.assertEqual(code, 0, out)
 

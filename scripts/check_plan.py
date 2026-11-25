@@ -26,10 +26,12 @@ Checks, in order:
     `## Commands`, since a stub file alone proves nothing runs;
   - `**Performer:**`, when present, is `auto`, `agent`, or `user` with
     `(blocking)` or `(deferrable)`;
-  - `**Kind:**`, when present, is `proof` (the default) or `search`; a search milestone
+  - `**Kind:**`, when present, is `proof` (the default), `search` or `divergent`; a search milestone
     has `**Metric:**`, `**Target:**` (`>= <n>` or `<= <n>`), `**Budget:**` (a number; over 50
     only with `user approved <date>`), `**Give up:**`, `**May change:**`, `**Measure:**` and
     `**Hold-out:**`, needs no criteria, and its proof is `search_log.py --check` → `ok`;
+  - a divergent milestone has `**Default:**`, `**Facts:**`, `**Working parts:**` and
+    `**Variants:**` (2 to 4), needs no criteria, and its proof is `divergent_log.py --check` → `ok`;
   - a criterion's test is not a shell check (`grep`, `test -f`, `open`...) and
     names a test (`test` or `spec` in it), not a source file;
   - a proof (any performer but `agent`) reads `` `<command>` → `<output>` `` and does not just
@@ -40,6 +42,10 @@ Checks, in order:
     or an `enough` line in `## Review notes`; Suggestion and Unrealistic ones
     only in `## Review notes`; either may instead be under the review's
     `## Resolution` when already fixed;
+  - a plan whose `**Source:**` names a `brainstorm` names at least one of its
+    current decisions (`B-NN`), the ones it covers (`brainstorm_close.py`);
+  - a plan whose `**Source:**` names a `stuck` file already replanned as another
+    plan (`**Replanned:** NNN`) has `**Approved by user:** <date> — <words>`;
   - with `--ready` (before execution): `## Plan gate` records a round, and
     the input file named in `**Source:**` is no longer open in `loc/inbox/`;
   - the file name gives the queue group and the difficulty,
@@ -62,6 +68,10 @@ import os
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import frame  # noqa: E402
 
 REQUIRED = ["Goal", "Out of scope", "Not defended against", "Code context", "Milestones", "Risks and decisions"]
 DEFENCE = "Not defended against"
@@ -89,7 +99,9 @@ PERFORMERS = re.compile(r"^(auto|agent|user \((blocking|deferrable)\))$")
 MANUAL_CHECK = re.compile(r"^\*\*Manual check:\*\*")
 KIND = re.compile(r"^\*\*Kind:\*\*\s*(?P<value>.*?)\s*$")
 SEARCH_FIELDS = ["Metric", "Quick metric", "Baseline", "Target", "Budget", "Give up", "May change", "Measure", "Hold-out"]
-SEARCH_FIELD = re.compile(r"^\*\*(?P<key>" + "|".join(SEARCH_FIELDS) + r"):\*\*\s*(?P<value>.*?)\s*$")
+DIVERGENT_FIELDS = ["Default", "Facts", "Working parts", "Variants"]
+SEARCH_FIELD = re.compile(r"^\*\*(?P<key>" + "|".join(SEARCH_FIELDS + DIVERGENT_FIELDS)
+                          + r"):\*\*\s*(?P<value>.*?)\s*$")
 SEARCH_TARGET = re.compile(r"^`?\s*(>=|<=|≥|≤)\s*-?\d+(\.\d+)?\s*%?\s*`?$")
 SEARCH_BUDGET = re.compile(r"^(?P<n>\d+)\b(?P<rest>.*)$")
 BUDGET_LIMIT = 50
@@ -177,10 +189,13 @@ def check_milestone(name: str, criteria: list, performer, issues: list, tested: 
     """criteria: [(line number, text)]; performer: (line number, value) or None;
     tested: {"criteria", "no_tests" (reason or None), "suite"} seen in the milestone."""
     kind = tested.get("kind")
-    if kind is not None and kind[1] not in ("proof", "search"):
-        issues.append({"line": kind[0], "problem": f"{name}: **Kind:** is proof or search"})
+    if kind is not None and kind[1] not in ("proof", "search", "divergent"):
+        issues.append({"line": kind[0], "problem": f"{name}: **Kind:** is proof, search or divergent"})
     if kind is not None and kind[1] == "search":
         check_search(name, tested, issues)
+        return
+    if kind is not None and kind[1] == "divergent":
+        check_divergent(name, tested, issues)
         return
     if tested["no_tests"] == "":
         issues.append({"line": 0, "problem": f"{name}: **No tests:** needs a reason, e.g. 'documents only'"})
@@ -282,6 +297,28 @@ def check_search(name: str, tested: dict, issues: list) -> None:
                        "its log check"})
 
 
+def check_divergent(name: str, tested: dict, issues: list) -> None:
+    """A divergent milestone: its fields, 2 to 4 variants and a proof that checks the divergent log."""
+    fields = tested.get("fields", {})
+    for key in DIVERGENT_FIELDS:
+        if not fields.get(key, (0, ""))[1]:
+            issues.append({"line": 0, "problem": f"{name}: a divergent milestone needs **{key}:** "
+                           "(${CLAUDE_PLUGIN_ROOT}/skills/loc-orchestrate/references/divergent.md)"})
+    variants = fields.get("Variants", (0, ""))
+    if variants[1] and not re.match(r"^[2-4](\s|$)", variants[1]):
+        issues.append({"line": variants[0], "problem": f"{name}: **Variants:** is 2 to 4, 3 by default"})
+    for proof in tested.get("proofs", [])[:1]:
+        if not ("divergent_log.py" in proof[1] and "--check" in proof[1] and CHECKABLE_PROOF.match(proof[1])):
+            issues.append({"line": proof[0], "problem": f"{name}: a divergent milestone's proof checks its log: "
+                           "'**Proof:** `sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" scripts/divergent_log.py --check "
+                           "--log loc/state/<NNN>/divergent-M<n>.md` → `ok`'"})
+    if not tested.get("proofs"):
+        issues.append({"line": 0, "problem": f"{name}: no **Proof:** line"})
+    elif len(tested["proofs"]) > 1:
+        issues.append({"line": tested["proofs"][1][0], "problem": f"{name}: a divergent milestone has one proof, "
+                       "its log check"})
+
+
 PROJECT = None  # set by a caller that checks plans of another project (migrate.py)
 
 
@@ -292,15 +329,7 @@ def project_dir() -> Path:
 def has_suite(project: Path) -> bool:
     """A test suite is `loc/TEST-PLAN.md` plus a test command in `CLAUDE.md` `## Commands`:
     the file alone can be written in a minute and proves nothing runs."""
-    if not (project / "loc" / SUITE).is_file():
-        return False
-    try:
-        text = (project / "CLAUDE.md").read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return False
-    section = re.search(r"(?ms)^## Commands\s*?$(.*?)(?=^## |\Z)", text)
-    body = COMMENT.sub("", section.group(1)) if section else ""
-    return any(TEST_NAME.search(line) for line in body.splitlines())
+    return (project / "loc" / SUITE).is_file() and frame.has_test_command(project)
 
 
 def check_ready(text: str, issues: list) -> None:
@@ -315,9 +344,13 @@ def check_ready(text: str, issues: list) -> None:
         issues.append({"line": 0, "problem": f"## {GATE_RECORD} records no round: the plan never went "
                        "through the loc-planning gate; run loc-planning on it"})
     source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    own = re.match(r"#\s*(\d{3,})", text)
     for match in INPUT.finditer(source.group(1) if source else ""):
         number = match.group(0).split("-", 1)[0]
         for path in (project_dir() / "loc" / "inbox").glob(f"{number}-*.md"):
+            if (match.group(1) == "brainstorm" and own  # decisions left for other plans keep it open
+                    and f"→ plan {own.group(1)}" in path.read_text(encoding="utf-8", errors="replace")):
+                continue
             issues.append({"line": 0, "problem": f"input loc/inbox/{path.name} is still open: loc-planning "
                            "did not close it (its step 7); run loc-planning on the plan"})
 
@@ -379,6 +412,43 @@ def check_review(text: str, issues: list) -> None:
                     if judged else
                     f"review {ref} ({category}) is not accounted for: record it in ## Review notes as "
                     f"`- {category.lower()} (planning): {ref} …`")})
+
+
+BRAINSTORM_DECISION = re.compile(r"^- (~~)?(B-\d{2,})\b", re.M)
+
+
+def check_brainstorm(text: str, issues: list) -> None:
+    """A plan made from a brainstorm names the decisions it covers, so brainstorm_close.py can mark them."""
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    for match in INPUT.finditer(source.group(1) if source else ""):
+        path = find_input(match.group(0)) if match.group(1) == "brainstorm" else None
+        if not path:
+            continue
+        decisions = "\n".join(sections_of(path.read_text(encoding="utf-8", errors="replace")).get("Decisions", []))
+        current = {m.group(2) for m in BRAINSTORM_DECISION.finditer(decisions) if not m.group(1)}
+        if current and not current & set(re.findall(r"\bB-\d{2,}\b", text)):
+            issues.append({"line": 0, "format": True, "problem": (
+                f"the plan names no decision of {match.group(0)}: list those it covers in **Source:** "
+                f"(e.g. `{match.group(0)} B-01, B-03`)")})
+
+
+REPLANNED = re.compile(r"^\*\*Replanned:\*\*\s*(\d{3,})", re.M)
+APPROVED = re.compile(r"^\*\*Approved by user:\*\*\s*\S", re.M)
+
+
+def check_stuck(text: str, issues: list) -> None:
+    """One new plan per stuck file: a second needs the user's words, or the work goes in circles."""
+    if APPROVED.search(text):
+        return
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    own = re.match(r"#\s*(\d{3,})", text)
+    for match in INPUT.finditer(source.group(1) if source else ""):
+        path = find_input(match.group(0)) if match.group(1) == "stuck" else None
+        replanned = path and REPLANNED.search(path.read_text(encoding="utf-8", errors="replace"))
+        if replanned and not (own and replanned.group(1) == own.group(1)):
+            issues.append({"line": 0, "problem": (
+                f"{match.group(0)} was already replanned as plan {replanned.group(1)}: a second plan from it "
+                "needs the user's consent, `**Approved by user:** <date> — <their words>` (loc-director's stuck list)")})
 
 
 DECISION = re.compile(r"\bD-\d{2,}\b")
@@ -514,7 +584,27 @@ def own_issues(path: Path) -> list:
 NAME = re.compile(r"^\d{3,}-plan-(\d+)-(easy|medium|hard)-[a-z0-9][a-z0-9-]*\.md$")
 
 
-LIMITS = {"easy": 6, "medium": 4, "hard": 3}
+LIMITS = {"easy": 12, "medium": 8, "hard": 6}
+
+
+def source_numbers(text: str) -> set:
+    source = re.search(r"^\*\*Source:\*\*(.*)$", text, re.MULTILINE)
+    return {match.group(0).split("-", 1)[0] for match in INPUT.finditer(source.group(1) if source else "")}
+
+
+def check_join(plan: Path, text: str, result: dict) -> None:
+    """A `join` note, never an issue: another open plan comes from the same input, so the two may be one."""
+    numbers = source_numbers(text)
+    for other in sorted((project_dir() / "loc" / "inbox").glob("*-plan-*.md")):
+        if other.name == plan.name:
+            continue
+        shared = numbers & source_numbers(other.read_text(encoding="utf-8", errors="replace"))
+        if shared:
+            result.setdefault("notes", []).append({
+                "note": "join", "plan": other.name, "source": sorted(shared),
+                "message": f"{other.name} comes from the same input ({', '.join(sorted(shared))}): "
+                           "one input goes to one plan, so add this work to it unless its limit or an order "
+                           "between them forbids (loc-planning step 5)"})
 
 
 def check_name(name: str, result: dict) -> None:
@@ -547,6 +637,9 @@ def main() -> int:
     result = check(text)
     check_review(text, result["issues"])
     check_decisions(text, result["issues"])
+    check_brainstorm(text, result["issues"])
+    check_stuck(text, result["issues"])
+    check_join(args.plan, text, result)
     if not args.ready:
         check_name(args.plan.name, result)
     result["ok"] = not result["issues"]
@@ -554,6 +647,10 @@ def main() -> int:
         # A plan that passed its gate is not failed by a format rule added since: its proofs still run.
         result["issues"] = [issue for issue in result["issues"] if not issue.pop("format", False)]
         check_ready(text, result["issues"])
+        gaps = frame.missing(project_dir())
+        if gaps:  # no goal, no work: never filtered as format
+            result["issues"].append({"line": 0, "problem": "project frame missing: " + ", ".join(gaps)
+                                     + " (draft and ask: ${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md)"})
         result["ok"] = not result["issues"]
     print(json.dumps({"plan": args.plan.as_posix(), **result}, indent=2))
     return 0 if result["ok"] else 1

@@ -5,9 +5,9 @@
 Do not start a fourth round, and **change no more code**: a fix after the last round is never reviewed. No inbox file and no architect now: the record goes into the plan, and the architect weighs it once, in the triage at the end. Add the plan's section `## Stuck gates` above `## Resolution` if it has none, then one subsection per gate:
 
 ```
-### M2 code-review
+### M2 proof
 **Remains:**
-- `parse.py:41` — "around five" still parses as 05:00
+- `parse.py:41` — "around five" still parses as 05:00 (proof `test_parse` fails)
 **Rounds:**
 1. <the failure output word for word>; changed <what>; <result>
 2. <the same, even when it repeats round 1>
@@ -34,9 +34,9 @@ Per gate, add it to `**Stuck gates:**` and write one section (`## final-review`,
 
 - **retry**: rounds 4–6, once; when they fail too, Triage again: only plan or ask.
 - **plan**: `**Status:**` → `open — gate failed`; the stuck file waits for the next planning, which starts from it.
-- **ask**: only beyond the architect's competence. As plan, plus `next_number.py --type question --title "<plan>: <what remains>" --source "<stuck file>" --by "architect (Triage)"` with its options.
+- **ask**: as plan, plus the `question` file as in Triage's **ask** (`--type question`, `--source "<stuck file>"`, `--by "architect (Triage)"`).
 
-**A plan made from a stuck `## plan gate`** makes no stuck file of its own. Passed: the stuck file closes as its input; the plan that first failed gets `**Status:** closed — replaced by <new plan>`, moved to `loc/inbox/done/`. Failed: its rounds go into the stuck file's `## plan gate` as `### <new plan>`; after Triage the new plan gets `**Status:** closed — merged into <stuck file>`, moved to `loc/inbox/done/`; the stuck file stays open.
+**A plan made from a stuck `## plan gate`** makes no stuck file of its own. Passed: the stuck file closes as its input; the plan that first failed gets `**Status:** closed — replaced by <new plan>`, moved to `loc/inbox/done/`. Failed: its rounds go into the stuck file's `## plan gate` as `### <new plan>`; after Triage (now only **ask**) the new plan gets `**Status:** closed — merged into <stuck file>`, moved to `loc/inbox/done/`; the stuck file stays open.
 
 ## Closing what the plan resolved
 
@@ -44,12 +44,13 @@ After the final review, check each point of `**Remains:**` in the plan's `## Stu
 
 ## Triage
 
-Triage runs when the final review went stuck, **or** a point of `## Stuck gates` is still open after the closing check, even though the final review passed. Call the `architect` agent in Triage mode with the plan's `## Stuck gates`, the stuck file's `## final-review` section if any, the plan path, `loc/PRD.md` and `CLAUDE.md`. Append its verdict to the `final-review` gate's `triage` list and write it with its reason in each `**Architect (Triage):**`, then:
+Triage runs when the final review went stuck, **or** a point of `## Stuck gates` is still open after the closing check, even though the final review passed. Call the `architect` agent in Triage mode with the plan's `## Stuck gates`, the stuck file's `## final-review` section if any, the plan path, `loc/PRD.md` and `CLAUDE.md`. A plan whose `**Source:**` is a stuck file gets only **ask**: one replan per stuck file. Append its verdict to the `final-review` gate's `triage` list and write it with its reason in each `**Architect (Triage):**`, then:
 
-- **retry**: call `loc-review` again for rounds 4–6 (once per plan), with the open points as findings to fix. It adds a `## final-review (rounds 4–6)` section; when that fails too, call the architect again: now only `plan`, `search` or `ask`.
+- **retry**: call `loc-review` again for rounds 4–6 (once per plan), with the open points as findings to fix. It adds a `## final-review (rounds 4–6)` section; when that fails too, call the architect again: now only `plan`, `search`, `let go` or `ask`.
 - **plan**: the open points become work for the next planning:
   `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type deferred --slug "<plan topic> leftovers" --title "<plan> — leftovers" --source "<plan path>" --what "<each point with file:line>" --why "<the architect's reason>" --when "the next loc-planning" --by "loc-orchestrate (architect: plan)"`
 - **search**: as plan, `--slug "<plan topic> search"`, `--by "loc-orchestrate (architect: search)"`, and `--what` is a search milestone draft (`references/search.md`): `**Kind:** search`, the architect's metric command and target, `**May change:**` its files, `**Budget:** 20`.
-- **ask**: only what the architect called beyond its competence: `next_number.py --type question --title "Plan <NNN>: <topic>" --source "<plan path>" --by "architect (Triage)"`, in the user's language: what is at stake with `file:line`, the architect's options with the recommended one first, and its reason.
+- **let go**: each open point becomes a `## Review notes` line, `- let go (architect): <point> — <reason>`.
+- **ask**: the plan's one `question` file (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type question --title "Plan <NNN>: questions" --source "<plan path>" --by "architect (Triage)"`, created by the first matter and added to the state file's `questions`), one `### <matter>` each, in the user's language: what is at stake with `file:line`, the options with the recommended one first, the reason. `loc-orchestrate` asks them all in one round when the plan ends.
 
 Name the new file in `**Next:**` (stuck file), the plan's `## Resolution` and the report. The plan then closes as usual.

@@ -46,6 +46,8 @@ Write the tokens file, then build. Every colour, size and space comes from a tok
 
 Fix the critic's big misses first.
 
+For a divergent milestone you first build each variant you are given as a sketch, enough to judge its look, never finished, then build only the picked one in full.
+
 ## Rules
 
 - Edit only the given files and the tokens file.

@@ -569,6 +569,7 @@ class PriorityMigrationTest(unittest.TestCase):
             "loc/inbox/069-plan-1-medium-grouped.md": BROKEN_PLAN,
             "loc/state/060.json": json.dumps({"plan": "loc/inbox/060-plan-running.md", "phase": "build"}),
             "loc/MEMORY.md": "Details: loc/inbox/008-plan-etap-1.md\n",
+            "CLAUDE.md": "## Commands\n- Tests: `python -m unittest`\n",
         }
         for rel, text in files.items():
             path = self.project / rel

@@ -22,7 +22,7 @@ and they ask you only what they cannot decide.
 - **Plans that can fail.** Every milestone ends with a proof: a command and its expected result. Tests come first, written by an agent that never reads the implementation, and they must fail on an assertion before any code is written.
 - **No lost reports.** Every agent ends its report with `End of report.`, and the reviewers start it with the number of findings. A cut, empty or short report is asked for again, up to three times, so a slow model's half answer never passes as "nothing found".
 - **Decisions without interruptions.** The `architect` settles what you need not decide. What only you can decide becomes a question file with a recommended option, and the work goes on with that option meanwhile.
-- **Reviews that end.** Every gate gets at most three rounds. The `judge` weighs each finding against what the project is for (`fix`, `enough`, or `challenges D-07`), so review does not turn into polishing. Each finding is first checked against the code: one the code contradicts is dropped with a reason, one it cannot settle reaches the judge marked unconfirmed.
+- **Reviews that end.** Every gate gets at most three rounds. Each milestone gets a quick code review that fixes only a blocking finding (a wrong result, lost data, a crash, a failing test, a broken invariant), with the `judge` asking first whether it really blocks, and keeps the rest for the end. The plan's final review weighs blocking and non-blocking findings with the `judge`, which fixes what the project needs and turns the rest into notes, so review does not turn into polishing. Each finding is first checked against the code: one the code contradicts is dropped with a reason, one it cannot settle reaches the judge marked unconfirmed.
 - **Less code.** Before writing code, the team checks whether it needs to exist: already in the project, the standard library, the platform or an installed dependency. Validation, error handling, security and accessibility are never cut.
 - **Search when there is no pass/fail.** A milestone can improve a number toward a target instead (a prompt's pass rate, a run time): a fresh agent tries one idea at a time, only a better score is kept, and the search stops at the target, at its budget or when ideas run out. Missing the target is an accepted result, not a failure.
 - **Bugs fixed at the cause.** `loc-debug` reproduces a bug with a command, pins it with a failing test and tests hypotheses before changing any code.
@@ -73,18 +73,21 @@ To update later: `/plugin marketplace update masterskills`, then run `/masterski
 flowchart TD
     A["<b>loc-brainstorm</b><br/>conversation → decisions"] --> B["<b>loc-planning</b><br/>milestones, criteria, proofs"]
     B --> G{"plan gate<br/>rubber-duck · plan check"}
-    G --> M
-    subgraph M["loc-orchestrate · every milestone"]
+    G --> F{"frame<br/>goal · scenarios · test command"}
+    F --> M
+    subgraph M["orchestrator agent · every milestone"]
         direction LR
         T["test-author<br/>tests first"] --> R{"red gate"}
-        R --> C["code"] --> P["proof"] --> CR["code-review<br/>+ judge"]
+        R --> C["code"] --> P["proof"] --> CR["quick review<br/>blocking fixed"]
     end
     M --> Q["<b>loc-qa</b><br/>APPROVED / NOT APPROVED"]
-    Q --> RV["<b>loc-review</b><br/>final review"]
-    RV --> J["<b>loc-journal</b><br/>lessons + overview diagram"]
+    Q --> RV["<b>loc-review</b><br/>final review<br/>the judge decides what is fixed"]
+    RV --> J["<b>journal</b><br/>lessons · cost · diagram if the structure changed"]
 ```
 
-### Proof and search milestones
+`loc-orchestrate` checks the frame and the plan, then hands the plan to the `orchestrator` agent: the plan's whole work runs in the agent's context, and your session sees only the start, one round of questions and the report. No work starts without the project's frame: its goal, core idea and scenarios in `loc/PRD.md` and a test command in `CLAUDE.md`. Each plan's journal entry ends with its cost, e.g. `1.8M tokens: orchestrator 55%, rubber-duck 25%, main 5%`.
+
+### Proof, search and divergent milestones
 
 Most milestones are **proof** milestones: a command that must pass. When the goal is a number to improve with no known ceiling, `loc-planning` makes a **search** milestone instead, and only then: never as a way out of a hard proof.
 
@@ -104,6 +107,19 @@ Most milestones are **proof** milestones: a command that must pass. When the goa
 Measuring stays in proportion to the work: a result the project already has is the baseline, tries run on a quick metric, and the full one only confirms a gain that meets the target and runs once at the end. Each try is one change with a hypothesis from a fresh `searcher` agent; `search_log.py` decides keep or revert and keeps the log, so a search resumes after `/clear`. The budget is 50 tries by default and more only with your consent. The metric changes only when the `judge` agrees it was wrong, at most twice. The result reads `64 → 78 (target >= 80), stopped: budget`, with ideas for going further kept as a deferred item.
 
 A search also follows a stuck gate: when what a gate could not fix in its rounds is a number short of its target (a proof threshold, a time, a pass rate), the `architect` can order a search plan of 20 tries instead of asking you.
+
+The third kind is **divergent**: a name, a tagline, a visual direction or a concept you have not decided, where the risk is the first answer everyone gives.
+
+```markdown
+### M3 — app name and tagline
+**Kind:** divergent
+**Default:** a made-up two-syllable word; "Your text, simplified."
+**Facts:** PRD Goal: counts and cleans text for one user; a terminal tool
+**Working parts:** `python -m unittest` still passes
+**Variants:** 3
+```
+
+The milestone writes the default answer down so it can be avoided, makes two to four variants that differ in kind (each with its reason from a project fact, at most one safe), and has the `design-critic` judge them: would it fit another project, would most people make it first, is it only the default's opposite, does it repeat a move from `loc/moves.md`. The run builds the recommended variant and goes on; you pick in the round of questions at the plan's end, and another pick becomes a deferred item. `seed.py` gives a random start when the project offers no facts, and `divergent_log.py --check` is the proof.
 
 Everything the workflow writes stays in `loc/`, ignored by git with one line:
 
@@ -132,17 +148,18 @@ Agents are spawned with a clean context and narrow tools, so each one judges onl
 
 | | Role | Agent | What it does | Limits |
 |---|---|---|---|---|
+| 🎼 | **Orchestrator** | `orchestrator` | Runs one plan to its end: builds every milestone, proves it, runs the gates and the workers, resumes from the state file | never asks you; leaves its questions in the state file for one round |
 | 🏛️ | **Architect** | `architect` | Decides what you need not: settles a choice a skill would ask you, challenges recorded decisions, decides what follows a stuck gate, proposes decisions from finished plans | read-only |
-| ⚖️ | **Judge** | `judge` | Weighs every review finding against the project's goal: `fix`, `enough` or `challenges D-NN`, each with a reason | read-only, adds no findings |
+| ⚖️ | **Judge** | `judge` | Weighs the final review's blocking and non-blocking findings against the project's goal: `fix`, `enough` or `challenges D-NN`, each with a reason | read-only, adds no findings |
 | 📋 | **PM** | `pm` | Orders open plans and deferred, stuck and review work into one queue, so a plan is not first only because it is new | read-only |
 | 🦆 | **Rubber duck** | `rubber-duck` | Independent critic of a plan or a change: are all requirements covered, can every proof really fail | read-only |
 | 🧪 | **QA** | `qa` | Runs the suite once, compares the tests with the plan's starting copy (a weakened test is caught), writes what is missing, gives the verdict | edits tests only |
 | ✍️ | **Test author** | `test-author` | Writes tests from a milestone's behaviour criteria before the code exists | writes tests only, never reads the code |
 | 🎯 | **Searcher** | `searcher` | One try of a search milestone: one change with its hypothesis, read from the log of earlier tries | changes only the files the plan allows, never the metric |
 | 🎨 | **Designer** | `designer` | Builds a screen that looks good: plans the tokens, challenges the plan against the generated look, builds from the tokens | changes only the files it is given and the tokens, never takes screenshots |
-| 👁️ | **Design critic** | `design-critic` | Looks at the screenshots: light after a UI milestone, full at the end against the direction, the references and a checklist | read-only |
+| 👁️ | **Design critic** | `design-critic` | Looks at the screenshots: light after a UI milestone, full at the end against the direction, the references and a checklist; judges the variants of a divergent milestone | read-only |
 | 🔎 | **Researcher** | `researcher` | Maps what exists before a change: files, call sites, tests, commands, with `file:line` | documents, never judges |
-| 🔍 | **Code reviewer** | `code-review` | Reviews the diff of every milestone and the final change | read-only |
+| 🔍 | **Code reviewer** | `code-review` | Reviews each milestone quickly (blocking findings only) and the whole plan's diff at its end; lock, minified and generated files are left out | read-only |
 
 In Claude Code the code reviewer is its built-in `code-review` skill; the OpenCode build ships it as an agent.
 
@@ -153,7 +170,7 @@ In Claude Code the code reviewer is its built-in `code-review` skill; the OpenCo
 | `loc-init` | set up or update `loc/` and `CLAUDE.md`; fill the project's goal from a brainstorm |
 | `loc-brainstorm` | keep the notes and decisions of a design conversation in one file; "grill me" to be questioned about an idea |
 | `loc-planning` | turn a brainstorm into plans whose milestones have criteria, tests and proofs |
-| `loc-orchestrate` | execute a plan: tests first, code, proof, review, commit |
+| `loc-orchestrate` | execute a plan in the `orchestrator` agent: tests first, code, proof, a quick review per milestone, a final review, commit |
 | `loc-qa` | get a QA verdict on a plan or a change, at any time |
 | `loc-review` | review a diff at the level you choose |
 | `loc-journal` | record what was learned after work outside a plan |

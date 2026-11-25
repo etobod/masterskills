@@ -34,7 +34,7 @@ Design plugin: none
 
 ## Tools
 
-`ui_check.py --detect` says whether Playwright is installed. When it is not and `Screenshots` is not `declined`, ask with `AskUserQuestion` once: `Install the browser` (recommended: the critic sees the page, the sheet gets screenshots; the command is in `install`) or `No screenshots`. Record a refusal as `Screenshots: declined <date>` and never ask again. Without screenshots the critic judges from code; sheet points have no images.
+`ui_check.py --detect` says whether Playwright is installed. When it is not and `Screenshots` is not `declined`, one `question` file asks once (in a plan run, added to the state file's `questions`): `Install the browser` (recommended: the critic sees the page, the sheet gets screenshots; the command is in `install`) or `No screenshots`; the run goes on without screenshots meanwhile. Record a refusal as `Screenshots: declined <date>` and never ask again. Without screenshots the critic judges from code; sheet points have no images.
 
 ## References
 

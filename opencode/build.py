@@ -9,7 +9,9 @@ The Claude Code plugin is the source; this script only translates it:
   `context: fork` runs in its `agent` as a subtask;
 - `agents/<name>.md`: `mode: subagent`, and `tools:` turned into `permission:`;
   `opencode/agents/` adds agents for what Claude Code has built in (`code-review`),
-  and a `Skill(skill: "code-review", ...)` call becomes a call of that agent;
+  and a `Skill(skill: "code-review", ...)` call becomes a call of that agent; an
+  agent with the `Agent` tool (the orchestrator) gets `task`, and an
+  `Agent(subagent_type: ...)` call becomes `task(subagent_type: ...)`;
 - `plugins/masterskills.ts`: runs the Python hooks from OpenCode's plugin hooks
   (write and commit guards, core rules and inbox in the system prompt, the CI
   check after a push);
@@ -95,6 +97,8 @@ def translate(text: str, out: Path) -> str:
     text = CODE_REVIEW.sub(lambda m: f'task(subagent_type: "code-review", prompt: {m.group(1)})', text)
     # `date "+<format>"` fails in PowerShell, where OpenCode on Windows runs commands.
     text = DATE.sub(lambda m: f'{find_python()} -c "import time; print(time.strftime(\'{m.group(1)}\'))"', text)
+    # OpenCode starts an agent with its `task` tool.
+    text = text.replace("Agent(subagent_type: ", "task(subagent_type: ")
     # OpenCode's tool for a multiple-choice question is called `question`.
     text = text.replace("`AskUserQuestion`", "the `question` tool")
     return re.sub(r"\bmasterskills:(?=[a-z])", "", text)
@@ -127,6 +131,8 @@ TOOL_PERMISSIONS = {
     "Skill": ("skill",),
     "WebFetch": ("webfetch",),
     "WebSearch": ("websearch",),
+    # Only the orchestrator starts agents; every other agent has `task` denied, so workers stay one level.
+    "Agent": ("task",),
 }
 
 
@@ -224,10 +230,13 @@ def configure(out: Path) -> list:
     missing = []
     instructions = data.setdefault("instructions", [])
     rules = (out / RULES).resolve().as_posix()
-    if rules in instructions:
-        instructions.remove(rules)
-    if "CLAUDE.md" not in instructions:
-        instructions.append("CLAUDE.md")
+    if not isinstance(instructions, list):
+        missing.append(manual[0])
+    else:
+        if rules in instructions:
+            instructions.remove(rules)
+        if "CLAUDE.md" not in instructions:
+            instructions.append("CLAUDE.md")
     permission = data.setdefault("permission", {})
     external = permission.setdefault("external_directory", {}) if isinstance(permission, dict) else None
     if isinstance(external, dict):

@@ -57,9 +57,14 @@ def plan(milestones: str) -> str:
     return HEAD + milestones + TAIL
 
 
+FRAME_PRD = ("# PRD\n\n## Goal\nGreet visitors in their language.\n\n## Core idea\n- One greeting per visit.\n\n"
+             "## Scenarios\n1. A visitor opens the page and is greeted.\n")
+
+
 class CheckPlanTest(unittest.TestCase):
     def run_check(self, text: str, suite: bool = True, ready: bool = False, files: tuple = (),
-                  claude: str = None, name: str = "007-plan-1-easy-powitania.md") -> tuple:
+                  claude: str = None, name: str = "007-plan-1-easy-powitania.md", prd: str = FRAME_PRD,
+                  contents: dict = None) -> tuple:
         """Check `text` as a plan of a project that has a test suite (`loc/TEST-PLAN.md` and a test
         command in `CLAUDE.md`) or not; `files` are created in the project first, `claude` is its
         `CLAUDE.md`, `ready` adds `--ready`."""
@@ -71,9 +76,13 @@ class CheckPlanTest(unittest.TestCase):
             (directory / "loc" / "TEST-PLAN.md").write_text("# TEST-PLAN\n", encoding="utf-8")
             (directory / "CLAUDE.md").write_text(COMMANDS.format(command="`python -m unittest`"),
                                                  encoding="utf-8")
+            (directory / "loc" / "PRD.md").write_text(prd, encoding="utf-8")
         for rel in files:
             (directory / rel).parent.mkdir(parents=True, exist_ok=True)
             (directory / rel).write_text("# 001\n", encoding="utf-8")
+        for rel, body in (contents or {}).items():
+            (directory / rel).parent.mkdir(parents=True, exist_ok=True)
+            (directory / rel).write_text(body, encoding="utf-8")
         if claude is not None:
             (directory / "CLAUDE.md").write_text(claude, encoding="utf-8")
         path = directory / name
@@ -406,7 +415,51 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(plan("### M1 — x\n**Kind:** tuning\n**No tests:** documents only\n"
                                         "**Proof:** `python -m unittest` → `OK`\n"))
         self.assertEqual(code, 1)
-        self.assertIn("proof or search", self.problems(out))
+        self.assertIn("proof, search or divergent", self.problems(out))
+
+    # A divergent milestone (plan 86, B-01): creative work whose result must not be the first template answer.
+    DIVERGENT = ("### M1 — app name and tagline\n"
+                 "**Kind:** divergent\n"
+                 "**Default:** a two-syllable made-up word with a gradient logo and \"Your X, simplified\"\n"
+                 "**Facts:** PRD Goal: counts and cleans text for one user; CLAUDE.md: a command line tool\n"
+                 "**Working parts:** the name is typed in a terminal: `python -B check_name.py` exits 0\n"
+                 "**Variants:** {variants}\n"
+                 "**Proof:** {proof}\n")
+    DIVERGENT_PROOF = ('`sh "${{CLAUDE_PLUGIN_ROOT}}/scripts/py.sh" scripts/divergent_log.py --check '
+                       '--log loc/state/007/divergent-M1.md` → `ok`')
+
+    def divergent(self, variants="3", proof=None) -> str:
+        return plan(self.DIVERGENT.format(variants=variants, proof=proof or self.DIVERGENT_PROOF.format()))
+
+    def test_divergent_milestone_needs_no_criteria(self):
+        code, out = self.run_check(self.divergent())
+        self.assertEqual(code, 0, out)
+        for variants in ("2", "4"):
+            code, out = self.run_check(self.divergent(variants=variants))
+            self.assertEqual(code, 0, (variants, out))
+
+    def test_divergent_milestone_needs_its_fields(self):
+        text = self.divergent().replace(
+            "**Default:** a two-syllable made-up word with a gradient logo and \"Your X, simplified\"\n", "")
+        code, out = self.run_check(text)
+        self.assertEqual(code, 1)
+        self.assertIn("**Default:**", self.problems(out))
+        self.assertIn("references/divergent.md", self.problems(out))
+        text = self.divergent().replace(
+            "**Facts:** PRD Goal: counts and cleans text for one user; CLAUDE.md: a command line tool", "**Facts:**")
+        problems = self.problems(self.run_check(text)[1])
+        self.assertIn("**Facts:**", problems)
+
+    def test_divergent_variants_are_two_to_four(self):
+        for variants in ("6", "1", "many", "3-10", "4.5"):
+            code, out = self.run_check(self.divergent(variants=variants))
+            self.assertEqual(code, 1, variants)
+            self.assertIn("**Variants:** is 2 to 4", self.problems(out))
+
+    def test_divergent_proof_checks_its_log(self):
+        code, out = self.run_check(self.divergent(proof="`python -m unittest` → `OK`"))
+        self.assertEqual(code, 1)
+        self.assertIn("divergent_log.py --check", self.problems(out))
 
     def test_ready_needs_a_recorded_gate(self):
         for record in ("", "<zapis rund bramki: runda, wynik `check_plan.py`>\n"):
@@ -420,12 +473,58 @@ class CheckPlanTest(unittest.TestCase):
         code, out = self.run_check(self.ready_plan(""))
         self.assertEqual(code, 0, out)
 
+    def test_a_plan_from_a_brainstorm_names_its_decisions(self):
+        brainstorm = ("# 001 — Fourier\n\n## Decisions\n- B-01 — FFT first.\n- ~~B-02 — DCT.~~ → replaced by B-03\n"
+                      "- B-03 — Windowing.\n\n## Open\n")
+        files = {"loc/inbox/001-brainstorm-fourier.md": brainstorm}
+        base = plan("### M1 — x\n**No tests:** documents only\n**Proof:** `python -m unittest` → `OK`\n")
+        for source, ok in (("loc/inbox/001-brainstorm-fourier.md", False),
+                           ("loc/inbox/001-brainstorm-fourier.md B-02", False),
+                           ("loc/inbox/001-brainstorm-fourier.md B-01, B-03", True)):
+            with self.subTest(source=source):
+                text = base.replace("**Status:** open", f"**Status:** open\n**Source:** {source}")
+                code, out = self.run_check(text, contents=files)
+                self.assertEqual(code == 0, ok, out)
+                if not ok:
+                    self.assertIn("names no decision of 001-brainstorm-fourier.md", self.problems(out))
+
+    def test_a_second_plan_from_a_stuck_file_needs_the_user(self):
+        # poe: stuck 017 became plan 024, which got stuck again; the ladder allows one new plan.
+        stuck = "# 017 — x — stuck gates\n\n**Type:** stuck\n**Replanned:** 024\n\n## final-review\n"
+        files = {"loc/inbox/done/017-stuck-x.md": stuck}
+        base = plan("### M1 — x\n**No tests:** documents only\n**Proof:** `python -m unittest` → `OK`\n")
+        base = base.replace("**Status:** open", "**Status:** open\n**Source:** loc/inbox/done/017-stuck-x.md")
+        for text, ok in ((base, False),
+                         (base.replace("# 007", "# 024", 1), True),
+                         (base.replace("**Status:** open", "**Status:** open\n**Approved by user:** 2026-11-25 — "
+                                       "plan it once more"), True)):
+            with self.subTest(text=text[:40]):
+                code, out = self.run_check(text, contents=files)
+                self.assertEqual(code == 0, ok, out)
+                if not ok:
+                    self.assertIn("already replanned as plan 024", self.problems(out))
+
+    def test_ready_needs_the_project_frame(self):
+        # The analysed project ran for a week on the empty template plus a Decisions list.
+        done = self.ready_plan("- round 1: ok\n")
+        empty = "# PRD\n\n## Goal\n<what this project is for>\n\n## Decisions\n- D-01: x\n"
+        code, out = self.run_check(done, ready=True, prd=empty)
+        problems = self.problems(out)
+        self.assertEqual(code, 1)
+        self.assertIn("project frame missing: loc/PRD.md ## Goal, loc/PRD.md ## Core idea, loc/PRD.md ## Scenarios",
+                      problems)
+        self.assertIn("frame.md", problems)
+
     def test_ready_needs_the_input_closed(self):
         text = self.ready_plan("- round 1: skan czysty\n")
         code, out = self.run_check(text, ready=True, files=("loc/inbox/001-brainstorm-fourier.md",))
         self.assertEqual(code, 1)
         self.assertIn("input loc/inbox/001-brainstorm-fourier.md is still open", self.problems(out))
         code, out = self.run_check(text, ready=True, files=("loc/inbox/done/001-brainstorm-fourier.md",))
+        self.assertEqual(code, 0, out)
+        # brainstorm_close.py marked this plan's decisions; others still wait for a plan
+        marked = {"loc/inbox/001-brainstorm-fourier.md": "## Decisions\n- B-01 — x → plan 007\n- B-02 — y\n"}
+        code, out = self.run_check(text, ready=True, contents=marked)
         self.assertEqual(code, 0, out)
 
     def test_ready_finds_the_input_by_number(self):
@@ -635,18 +734,34 @@ class MilestoneLimitTest(unittest.TestCase):
         return "milestones, the limit" in self.problems(out)
 
     def test_limit_follows_the_difficulty(self):
-        for difficulty, count, over in (("hard", 4, True), ("hard", 3, False), ("easy", 6, False),
-                                        ("easy", 7, True), ("medium", 5, True), ("medium", 4, False)):
+        # poe: 3 milestones a plan on average, each plan paid its gate, review and journal (B-19).
+        for difficulty, count, over in (("hard", 7, True), ("hard", 6, False), ("easy", 12, False),
+                                        ("easy", 13, True), ("medium", 9, True), ("medium", 8, False)):
             with self.subTest(difficulty=difficulty, count=count):
                 self.assertEqual(self.over(difficulty, count), over)
 
     def test_suite_milestone_is_not_counted(self):
-        self.assertFalse(self.over("hard", 3, suite=True))
-        self.assertTrue(self.over("hard", 4, suite=True))
+        self.assertFalse(self.over("hard", 6, suite=True))
+        self.assertTrue(self.over("hard", 7, suite=True))
 
     def test_ready_skips_the_limit(self):
-        self.assertFalse(self.over("hard", 5, ready=True))
+        self.assertFalse(self.over("hard", 8, ready=True))
 
     def test_planning_states_the_limits(self):
         text = (ROOT / "skills" / "loc-planning" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("`easy` 6, `medium` 4, `hard` 3", text)
+        self.assertIn("`easy` 12, `medium` 8, `hard` 6", text)
+        self.assertIn("One input goes to one plan", text)
+        self.assertIn("a plan has no minimum size", text)
+        self.assertIn("A `join` note", text)
+
+    def test_a_second_open_plan_from_the_same_input_gets_a_join_note(self):
+        # Two plans from one brainstorm each paid a gate, a review and a journal (B-25).
+        body = self.milestones(1).replace("### M1", "**Source:** loc/inbox/005-brainstorm-x.md\n\n### M1", 1)
+        other = "# 008 Other\n**Source:** loc/inbox/005-brainstorm-x.md, B-02\n"
+        code, out = self.run_check(plan(body), contents={"loc/inbox/008-plan-1-easy-other.md": other})
+        self.assertEqual(code, 0, self.problems(out))
+        self.assertEqual([note["plan"] for note in out.get("notes", [])], ["008-plan-1-easy-other.md"])
+        self.assertEqual(out["notes"][0]["note"], "join")
+        apart = other.replace("005-brainstorm-x", "006-brainstorm-y")
+        code, out = self.run_check(plan(body), contents={"loc/inbox/008-plan-1-easy-other.md": apart})
+        self.assertNotIn("notes", out)
