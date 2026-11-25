@@ -31,10 +31,18 @@ class OrchestratorAgentTest(unittest.TestCase):
         for part in ("**Plan**", "**State**", "**Procedure**: `run.md`. Read it first",
                      "You implement every milestone yourself", "**Never ask the user.**",
                      "`questions` in the state file", "`Status: waiting: questions`", "End of report.",
-                     "Write it out in every command", "`rules/core.md`"):
+                     "Write it out in every command", "`rules/core.md`", "**No forgotten shells.**",
+                     "with a deadline", "killed included", "never an endless `until` loop",
+                     "stop every background command you started"):
             self.assertIn(part, agent)
         for worker in ("test-author", "designer", "design-critic", "searcher", "researcher", "rubber-duck", "judge", "architect"):
             self.assertIn(f"`{worker}`", agent)
+
+    def test_a_proof_runs_in_the_foreground(self):
+        # A proof sent to the background and polled forever kept shells running into the final review.
+        run = read("skills/loc-orchestrate/references/run.md")
+        self.assertIn("Run it in the foreground, with the command tool's longest timeout", run)
+        self.assertIn("never the same command twice at once", run)
 
     def test_only_the_orchestrator_starts_agents(self):
         # Two levels: the orchestrator and its workers; a worker never starts another agent.

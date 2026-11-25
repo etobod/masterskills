@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.3 — 2026-11-25
+
+- The orchestrator no longer leaves background shells running: a proof runs in the foreground with the longest timeout and never twice at once, a background command is waited for with a deadline that also ends on a kill (no endless `until` loop), and every background command still running is stopped before a milestone is marked done and before the final review.
+
 ## 2.32.2 — 2026-11-25
 
 - Pre-release review fixes: a milestone gate passes when nothing the judge marked `fix` is left (an `enough` no longer makes it stuck), a `challenges D-NN` there goes to the architect, a milestone with no changed files skips the quick review, and a manual-check fix gets the quick review again.
