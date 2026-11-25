@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.7 — 2026-11-25
+
+- A proof or test the `600000` ms timeout kills is a hang, a new test's first run included: a failed round and a code fix, no longer a background rerun waited for up to 30 minutes and then blamed on the time limit. Only a command known to be long (its `Proof` line or `CLAUDE.md` says so, or an earlier run took minutes) is still rerun in the background. A text test spinning at full CPU in a real project showed it. Word limit raised: `run.md` 1550.
+
 ## 2.32.6 — 2026-11-25
 
 - code-review, in a milestone gate and in `loc-review`, no longer runs the test suite or the proofs: they already run in the orchestrator's step 3 and in QA. To confirm a finding it runs at most one short test, in the foreground, waiting for its result. A reviewer that ran the suite itself wrote its report without the result and left the shell running. Word limit raised: `gates.md` 1250. OpenCode's code-review agent, which cannot run commands, runs nothing.
