@@ -1,6 +1,6 @@
 ---
 name: loc-orchestrate
-description: Use when the user asks to execute a plan from loc/inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in loc/state/. Checks the plan, starts the orchestrator agent that builds it milestone by milestone with a proof per milestone and one review of the whole plan, and asks the user its questions in one round.
+description: Use when the user asks to execute a plan from loc/inbox/ (e.g. "loc-orchestrate 018", "execute plan 018"), or to resume one that has a state file in loc/state/. Checks the plan, starts the orchestrator agent that builds it milestone by milestone with a proof and a quick code review per milestone and a final review of the whole plan, and asks the user its questions in one round.
 argument-hint: "<plan number or file>"
 ---
 
@@ -16,7 +16,7 @@ Run each command on its own, exactly as written: no `cd`, variables, `;` or `&&`
 2. If `loc/state/<NNN>.json` exists, this is a **resume**: validate it (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_state.py loc/state/<NNN>.json`, exit `0` or fix it). `phase` `done`: the plan is finished, say so and stop. Otherwise, with `questions` left go to §3, else to step 4, then §2.
 3. The frame: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/frame.py`; not `ok`: `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md` first.
 4. Run `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/check_plan.py --ready <plan>`. If it exits non-zero, the plan's status says the gate failed, or `loc/inbox/` has an open `PRD:` `question`, **stop**: say why, point to `/masterskills:loc-planning`; no architect, no edits to the plan.
-5. Create the state file with `"mode": "agent"` (`references/state.md`, Start value).
+5. Create the state file with `"mode": "agent"` and `"review": "milestone"` (`references/state.md`, Start value).
 6. Copy the tests: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/test_baseline.py --plan <NNN>`.
 
 ## 2. Run the agent

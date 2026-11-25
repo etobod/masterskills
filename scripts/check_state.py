@@ -47,8 +47,11 @@ failing test output in `output`; when the plan's milestone has a
 those tests (`test_author: true`), and `false` needs a deviation for that
 milestone explaining why. A plan with `**Criteria:**` reaches `journal`
 or `done` only after a `qa` gate that passed or went stuck. A `done` milestone
-with `**Criteria:**` needs a passed `M<n>/red` gate (or a deviation for it); it needs
-no `M<n>/code-review` gate (the review runs once per plan; old runs may still have one). `journal` and `done` need a `final-review`
+with `**Criteria:**` needs a passed `M<n>/red` gate (or a deviation for it). With
+`"review": "milestone"` a `done` milestone also needs a passed `M<n>/code-review`
+gate (runs of 2.30-2.31 have no `review` and no such gate); that gate may keep
+`pending`, its Non-blocking findings for the final review, a list of
+`"<file:line> — <finding>"`. `journal` and `done` need a `final-review`
 gate that passed or went stuck; `done` needs the plan's `**Status:**` closed
 (`done <date>` or `open — QA failed`). `deferred`, when
 set (runs started before 1.6), names the plan's `deferred` file of milestone
@@ -73,7 +76,9 @@ from pathlib import Path
 
 KEYS = {"plan", "mode", "milestone", "phase", "milestones", "gates", "deviations",
         "next_action", "updated"}
-OPTIONAL = {"deferred", "commit", "questions"}
+OPTIONAL = {"deferred", "commit", "questions", "review"}
+REVIEWS = {"milestone"}
+PENDING = re.compile(r"^\S+:\d+\S* — \S")  # "<file:line> — <finding>"
 MODES = {"agent", "inline", "subagent"}
 PHASES = {"start", "implement", "proof", "code-review", "search", "qa", "final-review", "journal", "done"}
 STATUSES = {"pending", "in_progress", "done", "stuck"}
@@ -192,6 +197,12 @@ def check_gates(data: dict, ids: list, project: Path, problems: list) -> None:
             problems.append(f"gates.{name}.stuck: only a gate that failed {MAX_ROUNDS} rounds has one")
         if "verdicts" in gate:
             check_verdicts(name, match, gate["verdicts"], problems)
+        if "pending" in gate:
+            pending = gate["pending"]
+            if match.group(2) != "code-review":
+                problems.append(f"gates.{name}.pending: only a M<n>/code-review gate has it")
+            elif not (isinstance(pending, list) and all(isinstance(v, str) and PENDING.match(v) for v in pending)):
+                problems.append(f"gates.{name}.pending: expected a list of findings ('<file:line> — <finding>')")
         output = gate.get("output")
         if match.group(2) == "red" and passed is True and not (isinstance(output, str) and output.strip()):
             problems.append(f"gates.{name}.output: a passed red gate keeps the failing test output")
@@ -283,8 +294,8 @@ def finished_gate(gate) -> bool:
 
 
 def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
-    """A done milestone with criteria went through its red gate (the review runs once per plan);
-    a finished run went through the final review and closed the plan."""
+    """A done milestone with criteria went through its red gate and, with "review": "milestone",
+    its quick code review; a finished run went through the final review and closed the plan."""
     gates = data.get("gates") if isinstance(data.get("gates"), dict) else {}
     plan = data.get("plan")
     tested = milestones_with(project, plan, CRITERIA)
@@ -297,6 +308,9 @@ def check_skipped_gates(data: dict, project: Path, problems: list) -> None:
         if name in tested and name not in deviated and not (isinstance(red, dict) and red.get("passed") is True):
             problems.append(f"gates.{name}/red: {name} has **Criteria:** but no passed red gate "
                             "(tests first); a deviation for it must say why")
+        review = gates.get(f"{name}/code-review")
+        if data.get("review") == "milestone" and not (isinstance(review, dict) and review.get("passed") is True):
+            problems.append(f"gates.{name}/code-review: {name} is done without a passed quick code review")
     if data.get("phase") not in ("journal", "done"):
         return
     final = gates.get("final-review")
@@ -424,6 +438,8 @@ def check(path: Path, data) -> list:
         problems.append(f"plan: number {match.group(2)} does not match the file name {path.name}")
     if data.get("mode") not in MODES:
         problems.append(f"mode: expected one of {sorted(MODES)}")
+    if "review" in data and data["review"] not in REVIEWS:
+        problems.append(f"review: expected one of {sorted(REVIEWS)}")
     if data.get("phase") not in PHASES:
         problems.append(f"phase: expected one of {sorted(PHASES)}")
 

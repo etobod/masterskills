@@ -185,10 +185,10 @@ class CheckStateTest(unittest.TestCase):
                                    "**Proof:** `grep x` → `1`\n")
         self.assertEqual(code, 0, out)
 
-    def test_done_milestone_needs_no_code_review(self):
-        # poe: 419 code-review runs, mostly per milestone; the review now runs once per plan.
+    def test_done_milestone_of_an_old_run_needs_no_code_review(self):
+        # Runs of 2.30-2.31 had no per-milestone review and no "review" key.
         qa = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
-        for review in (None, {"rounds": 1, "passed": True, "stuck": None}):  # a new run, an old run
+        for review in (None, {"rounds": 1, "passed": True, "stuck": None}):  # a 2.30-2.31 run, a run older than 2.30
             data = self.finished("done", qa)
             if review is None:
                 del data["gates"]["M1/code-review"]
@@ -196,6 +196,36 @@ class CheckStateTest(unittest.TestCase):
                 data["gates"]["M1/code-review"] = review
             code, out = self.run_check(data, PLAN_WITH_CRITERIA)
             self.assertEqual(code, 0, out)
+
+    def test_done_milestone_needs_a_quick_code_review(self):
+        qa = {"qa": {"rounds": 1, "passed": True, "stuck": None}}
+        data = self.finished("done", qa)
+        data["review"] = "milestone"
+        del data["gates"]["M1/code-review"]
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        self.assertIn("gates.M1/code-review: M1 is done without a passed quick code review", out["problems"])
+        data["gates"]["M1/code-review"] = {"rounds": 1, "passed": True, "stuck": None,
+                                           "pending": ["app.py:3 — a retry logs twice"]}
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 0, out)
+
+    def test_review_takes_only_milestone(self):
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})
+        data["review"] = "plan"
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        self.assertIn("review: expected one of ['milestone']", out["problems"])
+
+    def test_pending_only_in_a_code_review_gate(self):
+        data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — y"]}})
+        data["gates"]["M1/code-review"] = {"rounds": 1, "passed": True, "stuck": None, "pending": ["a.py:1 — ok", "retry logs twice", 3]}
+        code, out = self.run_check(data, PLAN_WITH_CRITERIA)
+        self.assertEqual(code, 1)
+        problems = " | ".join(out["problems"])
+        self.assertIn("gates.qa.pending: only a M<n>/code-review gate has it", problems)
+        self.assertNotIn("gates.M1/proof.pending", problems)
+        self.assertIn("gates.M1/code-review.pending: expected a list of findings", problems)
 
     def test_done_milestone_with_criteria_needs_a_red_gate_or_a_deviation(self):
         data = self.finished("done", {"qa": {"rounds": 1, "passed": True, "stuck": None}})

@@ -2,6 +2,11 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.0 — 2026-11-25
+
+- **A quick review per milestone, the full review at the end.** Each milestone gets a `M<n>/code-review` gate again, quick: code-review `low` on its files, only Blocking findings fixed, no judge and no rubber-duck. Its Non-blocking findings wait in the gate's `pending` list. The final review is back to how it was before 2.30.0: rubber-duck and code-review on the whole plan; the judge weighs Blocking and Non-blocking findings, the milestones' `pending` ones included; everything it marks `fix` is fixed, and a challenged decision goes to the architect. A repeated non-blocking finding no longer goes to the question file.
+- The state file of a new run has `"review": "milestone"`; with it, `check_state.py` requires a passed `M<n>/code-review` gate for a `done` milestone and checks `pending`. A resumed run of 2.30-2.31 (no `review` key) skips the milestone gate and passes `check_state.py`; its final review follows the restored rules.
+
 ## 2.31.1 — 2026-11-25
 
 - `commit_plan.py` passes the plan's files to git on stdin (`--pathspec-from-file`), so a plan of several hundred files no longer exceeds the Windows command line limit.

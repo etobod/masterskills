@@ -117,7 +117,7 @@ class SkillsUseTheSheetTest(unittest.TestCase):
 
     def test_manual_checks_go_to_the_sheet(self):
         step6 = [line for line in self.read("skills/loc-orchestrate/references/run.md").splitlines()
-                 if line.startswith("5. **Manual check**")][0]
+                 if line.startswith("6. **Manual check**")][0]
         for part in ("scripts/checks.py --add", "--blocking", "checks.py --rate", "--again", "waiting: questions"):
             self.assertIn(part, step6)
         self.assertNotIn("--type deferred", step6)

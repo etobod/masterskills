@@ -50,7 +50,7 @@ Phase `search`, gate `M<n>/search` with `"log": "loc/state/<NNN>/search-M<n>.md"
    - `confirm: true`: run the full metric, `search_log.py --confirm --log <log> --full <score>`.
 3. **Until `stop` is set.** `target` ends it. "Give up": `search_log.py --stop --log <log> --reason "<reason>"`; time spent measuring is never a reason.
    - **Metric change**: the agent never edits the metric, cases, hold-out or guard; it proposes. The `judge` decides ("does this fix a wrong case or scorer, or make the task easier?"). `fix`: change it, re-measure baseline and best, `search_log.py --metric-change --log <log> --reason "<...>" --baseline <x> --best <x>`. A third change is refused and becomes a `question` file; the search goes on.
-4. **Close.** The full metric on the best, if unconfirmed, and the hold-out. Run the `Proof`; it passes whatever the score. The kept change is reviewed with the plan, in the final review. No later fix changes the metric, cases, hold-out or guard.
+4. **Close.** The full metric on the best, if unconfirmed, and the hold-out. Run the `Proof`; it passes whatever the score. The kept change gets the milestone's quick code review and the final review. No later fix changes the metric, cases, hold-out or guard.
 
 ## Summary
 

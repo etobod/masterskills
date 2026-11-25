@@ -37,7 +37,7 @@ class BudgetTest(unittest.TestCase):
             "skills/loc-planning/SKILL.md": 2950,
             "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
-            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 950,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1050,
             "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1400,
             "skills/loc-orchestrate/references/divergent.md": 850,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
@@ -192,32 +192,43 @@ class LeanReviewTest(unittest.TestCase):
                      "same agent again, up to 3 times", "never a relaunch", "still lost fails the round"):
             self.assertIn(part, rule)
 
-    def test_the_plan_is_reviewed_once_with_its_whole_diff(self):
-        # poe: 419 code-review runs, mostly one per milestone (B-01).
+    def test_a_milestone_gets_a_quick_review_and_the_end_a_full_one(self):
+        # Brainstorm 011: quick review per milestone (B-01, B-02), the end as before 2.30.0 (B-03).
         review = self.read("skills/loc-review/SKILL.md").split("## 2. Review, in parallel", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("Orchestrated, the whole plan's diff: no milestone was reviewed before.", review)
+        self.assertIn("Orchestrated, the whole plan's diff: the milestone gates fixed only Blocking findings and kept the Non-blocking ones in `pending`.", review)
         steps = self.read("skills/loc-orchestrate/references/run.md").split("## 2. Each milestone", 1)[1].split("\n## ", 1)[0]
-        self.assertNotIn("Code-review gate", steps)
-        self.assertIn("No review here: the plan is reviewed once, at the end.", steps)
-        self.assertNotIn("M<n>/code-review", self.read("skills/loc-orchestrate/references/search.md"))
+        for part in ("**Quick code-review gate** (`M<n>/code-review`", "code-review `low`",
+                     "only Blocking findings fixed, no judge, no rubber-duck", "`pending`"):
+            self.assertIn(part, steps)
+        self.assertNotIn("reviewed once, at the end", steps)
+        run = self.read("skills/loc-orchestrate/references/run.md")
+        self.assertNotIn("review the whole plan once", run)
+        self.assertIn('a run of 2.30-2.31 skips it', run)
+        self.assertNotIn("one review of the whole plan", self.read("skills/loc-orchestrate/SKILL.md"))
+        self.assertNotIn("reviewed with the plan, in the final review", self.read("skills/loc-orchestrate/references/search.md"))
+        gates = self.read("skills/loc-orchestrate/references/gates.md")
+        milestone = gates.split("## The milestone gate", 1)[1].split("\n## ", 1)[0]
+        for part in ('args: "<changed files> low', "**never `ultra`**", "no judge, no rubber-duck",
+                     "Fix only the Blocking findings", '`"pending"`', "the final review's judge gets it",
+                     "gate `M<n> code-review`", "**stuck**"):
+            self.assertIn(part, milestone)
 
-
-    def test_only_blocking_findings_start_a_fix_round(self):
-        # poe: about 240 fix rounds and 345 judge calls (B-22).
+    def test_the_final_judge_weighs_blocking_and_non_blocking(self):
         gates = self.read("skills/loc-orchestrate/references/gates.md")
         for part in ("a wrong result", "data lost or distorted", "a crash or a hang", "a failing proof or test",
                      "a broken `## Invariants` entry", "Nothing else is blocking.",
-                     "Only a round with Blocking findings calls the `judge`", '"is it really blocking?"',
-                     "Non-blocking findings never go to the judge", "- non-blocking (final-review):",
-                     "### Repeated non-blocking findings", "## Rounds 2 and 3"):
+                     "the `judge` gets the Blocking and Non-blocking findings not `rejected`",
+                     "in round 1 also every milestone gate's `pending` finding", "## Rounds 2 and 3",
+                     "**A challenged decision.**"):
             self.assertIn(part, gates)
+        for gone in ("Only a round with Blocking findings", "is it really blocking", "Repeated non-blocking",
+                     "Non-blocking findings never go to the judge"):
+            self.assertNotIn(gone, gates)
         review = self.read("skills/loc-review/SKILL.md").split("## 4. Orchestrated mode", 1)[1].split("\n## ", 1)[0]
-        for part in ("Only Blocking findings", '"is it really blocking?"', "Rounds 2 and 3 review only the fixes' diff",
-                     "get no judge and no fix", "a repeat of an earlier plan's non-blocking line"):
+        for part in ("give the Blocking and Non-blocking findings to the `judge` agent",
+                     "with the milestone gates' `pending` findings", "Rounds 2 and 3 review only the fixes' diff"):
             self.assertIn(part, review)
-        judge = self.read("agents/judge.md")
-        self.assertIn("A review gate gives you only Blocking findings", judge)
-        self.assertIn("**is it really blocking?**", judge)
+        self.assertNotIn("is it really blocking", self.read("agents/judge.md"))
 
 class AgentAnswerTest(unittest.TestCase):
     """An agent ends with its report alone, and says so when it found nothing."""

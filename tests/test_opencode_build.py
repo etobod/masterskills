@@ -114,6 +114,9 @@ class OpenCodeBuildTest(unittest.TestCase):
         orchestrator = front((out / "agents" / "orchestrator.md").read_text(encoding="utf-8")).splitlines()
         self.assertIn("mode: subagent", orchestrator)
         self.assertIn("  task: allow", orchestrator)
+        body = (out / "agents" / "orchestrator.md").read_text(encoding="utf-8")
+        self.assertNotIn("`code-review`, `loc-review`", body)  # code-review is an agent here, not a skill
+        self.assertIn("`code-review` you run as the procedure calls it", body)
         for path in (out / "agents").glob("*.md"):
             if path.name != "orchestrator.md":
                 self.assertNotIn("  task: allow", front(path.read_text(encoding="utf-8")).splitlines(), path.name)
@@ -142,7 +145,7 @@ class OpenCodeBuildTest(unittest.TestCase):
         self.run_build("--out", str(out))
         for path in out.rglob("*.md"):
             self.assertNotIn('Skill(skill: "code-review"', path.read_text(encoding="utf-8"), path)
-        for rel, args in (("skills/loc-orchestrate/references/gates.md", '"<files review_diff listed> medium'),
+        for rel, args in (("skills/loc-orchestrate/references/gates.md", '"<changed files> low'),
                           ("skills/loc-review/SKILL.md", '"<changed files> <level> —')):
             text = (out / rel).read_text(encoding="utf-8")
             self.assertIn('task(subagent_type: "code-review", prompt: ' + args, text, rel)
