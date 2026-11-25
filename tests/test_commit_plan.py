@@ -69,6 +69,20 @@ class CommitPlanTest(unittest.TestCase):
         self.assertEqual(self.git("status", "--porcelain"), "M notes.txt")
         self.assertEqual(self.state()["commit"], self.git("rev-parse", "HEAD"))
 
+    def test_a_plan_longer_than_the_command_line(self):
+        # Windows caps a command line at 32767 characters; the paths go to git on stdin.
+        self.write("app.py", "x = 1\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "chore: start")
+        self.start_plan()
+        names = [f"src/{i:03d}_" + "a" * 110 + ".py" for i in range(350)]
+        for name in names:
+            self.write(name, "x = 1\n")
+        self.assertGreater(sum(len(name) + 1 for name in names), 32767)
+        code, out = self.commit("--message", "feat(app): many files", "--add", "src")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(len(self.git("show", "--name-only", "--format=", "HEAD").splitlines()), 350)
+
     def test_a_renamed_file_commits_its_deletion(self):
         self.write("old.py", "x = 1\n")
         self.git("add", "-A")

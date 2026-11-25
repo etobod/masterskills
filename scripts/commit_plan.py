@@ -102,7 +102,8 @@ def main() -> int:
         files = git(["diff", "--name-only", "--no-renames", start, snapshot(project), "--", ".", ":!loc"],
                     project).splitlines()
         # A file untracked at the start and gone now (renamed or deleted) has nothing to commit.
-        tracked = set(git(["ls-files", "--", *files], project).splitlines()) if files else set()
+        # Paths go to git on stdin or are filtered here: a big plan exceeds the command line limit.
+        tracked = set(git(["ls-files"], project).splitlines()) if files else set()
         files = [name for name in files if name in tracked or (project / name).exists()]
         new = new_directories(files, project)
         leave = {name.strip("/\\") for name in args.leave}
@@ -119,14 +120,15 @@ def main() -> int:
             record(state_path, data, "none")
             print(json.dumps({"ok": True, "commit": "none", "files": [], "left": left}))
             return 0
-        git(["add", "-A", "--", *files], project)
-        if not git(["diff", "--cached", "--name-only", "--", *files], project).strip():
+        pathspec = "\n".join(files) + "\n"
+        git(["add", "-A", "--pathspec-from-file=-"], project, stdin=pathspec)
+        if not set(git(["diff", "--cached", "--name-only", "--no-renames"], project).splitlines()) & set(files):
             # Already committed during the plan (e.g. by the user): record that commit, not "none".
             commit = git(["rev-parse", "HEAD"], project)
             record(state_path, data, commit)
             print(json.dumps({"ok": True, "commit": commit, "files": [], "left": left, "already": True}))
             return 0
-        git(["commit", "-q", "-m", message, "--", *files], project)
+        git(["commit", "-q", "-m", message, "--pathspec-from-file=-"], project, stdin=pathspec)
         commit = git(["rev-parse", "HEAD"], project)
     except (RuntimeError, OSError) as error:
         print(json.dumps({"ok": False, "error": str(error)}))

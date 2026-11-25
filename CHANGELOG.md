@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.31.1 — 2026-11-25
+
+- `commit_plan.py` passes the plan's files to git on stdin (`--pathspec-from-file`), so a plan of several hundred files no longer exceeds the Windows command line limit.
+
 ## 2.31.0 — 2026-11-25
 
 - **Divergent milestones.** A third kind next to proof and search, for a name, a text, a visual direction or a concept the user has not decided. The plan writes down the `**Default:**` answer, the `**Facts:**` the variants start from and the `**Working parts:**` that must keep working; the run makes 2 to 4 variants that differ in kind, the `design-critic` judges them in its new `divergent` mode, the recommended one is built and the user picks in the plan's round of questions. `divergent_log.py` keeps the log and is the proof; `check_plan.py` checks the fields.
