@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.6 — 2026-11-25
+
+- code-review, in a milestone gate and in `loc-review`, no longer runs the test suite or the proofs: they already run in the orchestrator's step 3 and in QA. To confirm a finding it runs at most one short test, in the foreground, waiting for its result. A reviewer that ran the suite itself wrote its report without the result and left the shell running. Word limit raised: `gates.md` 1250. OpenCode's code-review agent, which cannot run commands, runs nothing.
+
 ## 2.32.5 — 2026-11-25
 
 - `loc-review` called with no range, paths or requirements asks what to cover: `Recent changes` (the old default), `Whole product` (all code but the tests, against `PRD.md` and `CLAUDE.md`) or `Whole test suite` (all tests, against `TEST-PLAN.md` and `PRD.md`, asking whether each can fail on wrong code). Test paths come from `TEST-PLAN.md` or `CLAUDE.md`, else are found at any depth; a project with no tests gets no test-suite review. `review_diff.py` gets `--from empty` (the whole project) and `--exclude`, and refuses an empty `--paths`; it no longer puts the file list on git's command line, which failed on Windows for a whole-project review. Over 150 files, `loc-review` asks which directories to cover. Word limit raised: `loc-review` `SKILL.md` 1200.

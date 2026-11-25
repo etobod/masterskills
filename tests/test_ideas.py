@@ -37,7 +37,7 @@ class BudgetTest(unittest.TestCase):
             "skills/loc-planning/SKILL.md": 2950,
             "skills/loc-review/SKILL.md": 1200, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
-            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1200,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1250,
             "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1500,
             "skills/loc-orchestrate/references/divergent.md": 850,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
@@ -120,14 +120,19 @@ class LadderTest(unittest.TestCase):
 
     def test_code_review_flags_code_that_already_exists(self):
         self.assertNotIn('Skill(skill: "code-review"', read("skills/loc-orchestrate/SKILL.md"))  # once per plan
-        for rel in ("skills/loc-review/SKILL.md",):
+        for rel in ("skills/loc-review/SKILL.md", "skills/loc-orchestrate/references/gates.md"):
             text = read(rel)
             calls = re.findall(r'Skill\(skill: "code-review", args: "[^"]*"\)', text)
             self.assertTrue(calls, rel)
             self.assertTrue(
-                all("already provide" in call for call in calls),
+                all("already provide" in call for call in calls if "Review only the changes" not in call),
                 f"{rel}: every code-review call asks for code the project or platform already provides",
             )
+            # A reviewer that ran the whole suite itself left its shell running after its report.
+            for call in calls:
+                self.assertIn("do not run the test suite or the proofs, they run elsewhere", call, rel)
+                self.assertIn("at most one short test, in the foreground, waiting for its result", call, rel)
+        self.assertIn("You run nothing, no tests and no proofs", read("opencode/agents/code-review.md"))  # it has no Bash
 
 
 class GrillTest(unittest.TestCase):
