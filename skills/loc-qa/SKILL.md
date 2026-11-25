@@ -54,7 +54,7 @@ For each `changed` or `removed` file, compare it with `loc/state/<NNN>/baseline/
 For every criterion ``- K<n>: … → `<test>` `` in the plan:
 
 1. The named test exists and passed in step 2 → **PASS**.
-2. It is missing → write it, following TEST-PLAN (e), and run it. At most 3 rounds for all missing tests together. It passes → **PASS** ("written by loc-qa"). It fails on its assertion → **FAIL**: the code does not meet the criterion; do not touch the code. Still broken after round 3 → **FAIL**.
+2. It is missing → write it, following TEST-PLAN (e), with expected values from the criterion or the project's data, never copied from the code, and whole values matched; run it. At most 3 rounds for all missing tests together. It passes → **PASS** ("written by loc-qa"). It fails on its assertion → **FAIL**: the code does not meet the criterion; do not touch the code. Still broken after round 3 → **FAIL**.
 3. `→ manual` → **INFO** with the performer. For `user (deferrable)` the milestone's `**Manual check:**` must be a point of the checks sheet (`checks.py --list`, or rated in `loc/inbox/done/`); if none is, add it (`loc-orchestrate` step 6) and list it.
 
 A milestone that changed code without `**Criteria:**` → **INFO**. A gap in TEST-PLAN itself (section (b) says what to extend and nothing was) → a `deferred` file, never an edit:

@@ -35,14 +35,14 @@ class BudgetTest(unittest.TestCase):
         overrides = measure().OVERRIDES
         expected = {
             "skills/loc-planning/SKILL.md": 2950,
-            "skills/loc-review/SKILL.md": 950, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
+            "skills/loc-review/SKILL.md": 1000, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1050,
             "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
-            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1100,
+            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1200,
             "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1500,
             "skills/loc-orchestrate/references/divergent.md": 850,
             "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
             "agents/architect.md": 700, "agents/design-critic.md": 800, "agents/designer.md": 650,
-            "agents/rubber-duck.md": 720, "agents/judge.md": 770,
+            "agents/rubber-duck.md": 780, "agents/judge.md": 800,
         }
         self.assertEqual(overrides, expected)
         self.assertEqual(measure().LIMITS["rule"], 595)
@@ -191,6 +191,28 @@ class LeanReviewTest(unittest.TestCase):
                      "fewer findings than announced", "`judge`", "never clean",
                      "same agent again, up to 3 times", "never a relaunch", "still lost fails the round"):
             self.assertIn(part, rule)
+
+    def test_tests_are_reviewed_as_tests(self):
+        # A review of a real project found tests comparing with literals copied from the source and
+        # tests the test plan never ran: neither reviewer asked about the quality of a test.
+        ask = ("in a test file, at any level, a test that cannot fail on wrong code: it compares with values copied "
+               "from the source instead of taken from it, matches part of a value where the whole is meant, compares "
+               "numbers as text, or re-implements a helper the code exports")
+        self.assertIn(ask, self.read("skills/loc-orchestrate/references/gates.md"))
+        self.assertIn(ask, self.read("skills/loc-review/SKILL.md"))
+        duck = self.read("agents/rubber-duck.md")
+        for part in ("- **Tests.**", "it fails on wrong code", "not a copy of it",
+                     "every criterion's behaviour has one", "when `loc/TEST-PLAN.md` exists, it runs the test",
+                     "a test TEST-PLAN never runs after such a change, Non-blocking"):
+            self.assertIn(part, duck)
+        self.assertIn("a test that cannot fail on the wrong result it guards", self.read("skills/loc-orchestrate/references/gates.md"))
+        judge = self.read("agents/judge.md")
+        self.assertIn("or cannot fail on wrong code (copied values, a partial match", judge)
+        self.assertIn("a failing proof or test, a test that cannot fail,", judge)
+        for path in ("skills/loc-orchestrate/references/tests.md", "skills/loc-qa/SKILL.md"):
+            self.assertIn("never copied from the code", self.read(path))
+        self.assertIn("never a part of a value where the whole is stated", self.read("agents/test-author.md"))
+        self.assertIn("Report it at every level, as `high`.", self.read("opencode/agents/code-review.md"))
 
     def test_a_milestone_gets_a_quick_review_and_the_end_a_full_one(self):
         # Brainstorm 011: quick review per milestone (B-01, B-02), the end as before 2.30.0 (B-03).

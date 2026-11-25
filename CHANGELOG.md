@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.4 — 2026-11-25
+
+- Tests get reviewed as tests. The code-review of a milestone and of the final review also flags a test that cannot fail on wrong code, compares with values copied from the source, or matches part of a value. The `rubber-duck` checks each new or changed test: it fails on wrong code, it checks the project's code and not a copy, every criterion's behaviour has one, and `TEST-PLAN.md` (when the project has one) runs it after the change it guards. A test that cannot fail on the wrong result it guards is Blocking, also in a milestone gate, and the judge marks it `fix`. Whoever writes a test after the code (the orchestrator, `loc-qa`) takes expected values from the criterion or the data, never copied from the code, and the `test-author` never matches part of a value. Word limits raised: `gates.md` 1200, `rubber-duck` 780, `judge` 800, `loc-review` 1000.
+
 ## 2.32.3 — 2026-11-25
 
 - The orchestrator no longer leaves background shells running. A new **Long commands** rule in `run.md` covers every proof, test run and metric (search, divergent, reruns, QA included): the foreground with a `600000` ms timeout, never two at once; only one that cannot finish in time goes to the background, waited for at most three times 10 minutes, then stopped and counted as a failed round (`exceeds the time limit`). Background commands are stopped before a milestone becomes done or stuck, before the QA gate, the final review and every stop or report; the orchestrator gets the `TaskStop` tool for it.

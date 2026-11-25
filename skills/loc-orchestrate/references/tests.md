@@ -25,7 +25,7 @@ Per milestone, in this order:
 
 ## Test written after the code
 
-A test added after its code (a regression test for a bug found on the way, a criterion the plan missed) proves itself by **mutation**, one hand-made change in place:
+A test added after its code (a regression test for a bug found on the way, a criterion the plan missed) takes its expected values from the criterion or the project's data, never copied from the code, matches whole values, and proves itself by **mutation**, one hand-made change in place:
 
 1. The test passes.
 2. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/mutate.py backup <file>`
