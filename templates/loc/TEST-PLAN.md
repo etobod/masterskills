@@ -6,16 +6,17 @@ edit it. No history of rounds and no requirement coverage.
 
 ## (a) Layers and commands
 
-<!-- One line per layer: name, command, gate or report, fast or full.
+<!-- One line per layer: name, command, gate or report, when it runs. Layers run in `loc-qa`,
+never after each milestone: a milestone runs only its own proof.
 A "gate" layer must pass for the plan to be approved; a "report" only informs.
 Mark layers that run only in CI as "CI only": they are not part of the verdict.
 Example:
 | Layer | Command | Kind | When |
 |---|---|---|---|
-| unit | `python -m pytest tests/unit -q` | gate | fast, after every milestone |
+| unit | `python -m pytest tests/unit -q` | gate | full, in `loc-qa` |
 | integration | `python -m pytest tests/integration -q` | gate | full, in `loc-qa` |
 | model behaviour | `python evals/run.py` | report | on demand |
-| ui | `ui_check.py --url <page> --widths <widths> --check` and `--tokens <file> --files <changed>` (only this one with `Screenshots: declined`), from `## Frontend` in `CLAUDE.md` | gate | fast, after every UI milestone |
+| ui | `ui_check.py --url <page> --widths <widths> --check` and `--tokens <file> --files <changed>` (only this one with `Screenshots: declined`), from `## Frontend` in `CLAUDE.md` | gate | full, in `loc-qa`; a UI milestone's proof runs it on its pages |
 | screenshots | `ui_check.py --url <page> --widths <widths> --out loc/tmp/design/shots`, from `## Frontend`; none with `Screenshots: declined` | gate | full, in `loc-qa` |
 -->
 

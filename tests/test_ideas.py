@@ -218,8 +218,8 @@ class LeanReviewTest(unittest.TestCase):
         self.assertIn(ask, self.read("skills/loc-review/SKILL.md"))
         duck = self.read("agents/rubber-duck.md")
         for part in ("- **Tests.**", "it fails on wrong code", "not a copy of it",
-                     "every criterion's behaviour has one", "when `loc/TEST-PLAN.md` exists, it runs the test",
-                     "a test TEST-PLAN never runs after such a change, Non-blocking"):
+                     "every criterion's behaviour has one", "when `loc/TEST-PLAN.md` exists, a gate layer of its (a) (run by `loc-qa`) or the milestone's proof runs it",
+                     "a test neither runs, Non-blocking"):
             self.assertIn(part, duck)
         self.assertIn("a test that cannot fail on the wrong result it guards", self.read("skills/loc-orchestrate/references/gates.md"))
         judge = self.read("agents/judge.md")
