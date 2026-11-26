@@ -31,21 +31,9 @@ class BudgetTest(unittest.TestCase):
         self.assertIn("A visible defect on a screen the plan changes", judge)
         self.assertIn('"it still works" is no reason for `enough`', judge)
 
-    def test_raised_limits(self):
-        overrides = measure().OVERRIDES
-        expected = {
-            "skills/loc-planning/SKILL.md": 2950,
-            "skills/loc-review/SKILL.md": 1300, "skills/loc-diagram/SKILL.md": 850, "skills/loc-qa/SKILL.md": 1100,
-            "skills/loc-director/SKILL.md": 850, "skills/loc-init/SKILL.md": 850,
-            "skills/loc-orchestrate/references/design.md": 850, "skills/loc-orchestrate/references/gates.md": 1250,
-            "skills/loc-orchestrate/references/stuck.md": 900, "skills/loc-orchestrate/references/run.md": 1550,
-            "skills/loc-orchestrate/references/divergent.md": 850,
-            "skills/loc-orchestrate/references/search.md": 900, "skills/loc-planning/references/prd.md": 850,
-            "agents/architect.md": 700, "agents/design-critic.md": 800, "agents/designer.md": 650,
-            "agents/rubber-duck.md": 830, "agents/judge.md": 800,
-        }
-        self.assertEqual(overrides, expected)
-        self.assertEqual(measure().LIMITS["rule"], 595)
+    def test_every_file_is_within_its_budget(self):
+        # The limits live only in measure.py; a copy of them here had to change with every raise.
+        self.assertEqual(measure().measure(ROOT)["over"], [])
 
 
 class DivergentCriticTest(unittest.TestCase):
