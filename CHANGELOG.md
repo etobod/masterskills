@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.10 — 2026-11-26
+
+- Tests only: the copy of the word limits in `tests/test_ideas.py` is gone. A test now runs `measure.py` and fails when a file is over its limit, so a raise changes `measure.py` alone.
+
 ## 2.32.9 — 2026-11-26
 
 - Redundant tests are removed by the plugin, not only added. The final review flags a new test that repeats an existing test or layer, or checks the exact wording of text the user reads, as Non-blocking; the fix removes it, recorded as a deviation. `loc-qa` measures the suite with the new `suite_size.py`: when the tests are over twice the code, or grew by half since the last whole-suite review, it reports `suite review due`, and the orchestrator then runs `loc-review tests` (the whole test suite, without asking), whose review file is planned like any other. The `TEST-PLAN.md` template says a duplicate is removed, a browser starts once per run and the exact wording of user text is not tested. Word limits raised: `loc-review` `SKILL.md` 1300, `loc-qa` 1100, `run.md` 1550, `rubber-duck` 830.
