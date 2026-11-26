@@ -38,6 +38,27 @@ class OrchestratorAgentTest(unittest.TestCase):
         for worker in ("test-author", "designer", "design-critic", "searcher", "researcher", "rubber-duck", "judge", "architect"):
             self.assertIn(f"`{worker}`", agent)
 
+    def test_redundant_tests_are_removed_by_the_plugin(self):
+        # A suite grew to three times the code: tests were only ever added, never removed.
+        duck = read("agents/rubber-duck.md")
+        self.assertIn("a new test that repeats what an existing test or layer checks, or checks the exact wording "
+                      "of text the user reads, Non-blocking, fixed by removing it", duck)
+        self.assertIn("A test a review finding removes (a duplicate, a wording check) goes the same way",
+                      read("skills/loc-orchestrate/references/tests.md"))
+        review = read("skills/loc-review/SKILL.md")
+        for part in ("- **`tests`** → standalone, scope `Whole test suite` below, without asking.",
+                     "start its own browser or page load", "suite_size.py --reviewed",
+                     "called as `tests`, ask nothing: one review per top-level test directory"):
+            self.assertIn(part, review)
+        qa = read("skills/loc-qa/SKILL.md")
+        self.assertIn("suite_size.py --record <NNN or ->", qa)
+        self.assertIn("`due: true` → row **INFO** `suite review due`", qa)
+        self.assertIn('when QA reported `suite review due`, `Skill(skill: "masterskills:loc-review", args: "tests")`',
+                      read("skills/loc-orchestrate/references/run.md"))
+        template = read("templates/loc/TEST-PLAN.md")
+        self.assertIn("is removed, not extended", template)
+        self.assertIn("one browser per run, each page loaded once per width", template)
+
     def test_a_milestone_runs_only_its_proof(self):
         # Layers after every milestone ran a whole suite each time: minutes per milestone.
         tests = read("skills/loc-orchestrate/references/tests.md")
