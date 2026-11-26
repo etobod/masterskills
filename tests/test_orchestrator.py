@@ -38,6 +38,16 @@ class OrchestratorAgentTest(unittest.TestCase):
         for worker in ("test-author", "designer", "design-critic", "searcher", "researcher", "rubber-duck", "judge", "architect"):
             self.assertIn(f"`{worker}`", agent)
 
+    def test_a_milestone_runs_only_its_proof(self):
+        # Layers after every milestone ran a whole suite each time: minutes per milestone.
+        tests = read("skills/loc-orchestrate/references/tests.md")
+        self.assertIn("No layer of `loc/TEST-PLAN.md` section (a) runs after a milestone", tests)
+        self.assertNotIn("fast layers", tests + read("skills/loc-planning/SKILL.md"))
+        self.assertNotIn("after every", read("templates/loc/TEST-PLAN.md"))
+        # The one exception, the same in both: a UI milestone checks its own pages.
+        self.assertIn("except `ui_check.py` on a UI milestone's own pages", tests)
+        self.assertIn("A UI milestone adds `ui_check.py` on its own pages", read("skills/loc-planning/SKILL.md"))
+
     def test_a_proof_runs_in_the_foreground(self):
         # A proof sent to the background and polled forever kept shells running into the final review.
         run = read("skills/loc-orchestrate/references/run.md")

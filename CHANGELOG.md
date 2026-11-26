@@ -2,6 +2,15 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.8 — 2026-11-26
+
+- A milestone runs only its own proof. The layers of `TEST-PLAN.md` (a) no longer run after each milestone: a layer marked "fast, after every milestone" was often the whole suite, run again after every milestone. The full suite still runs once, in `loc-qa`. A UI milestone still checks its own pages with `ui_check.py` in its proof. The `TEST-PLAN.md` template no longer offers "after every milestone"; reviewers ask whether a gate layer or a proof runs a test, not whether it runs after each change.
+- The 2.32.7 rule is withdrawn: a proof the `600000` ms timeout kills is no failure and runs again in the background, waited for at most 3×10 minutes, as before. A proof can be slow without hanging, and the rule sent the orchestrator to fix working code.
+
+## 2.32.7 — 2026-11-25
+
+- Withdrawn before release (2.32.8): a proof killed by the timeout was to count as a hang.
+
 ## 2.32.6 — 2026-11-25
 
 - code-review, in a milestone gate and in `loc-review`, no longer runs the test suite or the proofs: they already run in the orchestrator's step 3 and in QA. To confirm a finding it runs at most one short test, in the foreground, waiting for its result. A reviewer that ran the suite itself wrote its report without the result and left the shell running. Word limit raised: `gates.md` 1250. OpenCode's code-review agent, which cannot run commands, runs nothing.

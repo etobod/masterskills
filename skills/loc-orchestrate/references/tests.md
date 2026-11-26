@@ -38,7 +38,7 @@ One mutation at a time; `backup` refuses a second one. Never restore with `git c
 
 ## After each milestone
 
-The milestone's proof, plus the fast layers from `loc/TEST-PLAN.md` section (a). The full suite runs once, in `loc-qa`.
+Only the milestone's proof: its own tests. No layer of `loc/TEST-PLAN.md` section (a) runs after a milestone, whatever its `When` says, except `ui_check.py` on a UI milestone's own pages when its `Proof` names it. The full suite runs once, in `loc-qa`.
 
 ## Weakening a test
 

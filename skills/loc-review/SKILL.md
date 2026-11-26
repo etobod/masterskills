@@ -18,7 +18,7 @@ Parse `$ARGUMENTS`:
 - **Standalone with no range, paths or requirements** (a level alone is fine): ask with `AskUserQuestion`, "What should the review cover?":
   - `Recent changes` (recommended): everything uncommitted from `HEAD`; requirements as above.
   - `Whole product`: `--from empty --exclude <test paths>`; requirements: `loc/PRD.md` (if it exists) and `CLAUDE.md`, "does the product do what they say".
-  - `Whole test suite`: `--from empty --paths <test paths>`; requirements: `loc/TEST-PLAN.md` and `loc/PRD.md` (those that exist, else `CLAUDE.md`), "does each test prove the behaviour it claims, can it fail on wrong code, does it test the project's code, does TEST-PLAN run it after the changes it guards".
+  - `Whole test suite`: `--from empty --paths <test paths>`; requirements: `loc/TEST-PLAN.md` and `loc/PRD.md` (those that exist, else `CLAUDE.md`), "does each test prove the behaviour it claims, can it fail on wrong code, does it test the project's code, does a gate layer of TEST-PLAN (run by `loc-qa`) or a milestone's proof run it".
   - Other: the user's words are the requirements, and the scope when they name one.
 
   Test paths: those `loc/TEST-PLAN.md` or `## Commands` of `CLAUDE.md` names, else those found at any depth (`**/tests/`, `**/test/`, `**/*.test.*`, `**/*.spec.*`, `**/*_test.*`, `**/test_*`), each passed by its path. None found: `Whole test suite` says the project has no tests and stops. A whole-product or whole-suite review first says how many files `files` holds; over 150, ask with `AskUserQuestion` which top-level directories to cover (one review each) or to narrow it. `## Scope` and `--source` (§5) name it `whole product` or `whole test suite`, not the empty-tree hash.
