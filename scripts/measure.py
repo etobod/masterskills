@@ -40,7 +40,7 @@ OVERRIDES = {
     "skills/loc-orchestrate/references/gates.md": 1250,
     "skills/loc-orchestrate/references/stuck.md": 900,
     "skills/loc-orchestrate/references/search.md": 900,
-    "skills/loc-orchestrate/references/run.md": 1550,
+    "skills/loc-orchestrate/references/run.md": 1500,
     "skills/loc-orchestrate/references/divergent.md": 850,
     "skills/loc-planning/references/prd.md": 850,
     "agents/architect.md": 700,

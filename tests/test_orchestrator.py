@@ -52,10 +52,8 @@ class OrchestratorAgentTest(unittest.TestCase):
         # A proof sent to the background and polled forever kept shells running into the final review.
         run = read("skills/loc-orchestrate/references/run.md")
         for part in ("**Long commands.**", "in any step or reference (search, divergent, a rerun after a fix, QA)",
-                     "timeout at its maximum, `600000` ms",
-                     "A foreground run the timeout kills is a **hang**, a new test's first run included",
-                     "a failed round, fix the code, never a background rerun", "Only a command known to be long", "never start one while another still runs",
-                     "never with `&` or a detached start",
+                     "timeout at its maximum, `600000` ms", "never start one while another still runs",
+                     "A foreground run the timeout kills is no failure", "never with `&` or a detached start",
                      "No fourth round or code change: stop your background commands", "killed included, never an endless `until` loop",
                      "count the round as failed, cause `exceeds the time limit`, never a code fix",
                      "Before a milestone becomes `done` or `stuck`, before the QA gate, the final review and every stop or report",

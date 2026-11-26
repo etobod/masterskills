@@ -5,10 +5,11 @@ All notable changes to the `masterskills` plugin. Versions follow the `version` 
 ## 2.32.8 — 2026-11-26
 
 - A milestone runs only its own proof. The layers of `TEST-PLAN.md` (a) no longer run after each milestone: a layer marked "fast, after every milestone" was often the whole suite, run again after every milestone. The full suite still runs once, in `loc-qa`. A UI milestone still checks its own pages with `ui_check.py` in its proof. The `TEST-PLAN.md` template no longer offers "after every milestone"; reviewers ask whether a gate layer or a proof runs a test, not whether it runs after each change.
+- The 2.32.7 rule is withdrawn: a proof the `600000` ms timeout kills is no failure and runs again in the background, waited for at most 3×10 minutes, as before. A proof can be slow without hanging, and the rule sent the orchestrator to fix working code.
 
 ## 2.32.7 — 2026-11-25
 
-- A proof or test the `600000` ms timeout kills is a hang, a new test's first run included: a failed round and a code fix, no longer a background rerun waited for up to 30 minutes and then blamed on the time limit. Only a command known to be long (its `Proof` line or `CLAUDE.md` says so, or an earlier run took minutes) is still rerun in the background. A text test spinning at full CPU in a real project showed it. Word limit raised: `run.md` 1550.
+- Withdrawn before release (2.32.8): a proof killed by the timeout was to count as a hang.
 
 ## 2.32.6 — 2026-11-25
 
