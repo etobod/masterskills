@@ -23,6 +23,7 @@ Example:
 ## (b) What changed → what to extend
 
 <!-- Tests only. Documents belong in `## Project-specific workflow` in `CLAUDE.md`.
+A test that repeats another test or layer, or checks the exact wording of text the user reads, is removed, not extended.
 Example:
 | Change in the product | What to extend |
 |---|---|
@@ -45,6 +46,8 @@ Example:
 - where tests go (directory, file names);
 - fixtures: only hand-written ones in git; recorded data only in an ignored directory;
 - tests with random data (e.g. hypothesis): a fixed seed or a deterministic mode, so the gate does not fail at random;
+- browser tests: one browser per run, each page loaded once per width;
+- text the user reads: its structure is tested, never its exact wording;
 - marker of a known defect (e.g. `@pytest.mark.xfail(strict=True, reason="loc/inbox/NNN-…")`);
 - directory of recorded data.
 -->

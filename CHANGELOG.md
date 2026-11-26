@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.9 — 2026-11-26
+
+- Redundant tests are removed by the plugin, not only added. The final review flags a new test that repeats an existing test or layer, or checks the exact wording of text the user reads, as Non-blocking; the fix removes it, recorded as a deviation. `loc-qa` measures the suite with the new `suite_size.py`: when the tests are over twice the code, or grew by half since the last whole-suite review, it reports `suite review due`, and the orchestrator then runs `loc-review tests` (the whole test suite, without asking), whose review file is planned like any other. The `TEST-PLAN.md` template says a duplicate is removed, a browser starts once per run and the exact wording of user text is not tested. Word limits raised: `loc-review` `SKILL.md` 1300, `loc-qa` 1100, `run.md` 1550, `rubber-duck` 830.
+
 ## 2.32.8 — 2026-11-26
 
 - A milestone runs only its own proof. The layers of `TEST-PLAN.md` (a) no longer run after each milestone: a layer marked "fast, after every milestone" was often the whole suite, run again after every milestone. The full suite still runs once, in `loc-qa`. A UI milestone still checks its own pages with `ui_check.py` in its proof. The `TEST-PLAN.md` template no longer offers "after every milestone"; reviewers ask whether a gate layer or a proof runs a test, not whether it runs after each change.

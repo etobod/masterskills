@@ -42,7 +42,7 @@ Only the milestone's proof: its own tests. No layer of `loc/TEST-PLAN.md` sectio
 
 ## Weakening a test
 
-Removing an assertion, loosening a condition, skipping a test or deleting one is allowed only openly: a deviation in the state file with the reason, repeated in the final report. Before the final review run `test_baseline.py --plan <NNN> --compare`; every existing test it lists as `changed` or `removed` needs such a deviation.
+Removing an assertion, loosening a condition, skipping a test or deleting one is allowed only openly: a deviation in the state file with the reason, repeated in the final report. A test a review finding removes (a duplicate, a wording check) goes the same way, the finding as the reason. Before the final review run `test_baseline.py --plan <NNN> --compare`; every existing test it lists as `changed` or `removed` needs such a deviation.
 
 ## Known defect
 

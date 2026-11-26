@@ -39,6 +39,14 @@ Each layer of TEST-PLAN section (a), in order:
 - **CI only**: do not run; **INFO** "CI only".
 - **Model behaviour**: only with `model`; otherwise **SKIPPED** "not requested". When run, compare with the last line of `loc/state/qa-history.log` and append one line: `<date> <plan or -> <layer> <result summary>`. Its result is **INFO**.
 
+Then measure the suite (`--tests` with the test paths `loc/TEST-PLAN.md` or `## Commands` of `CLAUDE.md` names, if any, as `loc-review` takes them):
+
+```sh
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/suite_size.py --record <NNN or -> [--tests <paths>]
+```
+
+`due: true` → row **INFO** `suite review due` with its `reason`, and say it in the report.
+
 ## 3. Tests against the copy
 
 With a plan and a copy:
