@@ -59,6 +59,22 @@ class OrchestratorAgentTest(unittest.TestCase):
         self.assertIn("is removed, not extended", template)
         self.assertIn("one browser per run, each page loaded once per width", template)
 
+    def test_qa_runs_after_the_final_review(self):
+        # The final review's fixes were the last code changes, and the full suite ran before them.
+        end = read("skills/loc-orchestrate/references/run.md").split("## 5. At the end", 1)[1].split("\n## ", 1)[0]
+        self.assertLess(end.index("1. `phase: final-review`"), end.index("2. **QA gate**"))
+        self.assertIn("its fixes are the last code changes, and the full suite must run after them", end)
+        # A triage retry fixes code too: a stuck final review is triaged before QA, the rest after it without retry.
+        self.assertLess(end.index("so a `retry` also comes before QA"), end.index("2. **QA gate**"))
+        self.assertLess(end.index("2. **QA gate**"), end.index("3. **Close what the plan resolved**"))
+        self.assertIn("a stuck `qa` included", end)
+        self.assertIn("no `retry` now, it would change code after QA", end)
+        stuck = read("skills/loc-orchestrate/references/stuck.md")
+        self.assertIn("telling the architect that QA has run, so no `retry`", stuck)
+        self.assertIn("the architect gets only the stuck file's `## final-review` section", stuck)
+        self.assertIn("After round 6, or when told QA has run: only **plan**", read("agents/architect.md"))
+        self.assertIn("then `final-review`, `qa` (plans with `**Criteria:**`)", read("skills/loc-orchestrate/references/state.md"))
+
     def test_a_milestone_runs_only_its_proof(self):
         # Layers after every milestone ran a whole suite each time: minutes per milestone.
         tests = read("skills/loc-orchestrate/references/tests.md")
@@ -77,7 +93,7 @@ class OrchestratorAgentTest(unittest.TestCase):
                      "A foreground run the timeout kills is no failure", "never with `&` or a detached start",
                      "No fourth round or code change: stop your background commands", "killed included, never an endless `until` loop",
                      "count the round as failed, cause `exceeds the time limit`, never a code fix",
-                     "Before a milestone becomes `done` or `stuck`, before the QA gate, the final review and every stop or report",
+                     "Before a milestone becomes `done` or `stuck`, before the final review, the QA gate and every stop or report",
                      "Run it as **Long commands** above says.", "7. Stop your background commands (**Long commands**)"):
             self.assertIn(part, run)
 

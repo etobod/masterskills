@@ -76,7 +76,7 @@ class DecisionSkillsTest(unittest.TestCase):
         for part in ("printed by a command", "20 tries", "Never for a finding without such a number",
                      "never for a plan gate"):
             self.assertIn(part, search)
-        self.assertIn("After round 6: only **plan**, **search**, **let go** or **ask**.", architect)
+        self.assertIn("After round 6, or when told QA has run: only **plan**, **search**, **let go** or **ask**.", architect)
         self.assertIn("got stuck again: only **ask**; never a second **plan**", architect)
         stuck = read("skills/loc-orchestrate/references/stuck.md")
         self.assertIn("## Triage", stuck)

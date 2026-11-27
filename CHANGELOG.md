@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.11 — 2026-11-27
+
+- At the end of a plan the final review runs before QA. Its fixes are now the last code changes, and the full suite runs once after them; before, QA ran first and the final review's fixes were checked only by the proofs of the milestones they touched. A stuck final review is triaged at once, so a `retry` (which changes code) also comes before QA; the closing check and the triage of other open points stay after QA, now without `retry` (the architect is told QA has run). A fix made in a QA round and the tests `loc-qa` writes are not reviewed before the commit: the fix is small and targeted, the tests wait for the next whole-suite review. Budgets: `run.md` 1600, `stuck.md` 950.
+
 ## 2.32.10 — 2026-11-26
 
 - Tests only: the copy of the word limits in `tests/test_ideas.py` is gone. A test now runs `measure.py` and fails when a file is over its limit, so a raise changes `measure.py` alone.
