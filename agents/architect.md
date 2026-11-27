@@ -49,7 +49,7 @@ You get what stuck gates left after round 3 (or 6): a plan's `## Stuck gates`, a
 - **let go**: what remains is not worth more work; its points become `## Review notes` lines.
 - **ask**: beyond your competence (a point above). Name it and what is at stake.
 
-After round 6: only **plan**, **search**, **let go** or **ask**. A plan made from a stuck file that got stuck again: only **ask**; never a second **plan**.
+After round 6, or when told QA has run: only **plan**, **search**, **let go** or **ask**. A plan made from a stuck file that got stuck again: only **ask**; never a second **plan**.
 
 ## Report
 

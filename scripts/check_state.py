@@ -9,13 +9,13 @@
       "mode": "agent" | "inline" | "subagent",    # agent: the orchestrator agent; inline/subagent: older runs
       "milestone": 1,                            # current one, 1-based
       "phase": "start" | "implement" | "proof" | "code-review" | "search"
-               | "qa" | "final-review" | "journal" | "done",
+               | "final-review" | "qa" | "journal" | "done",
       "milestones": [
         {"id": "M1", "status": "pending" | "in_progress" | "done" | "stuck",
          "start": "<snapshot hash>" | null, "end": "<snapshot hash>" | null}
       ],
       "gates": {                                 # "M1/red", "M1/proof", "M1/code-review", "M1/search", "M1/design",
-                                                 # "qa", "final-review"
+                                                 # "final-review", "qa"
         "M1/red": {"rounds": 1, "passed": true, "stuck": null, "output": "AssertionError: ...",
                    "test_author": true},
         "M1/proof": {"rounds": 3, "passed": false, "stuck": "plan"}
