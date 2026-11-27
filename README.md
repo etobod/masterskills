@@ -27,7 +27,7 @@ and they ask you only what they cannot decide.
 - **Search when there is no pass/fail.** A milestone can improve a number toward a target instead (a prompt's pass rate, a run time): a fresh agent tries one idea at a time, only a better score is kept, and the search stops at the target, at its budget or when ideas run out. Missing the target is an accepted result, not a failure.
 - **Bugs fixed at the cause.** `loc-debug` reproduces a bug with a command, pins it with a failing test and tests hypotheses before changing any code.
 - **Memory that survives `/clear`.** Ideas, decisions, plans, open questions and lessons live in `loc/` inside your project, and every session starts with what is open.
-- **Small by contract.** About 525 words of rules are always loaded; each skill loads only when it is used. Word budgets are enforced by the test suite, not promised.
+- **Small by contract.** About 595 words of rules are always loaded; each skill loads only when it is used. Word budgets are enforced by the test suite, not promised.
 - **Answers with a picture.** Ask "how does saving an entry work?" and get a diagram drawn from the code, with `file:line` on every box and `?` on what was inferred, kept up to date in `loc/diagrams/`.
 
 ## Install
@@ -80,9 +80,9 @@ flowchart TD
         T["test-author<br/>tests first"] --> R{"red gate"}
         R --> C["code"] --> P["proof"] --> CR["quick review<br/>blocking fixed"]
     end
-    M --> Q["<b>loc-qa</b><br/>APPROVED / NOT APPROVED"]
-    Q --> RV["<b>loc-review</b><br/>final review<br/>the judge decides what is fixed"]
-    RV --> J["<b>journal</b><br/>lessons · cost · diagram if the structure changed"]
+    M --> RV["<b>loc-review</b><br/>final review<br/>the judge decides what is fixed"]
+    RV --> Q["<b>loc-qa</b><br/>full suite after the last fix<br/>APPROVED / NOT APPROVED"]
+    Q --> J["<b>journal</b><br/>lessons · cost · diagram if the structure changed"]
 ```
 
 `loc-orchestrate` checks the frame and the plan, then hands the plan to the `orchestrator` agent: the plan's whole work runs in the agent's context, and your session sees only the start, one round of questions and the report. No work starts without the project's frame: its goal, core idea and scenarios in `loc/PRD.md` and a test command in `CLAUDE.md`. Each plan's journal entry ends with its cost, e.g. `1.8M tokens: orchestrator 55%, rubber-duck 25%, main 5%`.
@@ -153,7 +153,7 @@ Agents are spawned with a clean context and narrow tools, so each one judges onl
 | ⚖️ | **Judge** | `judge` | Weighs the final review's blocking and non-blocking findings against the project's goal: `fix`, `enough` or `challenges D-NN`, each with a reason | read-only, adds no findings |
 | 📋 | **PM** | `pm` | Orders open plans and deferred, stuck and review work into one queue, so a plan is not first only because it is new | read-only |
 | 🦆 | **Rubber duck** | `rubber-duck` | Independent critic of a plan or a change: are all requirements covered, can every proof really fail | read-only |
-| 🧪 | **QA** | `qa` | Runs the suite once, compares the tests with the plan's starting copy (a weakened test is caught), writes what is missing, gives the verdict | edits tests only |
+| 🧪 | **QA** | `qa` | Runs the suite once, compares the tests with the plan's starting copy (a weakened test is caught), writes what is missing, gives the verdict; says when the suite has grown enough for a whole-suite review, which removes duplicate and redundant tests | edits tests only |
 | ✍️ | **Test author** | `test-author` | Writes tests from a milestone's behaviour criteria before the code exists | writes tests only, never reads the code |
 | 🎯 | **Searcher** | `searcher` | One try of a search milestone: one change with its hypothesis, read from the log of earlier tries | changes only the files the plan allows, never the metric |
 | 🎨 | **Designer** | `designer` | Builds a screen that looks good: plans the tokens, challenges the plan against the generated look, builds from the tokens | changes only the files it is given and the tokens, never takes screenshots |
@@ -196,7 +196,7 @@ Both cover the road from an idea through a plan and test-driven development to r
 
 | | masterskills |
 |---|---|
-| **Context** | ~525 words of rules always loaded; a skill loads only when used. Budgets are checked by the test suite: a skill core ≤ 800 words, an agent ≤ 600 |
+| **Context** | ~595 words of rules always loaded; a skill loads only when used. Budgets are checked by the test suite: a skill core ≤ 800 words, an agent ≤ 600 |
 | **Interruptions** | The `architect` decides what you need not; your questions wait in files with a recommended option while work continues; `loc-director` runs a course overnight |
 | **Review loops** | At most three rounds per gate, then recorded and carried on; the `judge` stops fixes the project does not need |
 | **Tests you can trust** | A red gate that must fail on an assertion; tests written blind by `test-author`; QA compares the final tests with the plan's starting copy |
