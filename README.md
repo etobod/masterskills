@@ -71,7 +71,7 @@ To update later: `/plugin marketplace update masterskills`, then run `/masterski
 
 ```mermaid
 flowchart TD
-    A["<b>loc-brainstorm</b><br/>conversation → decisions"] --> B["<b>loc-planning</b><br/>milestones, criteria, proofs"]
+    A["<b>loc-brainstorm</b><br/>conversation → decisions"] --> B["<b>loc-planning</b><br/>first asks what PRD · CLAUDE.md lack<br/>milestones, criteria, proofs"]
     B --> G{"plan gate<br/>rubber-duck · plan check"}
     G --> F{"frame<br/>goal · scenarios · test command"}
     F --> M
@@ -169,7 +169,7 @@ In Claude Code the code reviewer is its built-in `code-review` skill; the OpenCo
 |---|---|
 | `loc-init` | set up or update `loc/` and `CLAUDE.md`; fill the project's goal from a brainstorm |
 | `loc-brainstorm` | keep the notes and decisions of a design conversation in one file; "grill me" to be questioned about an idea |
-| `loc-planning` | turn a brainstorm into plans whose milestones have criteria, tests and proofs |
+| `loc-planning` | turn a brainstorm into plans whose milestones have criteria, tests and proofs; first asks you to add to `loc/PRD.md` and `CLAUDE.md` what the agents will judge the work by |
 | `loc-orchestrate` | execute a plan in the `orchestrator` agent: tests first, code, proof, a quick review per milestone, a final review, commit |
 | `loc-qa` | get a QA verdict on a plan or a change, at any time |
 | `loc-review` | review a diff at the level you choose |

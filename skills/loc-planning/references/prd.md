@@ -2,7 +2,7 @@
 
 `loc/PRD.md` holds only what is current. `## Goal`, `## Core idea` and `## Scenarios` are the project's guidelines: they never move into a plan, and the `judge` agent weighs review findings against them. `## Directions` are ideas waiting for a plan. Whatever stops being current leaves the PRD and goes into the plan that made it stale, so its history sits next to the reason.
 
-Take the date with `date "+%Y-%m-%d"`. `loc/` is not in git: nothing removed from the PRD may be lost, so copy it into the plan **before** removing it.
+Take the date with `date "+%Y-%m-%d"`. `loc/` is not in git: nothing removed from the PRD may be lost, so copy it into the plan **before** removing it; before a plan exists, the `PRD:` question holds it.
 
 ## A `Directions` fragment becomes a plan
 
@@ -17,20 +17,20 @@ Take the date with `date "+%Y-%m-%d"`. `loc/` is not in git: nothing removed fro
 
 ## `Goal`, `Core idea` and `Scenarios`
 
-After the plan's gate, before the report, compare the plan with these three sections:
+**Before the plan** (SKILL.md §2 step 5), compare the input with these three sections, `## Decisions` and the `Invariants`, `Limits` and `## Frontend` of `CLAUDE.md`; after the gate, once more for what only the plan added:
 
 - **The plan changes them**: it adds a goal, drops one, or makes a point untrue (e.g. a plan that sends data to a server, against "data never leave the machine").
-- **They are thin**: a point the plan shows to be missing. Empty sections were filled before planning (`${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md`).
+- **They are thin**: a point the input or the plan shows to be missing, e.g. a goal the brainstorm decided that the judge would otherwise reject as out of scope. Empty sections were filled before planning (`${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md`).
 
-First create a `question` file (`next_number.py --type question --by loc-planning`, title starting `PRD:`) with the proposed points, the old wording of every point that changes or goes, the plan's path, and the line `Po zgodzie: stare brzmienie do ## PRD fragment planu <NNN>, potem zapis loc/PRD.md.` `loc-orchestrate` does not start while it is open: the judge must not weigh findings against stale guidelines. Then **ask the user with `AskUserQuestion`**. Show the points as they would read after the change, and ask two things: do they say what you want from the project, and do the technical points still hold, so that a defect the judge waves through cannot bring something down. A point is a goal or a priority with its reason, never a description of the code, and never a repeat of `Invariants`, which the judge reads anyway. When there are more than about fifteen, propose merging some.
+First create a `question` file (`next_number.py --type question --source "<input file, or the plan after its gate>" --by loc-planning`, title starting `PRD:`) with the proposed points, the old wording of every point that changes or goes, proposed `D-NN` lines and `CLAUDE.md` changes, and the line `After the answer: write loc/PRD.md and CLAUDE.md (the old wording stays here), then /masterskills:loc-planning <input NNN>, whose plan copies the old wording into its ## PRD fragment` (after the gate: `copy the old wording into the ## PRD fragment of plan <NNN>`). `loc-orchestrate` does not start while it is open: the judge must not weigh findings against stale guidelines. Then **ask the user with `AskUserQuestion`**. Show the points as they would read after the change, and ask two things: do they say what you want from the project, and do the technical points still hold, so that a defect the judge waves through cannot bring something down. A point is a goal or a priority with its reason, never a description of the code, and never a repeat of `Invariants`, which the judge reads anyway. When there are more than about fifteen, propose merging some.
 
-- **Yes**: copy the old wording of each removed or rewritten point into the plan's `## PRD fragment`, write the PRD, then close the `question` (rule 8).
+- **Yes**: write the PRD and `CLAUDE.md`, then close the `question` (rule 8) and plan; the plan's `## PRD fragment` gets the old wording of each removed or rewritten point.
 - **Changes**: apply them to the `question` and ask again.
-- **No**: leave the PRD as it is and close the `question` with that answer. Do not propose the same again unless the user asks; the closed `PRD:` files in `loc/inbox/done/` record what was refused.
-- **No answer in this session**: the `question` stays open; whoever handles the answer later follows its last line.
+- **No**: leave the files as they are, close the `question` with that answer and plan against them, naming the refused point in `## Risks and decisions`. Do not propose the same again unless the user asks; the closed `PRD:` files in `loc/inbox/done/` record what was refused.
+- **No answer in this session**: the `question` stays open and, before the plan, no plan is written; whoever handles the answer later follows its last line, then plans.
 
 ## `Decisions`
 
-A lasting choice later plans must follow (a format, a threshold) is a line `- D-NN: <decision>. Reason: <why>. (<date>)`, numbered after the last `D-`. Plans cite it (`D-03`) instead of restating it. One the user approved here goes straight in. Any other proposed decision goes into one question file, never only into the report (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type question --slug "decisions" --title "Decision: <topic>" --source "<plan path>" --by loc-planning`): each ready `D-NN` line with its practical effect, ending with the line `After the answer: write the approved lines to loc/PRD.md ## Decisions.` A plan that changes a decision gives the new one the next number with `replaces D-03: <why>`, and moves the old line verbatim into its `## PRD fragment`.
+A lasting choice later plans must follow (a format, a threshold) is a line `- D-NN: <decision>. Reason: <why>. (<date>)`, numbered after the last `D-`. Plans cite it (`D-03`) instead of restating it. One the input settles is asked before the plan, with the points above. Any other proposed decision goes into one question file, never only into the report (`sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/next_number.py --type question --slug "decisions" --title "Decision: <topic>" --source "<plan path>" --by loc-planning`): each ready `D-NN` line with its practical effect, ending with the line `After the answer: write the approved lines to loc/PRD.md ## Decisions.` A plan that changes a decision gives the new one the next number with `replaces D-03: <why>`, and moves the old line verbatim into its `## PRD fragment`.
 
 Nothing else in the PRD changes: no status, no summary, no milestone list.

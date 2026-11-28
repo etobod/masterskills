@@ -36,6 +36,29 @@ class BudgetTest(unittest.TestCase):
         self.assertEqual(measure().measure(ROOT)["over"], [])
 
 
+class PrdBeforePlanTest(unittest.TestCase):
+    def test_planning_asks_for_prd_points_before_the_plan(self):
+        # Agents rejected work for a goal still waiting in an unanswered PRD question while planning went on.
+        skill = read("skills/loc-planning/SKILL.md")
+        step = skill.split("5. **What the team will read, before the plan.**", 1)[1].split("\n## ", 1)[0]
+        self.assertLess(skill.index("What the team will read, before the plan"), skill.index("## 5. Write the plan"))
+        self.assertIn("write no plan until they answer", step)
+        prd = read("skills/loc-planning/references/prd.md")
+        self.assertIn("**Before the plan** (SKILL.md §2 step 5)", prd)
+        self.assertIn("`Invariants`, `Limits` and `## Frontend` of `CLAUDE.md`", prd)
+        self.assertIn("before the plan, no plan is written", prd)
+        self.assertIn("naming the refused point in `## Risks and decisions`", prd)
+        # An unanswered question must not lose the input: it names it and how planning resumes.
+        self.assertIn('--source "<input file, or the plan after its gate>"', prd)
+        self.assertIn("then /masterskills:loc-planning <input NNN>", prd)
+        self.assertIn("An answered `PRD:` question whose `**Source:**` is not a plan is planned from that input", skill)
+        # A second run on the same input must not ask again: the director looped, one question per pass.
+        self.assertIn("An open `PRD:` question with this input as `**Source:**` already asks it: unanswered, point to it", step)
+        self.assertIn("answered under `## Resolution`, apply the answer (`references/prd.md`), then plan", step)
+        self.assertIn("the item waits for the user on that `U` file, never run again before its answer",
+                      read("skills/loc-director/SKILL.md"))
+
+
 class DivergentCriticTest(unittest.TestCase):
     """plan 86, B-03: the critic judges divergent variants; it never picks."""
 

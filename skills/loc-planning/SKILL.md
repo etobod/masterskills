@@ -18,7 +18,7 @@ Turns an input into `loc/inbox/NNN-plan-<group>-<difficulty>-<topic>.md`: a plan
 - **A fragment of `loc/PRD.md`**, named by its heading.
 - **Plain text**: the task itself; `fix N`: the N-th `enough` line of the last report.
 
-No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask what to plan. An open `question` is not an input.
+An answered `PRD:` question whose `**Source:**` is not a plan is planned from that input. No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask what to plan. An open `question` is not an input.
 
 ## 2. Read the code, not documents about it
 
@@ -26,6 +26,7 @@ No argument: if `loc/inbox/` has exactly one `brainstorm`, use it; otherwise ask
 2. The code the change touches. For more than a couple of files, delegate to the `researcher` agent with the question "what exists today for <change>" and use its `file:line` report. Documents are not evidence; code is.
 3. If the project has no `CLAUDE.md` `Commands` section, say so in the plan's risks and use the commands you verified by running them. A run leaves no files behind: nothing new in `git status --short` (Python: `python -B`).
 4. The frame first: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/frame.py`; not `ok`: `${CLAUDE_PLUGIN_ROOT}/skills/loc-init/references/frame.md`, before writing anything. Other gaps: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/init_project.py --check` (writes nothing). Empty `CLAUDE.md` sections never stop you: what the plan can establish goes into a milestone, the rest into the report. Sections that contradict each other ("two separate chains" vs "one complex chain") become a `question` (step 4).
+5. **What the team will read, before the plan.** The `architect`, `judge`, `pm` and the critics weigh work against `loc/PRD.md` and `CLAUDE.md`, never against the input. Compare the input with them: a goal, scenario, lasting decision (a brainstorm's `B-NN` later plans must follow becomes a `D-NN`), invariant, limit or visual direction it settles or relies on that is missing there or contradicted. Any found: stop, ask the user now (`references/prd.md`, "Before the plan") and write no plan until they answer, so no agent rejects work for a point still waiting in a question. An open `PRD:` question with this input as `**Source:**` already asks it: unanswered, point to it; answered under `## Resolution`, apply the answer (`references/prd.md`), then plan.
 
 ## 3. The judge decides which findings become work
 

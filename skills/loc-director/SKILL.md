@@ -37,7 +37,7 @@ The course lives in `loc/PRD.md` `## Course`; only `course.py` changes it. Run e
 Repeat, never asking "should I continue?":
 
 1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py next --text "<the step, e.g. loc-orchestrate 084>"` **before** starting it, so a cut run resumes there; an `error` (step cap) is a stop rule. Show its `banner` as it is, alone on a line.
-2. Run it: `Skill(skill: "masterskills:loc-planning", args: "<NNN>")` for an inbox file or an agreed plan without one, `Skill(skill: "masterskills:loc-orchestrate", args: "<NNN>")` for a plan; they handle their gates and questions.
+2. Run it: `Skill(skill: "masterskills:loc-planning", args: "<NNN>")` for an inbox file or an agreed plan without one, `Skill(skill: "masterskills:loc-orchestrate", args: "<NNN>")` for a plan; they handle their gates and questions. `loc-planning` that stopped on a `PRD:` question wrote no plan: skip step 3; the item waits for the user on that `U` file, never run again before its answer.
 3. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py done --item "<item>"`. One executed plan is one step of the cap (the agreed items + 10, or the user's number: `--cap`); planning and agents are not.
 4. New inbox files: the architect says what each needs; within the limit, `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/course.py add --item "<item>" --source "<file> (<the plan that made it>)"`; the pm orders the open items.
 5. Read the user's messages; check stop rules.

@@ -2,6 +2,10 @@
 
 All notable changes to the `masterskills` plugin. Versions follow the `version` field in `.claude-plugin/plugin.json`.
 
+## 2.32.12 — 2026-11-28
+
+- `loc-planning` checks `loc/PRD.md` and `CLAUDE.md` before writing a plan: a goal, scenario, lasting decision, invariant, limit or visual direction the input settles or relies on and the files lack is asked at once with `AskUserQuestion`, and no plan is written until the user answers. Budgets: `loc-planning` `SKILL.md` 3100, its `prd.md` 880, `loc-director` 880. A `PRD:` question asked before the plan names its input and ends with how to plan it after the answer; `loc-director` leaves such an item waiting for the user, never runs it again before the answer, and a second run reuses the open question instead of asking again, and once it is answered applies the answer and plans. Before, the check ran after the plan's gate, so the architect, judge, pm and critics could reject work for a point still waiting in an unanswered `PRD:` question.
+
 ## 2.32.11 — 2026-11-27
 
 - At the end of a plan the final review runs before QA. Its fixes are now the last code changes, and the full suite runs once after them; before, QA ran first and the final review's fixes were checked only by the proofs of the milestones they touched. A stuck final review is triaged at once, so a `retry` (which changes code) also comes before QA; the closing check and the triage of other open points stay after QA, now without `retry` (the architect is told QA has run). A fix made in a QA round and the tests `loc-qa` writes are not reviewed before the commit: the fix is small and targeted, the tests wait for the next whole-suite review. Budgets: `run.md` 1600, `stuck.md` 950.
